@@ -15,12 +15,12 @@ var HTTP = cc.Class({
         // ...
     },
     statics: {
-        baseURL:"http://192.168.100.196",
-        wsURL : "http://192.168.100.196:9081",
+        baseURL:"http://jenkins.suncity.ink:8080",
+        wsURL : "http://jenkins.suncity.ink:9081",
         authorization: null,
         httpGet: function (url , success , error , object) {
             var xhr = cc.loader.getXMLHttpRequest();
-            
+
             xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4) {
                     if(xhr.status >= 200 && xhr.status < 300){
@@ -57,18 +57,18 @@ var HTTP = cc.Class({
 
             xhr.send();
         },
-        encodeFormData : function(data)  
-        {  
-            var pairs = [];  
-            var regexp = /%20/g;  
-          
-            for (var name in data){  
-                var value = data[name].toString();  
-                var pair = encodeURIComponent(name).replace(regexp, "+") + "=" +  
-                    encodeURIComponent(value).replace(regexp, "+");  
-                pairs.push(pair);  
-            }  
-            return pairs.join("&");  
+        encodeFormData : function(data)
+        {
+            var pairs = [];
+            var regexp = /%20/g;
+
+            for (var name in data){
+                var value = data[name].toString();
+                var pair = encodeURIComponent(name).replace(regexp, "+") + "=" +
+                    encodeURIComponent(value).replace(regexp, "+");
+                pairs.push(pair);
+            }
+            return pairs.join("&");
         },
         httpPost: function (url, params, success , error , object) {
             var xhr = cc.loader.getXMLHttpRequest();
@@ -95,11 +95,11 @@ var HTTP = cc.Class({
                 xhr.setRequestHeader("Accept-Encoding", "gzip,deflate");
             }
             xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
-    
+
             // note: In Internet Explorer, the timeout property may be set only after calling the open()
             // method and before calling the send() method.
             xhr.timeout = 5000;// 5 seconds for timeout
-            
+
             xhr.send( HTTP.encodeFormData(params));
         }
     },
@@ -108,5 +108,5 @@ var HTTP = cc.Class({
     onLoad: function () {
     },
 
-    
+
 });

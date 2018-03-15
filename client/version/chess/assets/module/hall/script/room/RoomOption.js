@@ -85,6 +85,7 @@ cc.Class({
              * 发送创建房间开始游戏的请求
              */
             event.stopPropagation() ;
+            console.log("发送创建房间开始游戏的请求======socket=preload======>",JSON.stringify(extparams));
             self.preload(extparams , self) ;
         });
     },

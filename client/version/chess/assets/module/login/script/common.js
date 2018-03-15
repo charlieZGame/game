@@ -2,11 +2,27 @@ var beiMiCommon = require("BeiMiCommon");
 cc.Class({
     extends: beiMiCommon,
 
+
+    properties: {
+          // 这个属性引用了星星预制资源
+          useragreement: {
+              default: null,
+              type: cc.Node
+          },
+
+      },
     // use this for initialization
     onLoad: function () {
 
     },
+
+
+
     login:function(){
+        if(!this.useragreement.active){
+            this.alert("请先同意用户协议，再登录");
+          return;
+        }
         this.io = require("IOUtils");
         this.loadding();
         if(this.io.get("userinfo") == null){

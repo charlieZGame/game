@@ -170,8 +170,9 @@ public class ActionTaskUtils {
 	
 	/**
 	 * 更新玩家状态
-	 * @param userid
-	 * @param orgi
+	 * @param playUser
+	 * @param status
+	 * @param isNeedClean
 	 */
 	public static void updatePlayerClientStatus(PlayUserClient playUser, String status,boolean isNeedClean){
 		GameUtils.updatePlayerClientStatus(playUser.getId(), playUser.getOrgi(), status,isNeedClean);

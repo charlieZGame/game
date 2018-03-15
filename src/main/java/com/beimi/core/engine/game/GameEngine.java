@@ -309,7 +309,7 @@ public class GameEngine {
 	}
 	
 	/**
-	 * 出牌，并校验出牌是否合规
+	 * 出牌，并校验出牌是否合规  ZCL 自己主动出牌逻辑
 	 * @param roomid
 	 * 
 	 * @param auto 是否自动出牌，超时/托管/AI会调用 = true

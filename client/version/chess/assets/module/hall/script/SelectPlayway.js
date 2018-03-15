@@ -40,11 +40,12 @@ cc.Class({
         content: {
             default: null,
             type: cc.Node
-        },
+        }
     },
 
     // use this for initialization
     onLoad: function () {
+        this.first.getChildByName("rank").active = false;
         if(cc.beimi != null && cc.beimi.user != null){
             this.disMenu("first") ;
             this.playwaypool = new cc.NodePool();
@@ -74,6 +75,7 @@ cc.Class({
                 }
             }
         }
+
     },
     onClick:function(event, data){
         this.disMenu("second") ;
@@ -101,6 +103,7 @@ cc.Class({
                 /**
                  * 此处需要做判断，检查 对象池有足够的对象可以使用
                  */
+                console.log("获取点击的game---》",JSON.stringify(gametype.playways[inx]));
                 var playway = this.playwaypool.get();
                 var script = playway.getComponent("Playway") ;
                 if(script == null){

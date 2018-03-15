@@ -3,8 +3,6 @@ package com.beimi.util.server.handler;
 
 import java.util.List;
 
-import com.beimi.util.rules.model.PlayerChartMsg;
-import com.beimi.web.model.*;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -19,6 +17,10 @@ import com.beimi.util.client.NettyClients;
 import com.beimi.util.rules.model.GameStatus;
 import com.beimi.util.rules.model.SearchRoom;
 import com.beimi.util.rules.model.SearchRoomResult;
+import com.beimi.web.model.GamePlayway;
+import com.beimi.web.model.GameRoom;
+import com.beimi.web.model.PlayUserClient;
+import com.beimi.web.model.Token;
 import com.beimi.web.service.repository.es.PlayUserClientESRepository;
 import com.beimi.web.service.repository.jpa.GameRoomRepository;
 import com.beimi.web.service.repository.jpa.PlayUserClientRepository;
@@ -334,6 +336,37 @@ public class GameEventHandler {
 	}
 
 
+	@OnEvent(value = "forceleaveroom")
+	public void forceLeaveRoom(SocketIOClient client, String data) {
+		onLeave(client,data);
+	}
+
+	@OnEvent(value = "applyleaveroom")
+	public void applyLeaveRoom(SocketIOClient client, String data) {
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+
+
+	}
+
+
+
+	//玩家离开
+	@OnEvent(value = "leave")
+	public void onLeave(SocketIOClient client, String data) {
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		String token = beiMiClient.getToken();
+		if (!StringUtils.isBlank(token)) {
+			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
+			if (userToken != null) {
+				GameUtils.updatePlayerClientStatus(beiMiClient.getUserid(), beiMiClient.getOrgi(), BMDataContext.PlayerTypeEnum.LEAVE.toString(), true);
+			}
+		}
+	}
+
+
+
+
+
 	//抢地主事件
 	@OnEvent(value = "docatch")
 	public void onCatch(SocketIOClient client, String data) {
@@ -380,7 +413,7 @@ public class GameEventHandler {
 	}
 
 
-	//出牌
+	//出牌  // TODO: 2018/3/15 zcl 自己打牌调用
 	@OnEvent(value = "doplaycards")
 	public void onPlayCards(SocketIOClient client, String data) {
 		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
@@ -430,7 +463,7 @@ public class GameEventHandler {
 		}
 	}
 
-	//出牌
+	//出牌  // TODO: 2018/3/15 碰方法调用
 	@OnEvent(value = "selectaction")
 	public void onActionEvent(SocketIOClient client, String data) {
 		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());

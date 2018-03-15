@@ -53,12 +53,14 @@ cc.Class({
                     userid:cc.beimi.user.id
                 } ;
                 socket.emit("searchroom" , JSON.stringify(param));
+                console.log("查询房间参数-->",JSON.stringify(param));
                 this.registercallback(this.roomCallBack);
             }
             this.loadding();
         }
     },
     roomCallBack:function(result , self){
+        console.log("查询加入房间result-->",result);
         var data = self.parse(result) ;
         if(data.result == "ok"){
             var extparams = {
@@ -69,6 +71,7 @@ cc.Class({
             /**
              * 发送创建房间开始游戏的请求
              */
+           console.log("查询有该房间号，发送创建房间开始游戏的请求-->",JSON.stringify(extparams));
             self.preload(extparams , self) ;
         }else if(data.result == "notexist"){
             self.alert("房间号不存在。");

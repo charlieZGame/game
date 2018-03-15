@@ -36,6 +36,10 @@ cc.Class({
                 /**
                  * 此处需要做判断，检查 对象池有足够的对象可以使用
                  */
+                console.log("获取playways---》",gametype.playways[inx].name);
+               // if(gametype.playways[inx].name.contains("斗地主")){
+               //     return
+               //   }
                 var playway = this.playwaypool.get();
                 var script = playway.getComponent("Playway") ;
                 script.init(gametype.playways[inx]);

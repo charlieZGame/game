@@ -44,10 +44,11 @@ cc.Class({
         } ;
 
         cc.game.on(cc.game.EVENT_HIDE, function(event) {
+            console.log("游戏在前台运行");
             //self.alert("HIDE TRUE");
         });
         cc.game.on(cc.game.EVENT_SHOW, function(event) {
-            console.log("SHOW TRUE");
+            console.log("游戏在后台台运行");
             //self.alert("SHOW TRUE");
         });
 
@@ -192,6 +193,7 @@ cc.Class({
             cc.director.loadScene(name);
         });
     },
+
     preload:function(extparams , self){
         this.loadding();
         /**

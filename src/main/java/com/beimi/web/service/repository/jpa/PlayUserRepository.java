@@ -19,4 +19,5 @@ public abstract interface PlayUserRepository extends JpaRepository<PlayUser, Str
 	public abstract Page<PlayUser> findByDatastatus(boolean datastatus , String orgi, Pageable paramPageable);
 
 	public abstract Page<PlayUser> findByDatastatusAndUsername(boolean datastatus , String orgi ,String username ,Pageable paramPageable);
+
 }

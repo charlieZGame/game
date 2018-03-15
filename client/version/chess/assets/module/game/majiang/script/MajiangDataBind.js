@@ -290,7 +290,8 @@ cc.Class({
                      * 处理完毕，清理掉全局变量
                      * @type {null}
                      */
-                    this.invite = cc.instantiate(this.inviteplayer) ;
+                   this.invite = cc.instantiate(this.inviteplayer) ;
+                   this.invite.active = false;
                 }
                 this.initgame();
             }

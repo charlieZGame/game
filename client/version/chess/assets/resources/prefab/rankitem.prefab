@@ -207,7 +207,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 72,
+      "width": 96,
       "height": 24
     },
     "_rotationX": 0,
@@ -244,7 +244,7 @@
     },
     "_isSystemFontUsed": false,
     "_spacingX": 0,
-    "_N$string": "刘俊楠",
+    "_N$string": "Ao怡baby",
     "_N$horizontalAlign": 1,
     "_N$verticalAlign": 1,
     "_N$fontFamily": "Arial",
@@ -261,7 +261,7 @@
     "isAlignOnce": true,
     "_target": null,
     "_alignFlags": 8,
-    "_left": 87,
+    "_left": 75,
     "_right": 0,
     "_top": 0,
     "_bottom": 0,
@@ -579,6 +579,8 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
+    "pressedSprite": null,
+    "hoverSprite": null,
     "clickEvents": [],
     "_N$interactable": true,
     "_N$enableAutoGrayEffect": false,
@@ -597,10 +599,6 @@
       "a": 255
     },
     "_N$normalSprite": null,
-    "_N$pressedSprite": null,
-    "pressedSprite": null,
-    "_N$hoverSprite": null,
-    "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 15

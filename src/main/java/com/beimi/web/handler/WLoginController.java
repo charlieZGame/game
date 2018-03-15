@@ -1,52 +1,56 @@
-/*
-package com.beimi.wlogin;
+package com.beimi.web.handler;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.Writer;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import com.alibaba.fastjson.JSONObject;
+import com.beimi.model.GameResponse;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Map;
+
+/**
+ * Created by zhengchenglei on 2018/3/15.
+ */
 @Controller
-@RequestMapping({"/wlogin"})
-public class WLogin
-{
+@RequestMapping("/wchartLogin")
+public class WLoginController extends Handler {
+
     private String loginCheckUrl = "http://oauth.anysdk.com/api/User/LoginOauth/";
 
     private int connectTimeOut = 30000;
 
     private int timeOut = 30000;
+
     private static final String userAgent = "px v1.0";
+
+    private Logger logger = LoggerFactory.getLogger(WLoginController.class);
+
 
     @ResponseBody
     @RequestMapping({"check"})
-    public boolean check(HttpServletRequest request, HttpServletResponse response)
-    {
-        try
-        {
+    public boolean check(HttpServletRequest request, HttpServletResponse response) {
+        long tid = System.currentTimeMillis();
+        try {
             Map params = request.getParameterMap();
-
-            if (parametersIsset(params)) {
-                sendToClient(response, "parameter not complete");
+            String validateResponse = paramValidate(params);
+            if (StringUtils.isNotEmpty(validateResponse)) {
+                logger.error("tid:{} wechart user login failue. userInfo:{} reason:{}",tid,JSONObject.toJSONString(params),validateResponse);
+                sendToClient(response, GameResponse.gameErrorResponse(validateResponse,null));
                 return false;
             }
 
             String queryString = getQueryString(request);
 
             URL url = new URL(this.loginCheckUrl);
-            HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestProperty("User-Agent", "px v1.0");
             conn.setReadTimeout(this.timeOut);
             conn.setConnectTimeout(this.connectTimeOut);
@@ -64,43 +68,40 @@ public class WLogin
 
             InputStream is = conn.getInputStream();
             String result = stream2String(is);
-            sendToClient(response, result);
+            sendToClient(response, new GameResponse<String>(1,"OK",result));
             return true;
         } catch (Exception e) {
+            logger.error("tid:{} wechart login failed",tid,e);
             e.printStackTrace();
-
-            sendToClient(response, "Unknown error!");
-        }return false;
+            sendToClient(response, GameResponse.gameErrorResponse(e.getMessage(),null));
+        }
+        return false;
     }
 
-    public void setLoginCheckUrl(String loginCheckUrl)
-    {
-        this.loginCheckUrl = loginCheckUrl;
+
+    /**
+     *
+     * @param params
+     * @return
+     */
+    private String paramValidate(Map<String, String[]> params) {
+        if (!params.containsKey("channel")) {
+            return "channel can't be null";
+        }
+        if (!params.containsKey("uapi_key")) {
+            return "uapi key can't be null";
+        }
+        if(!params.containsKey("uapi_secret") ){
+            return "uapi_secret can't be null";
+        }
+        return null;
     }
 
-    public void setConnectTimeOut(int connectTimeOut)
-    {
-        this.connectTimeOut = connectTimeOut;
-    }
-
-    public void setTimeOut(int timeOut)
-    {
-        this.timeOut = timeOut;
-    }
-
-    private boolean parametersIsset(Map<String, String[]> params)
-    {
-        return (!params.containsKey("channel")) || (!params.containsKey("uapi_key")) ||
-                (!params
-                        .containsKey("uapi_secret"));
-    }
-
-    private String getQueryString(HttpServletRequest request)
-    {
+    private String getQueryString(HttpServletRequest request) {
         Map params = request.getParameterMap();
         String queryString = "";
         for (Object key : params.keySet()) {
-            String[] values = (String[])params.get(key);
+            String[] values = (String[]) params.get(key);
             for (int i = 0; i < values.length; i++) {
                 String value = values[i];
                 queryString = new StringBuilder().append(queryString).append(key).append("=").append(value).append("&").toString();
@@ -110,8 +111,7 @@ public class WLogin
         return queryString;
     }
 
-    private String stream2String(InputStream is)
-    {
+    private String stream2String(InputStream is) {
         BufferedReader br = null;
         try {
             br = new BufferedReader(new InputStreamReader(is));
@@ -130,22 +130,19 @@ public class WLogin
         return "";
     }
 
-    private void sendToClient(HttpServletResponse response, String content)
-    {
+    private void sendToClient(HttpServletResponse response, GameResponse gameResponse) {
         response.setContentType("text/plain;charset=utf-8");
         try {
             PrintWriter writer = response.getWriter();
-            writer.write(content);
+            writer.write(JSONObject.toJSONString(gameResponse));
             writer.flush();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void tryClose(OutputStream os)
-    {
-        try
-        {
+    private void tryClose(OutputStream os) {
+        try {
             if (null != os) {
                 os.close();
                 os = null;
@@ -155,10 +152,8 @@ public class WLogin
         }
     }
 
-    private void tryClose(Writer writer)
-    {
-        try
-        {
+    private void tryClose(Writer writer) {
+        try {
             if (null != writer) {
                 writer.close();
                 writer = null;
@@ -168,10 +163,8 @@ public class WLogin
         }
     }
 
-    private void tryClose(Reader reader)
-    {
-        try
-        {
+    private void tryClose(Reader reader) {
+        try {
             if (null != reader) {
                 reader.close();
                 reader = null;
@@ -180,4 +173,17 @@ public class WLogin
             e.printStackTrace();
         }
     }
-}*/
+
+    public void setLoginCheckUrl(String loginCheckUrl) {
+        this.loginCheckUrl = loginCheckUrl;
+    }
+
+    public void setConnectTimeOut(int connectTimeOut) {
+        this.connectTimeOut = connectTimeOut;
+    }
+
+    public void setTimeOut(int timeOut) {
+        this.timeOut = timeOut;
+    }
+
+}

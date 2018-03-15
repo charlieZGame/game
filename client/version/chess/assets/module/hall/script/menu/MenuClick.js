@@ -33,12 +33,13 @@ cc.Class({
             default: null,
             type: cc.Prefab
         }
+
     },
 
 
     // use this for initialization
     onLoad: function () {
-
+      
     },
     onSettingClick:function(){
         cc.beimi.openwin = cc.instantiate(this.setting) ;
