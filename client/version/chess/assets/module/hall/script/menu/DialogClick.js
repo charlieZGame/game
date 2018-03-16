@@ -24,6 +24,7 @@ cc.Class({
         event.stopPropagation();
     },
     onCloseClick:function(){
+        console.log("关闭弹出框");
         this.closeOpenWin();
     }
 

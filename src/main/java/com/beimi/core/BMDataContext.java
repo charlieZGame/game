@@ -34,6 +34,8 @@ public class BMDataContext {
 	public static final String BEIMI_SYSTEM_AUTH_DIC = "com.dic.auth.resource";
 
 	public static final String BEIMI_SYSTEM_ROOM = "room" ;
+
+	public static final String APPLY_LEAVE_ROOM = "applyLeaveRoom";
 	
 	
 	public static String SYSTEM_ORGI = "beimi" ;

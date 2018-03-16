@@ -7,6 +7,7 @@ import java.io.Serializable;
  */
 public class PlayerChartMsg<T> implements Serializable {
 
+
     private String srcUserId;
 
     private String srcUserName;
@@ -15,23 +16,23 @@ public class PlayerChartMsg<T> implements Serializable {
 
     private String desUserName;
 
-    private T msgType;
+    private String type;
 
-    private String message;
+    private T msg;
 
 
     public PlayerChartMsg() {
     }
 
-    public PlayerChartMsg(String srcUserId, String srcUserName, String desUserId, String desUserName, T msg,String message) {
+    public PlayerChartMsg(String srcUserId, String srcUserName, String desUserId, String desUserName,String returnCode, T msg) {
+
         this.srcUserId = srcUserId;
         this.srcUserName = srcUserName;
         this.desUserId = desUserId;
         this.desUserName = desUserName;
-        this.msgType = msgType;
-        this.message = message;
+        this.type = type;
+        this.msg = msg;
     }
-
 
 
     public String getSrcUserId() {
@@ -42,30 +43,6 @@ public class PlayerChartMsg<T> implements Serializable {
         this.srcUserId = srcUserId;
     }
 
-    public String getDesUserId() {
-        return desUserId;
-    }
-
-    public void setDesUserId(String desUserId) {
-        this.desUserId = desUserId;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public T getMsgType() {
-        return msgType;
-    }
-
-    public void setMsgType(T msgType) {
-        this.msgType = msgType;
-    }
-
     public String getSrcUserName() {
         return srcUserName;
     }
@@ -74,11 +51,35 @@ public class PlayerChartMsg<T> implements Serializable {
         this.srcUserName = srcUserName;
     }
 
+    public String getDesUserId() {
+        return desUserId;
+    }
+
+    public void setDesUserId(String desUserId) {
+        this.desUserId = desUserId;
+    }
+
     public String getDesUserName() {
         return desUserName;
     }
 
     public void setDesUserName(String desUserName) {
         this.desUserName = desUserName;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public T getMsg() {
+        return msg;
+    }
+
+    public void setMsg(T msg) {
+        this.msg = msg;
     }
 }

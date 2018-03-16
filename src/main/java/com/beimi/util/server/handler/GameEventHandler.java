@@ -1,8 +1,15 @@
 
 package com.beimi.util.server.handler;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+import com.alibaba.fastjson.JSONObject;
+import com.beimi.model.DefineMap;
+import com.beimi.model.OutRoom;
+import com.beimi.model.PlayCache;
+import com.beimi.util.rules.model.PlayerChartMsg;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -84,7 +91,7 @@ public class GameEventHandler {
 
 	//玩家离开
 	@OnEvent(value = "leave")
-	public void onLeave(SocketIOClient client, String data) {
+	public void onLeaveL(SocketIOClient client, String data) {
 		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
 		String token = beiMiClient.getToken();
 		if (!StringUtils.isBlank(token)) {
@@ -95,34 +102,79 @@ public class GameEventHandler {
 		}
 	}
 
-	@OnEvent(value="voteToLeaveRequest")
-	public void voteToLeave(SocketIOClient client, String data) {
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
-		String token = beiMiClient.getToken();
-		if(StringUtils.isEmpty(token)){
-			client.sendEvent(BMDataContext.BEIMI_GAMESTATUS_EVENT, "token illegal");
-			return;
+
+	@OnEvent(value = "leaveroom")
+	public void applyLeaveRoom(SocketIOClient client, String data) {
+
+		Map<String,Object> map = JSONObject.parseObject(data,Map.class);
+		if("1".equals(map.get("key"))){
+			onLeave(client,data);
+		}else if("2".equals(map.get("key"))){
+			acceptLeaveRoom(client,map);
+		}else if("4".equals(map.get("type"))){
+			applyLeaveRoomResponse(client,map);
 		}
-		Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
-		if(userToken == null){
-			client.sendEvent(BMDataContext.BEIMI_GAMESTATUS_EVENT, "token illegal");
-			return ;
-		}
-		String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(beiMiClient.getUserid(),beiMiClient.getOrgi());
-		List<PlayUserClient> playerList = CacheHelper.getGamePlayerCacheBean().getCacheObject(roomid, beiMiClient.getOrgi());
-		PlayUserClient playUser = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(userToken.getUserid(), userToken.getOrgi());
-		for(PlayUserClient playUserClient : playerList){
-			if(playUserClient.getId().equals(beiMiClient.getUserid())){
-				continue;
-			}
-			client.sendEvent(BMDataContext.BEIMI_GAMESTATUS_EVENT, new PlayerChartMsg<Integer>(playUser.getId(),playUser.getUsername(), playUserClient.getId(),playUserClient.getUsername(), 1,"用户 ["+playUser.getUsername()+"]请求离场"));
-		}
+
 	}
 
 
-	@OnEvent(value="voteToLeaveResponse")
-	public void voteToLeaveResponse(SocketIOClient client, String data) {
+	private void acceptLeaveRoom(SocketIOClient client,Map<String,Object> map){
 
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		String token = beiMiClient.getToken();
+		if (StringUtils.isEmpty(token)) {
+			client.sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new PlayerChartMsg<String>(null, null, null, null, "-1", "illegal token"));
+			return;
+		}
+		PlayCache.put(beiMiClient.getUserid(),new OutRoom().setApplyUserId(beiMiClient.getUserid()));
+		String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
+		List<PlayUserClient> playerList = CacheHelper.getGamePlayerCacheBean().getCacheObject(roomid, beiMiClient.getOrgi());
+		PlayUserClient playUser = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
+		for (PlayUserClient playUserClient : playerList) {
+			if (playUserClient.getId().equals(beiMiClient.getUserid())) {
+				continue;
+			}
+			client.sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new PlayerChartMsg<String>(playUser.getId(), playUser.getUsername(), playUserClient.getId(), playUserClient.getUsername(), "3", "用户 [" + playUser.getUsername() + "]请求离场"));
+		}
+
+	}
+
+
+	private void applyLeaveRoomResponse(SocketIOClient client, Map<String,Object> response) {
+
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		String token = beiMiClient.getToken();
+		if (StringUtils.isEmpty(token)) {
+			client.sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new DefineMap<String,String>().put("type","-1"));
+			return;
+		}
+
+		PlayCache.put(beiMiClient.getUserid(),new OutRoom().setApplyUserId(beiMiClient.getUserid()));
+
+		OutRoom outRoom = PlayCache.get(beiMiClient.getUserid(),OutRoom.class);
+		synchronized (outRoom){
+			outRoom.getVolate().put(beiMiClient.getUserid(),(Integer)response.get("code") == 1 ? true : false);
+
+			if(outRoom.getVolate().size() < 3){
+				return;
+			}
+			for(Iterator<Boolean> it = outRoom.getVolate().values().iterator(); it.hasNext();){
+				if(!it.next()){
+					PlayCache.clear(beiMiClient.getUserid());
+					client.sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new DefineMap<String,String>().put("type","5").put("isAgree","0"));
+					return;
+				}
+			}
+			PlayCache.clear(beiMiClient.getUserid());
+			client.sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new DefineMap<String,String>().put("type","5").put("isAgree","1"));
+		}
+
+	}
+
+
+	@OnEvent(value = "forceleaveroom")
+	public void forceLeaveRoom(SocketIOClient client, String data) {
+		onLeave(client,data);
 	}
 
 
@@ -334,20 +386,6 @@ public class GameEventHandler {
 			}
 		}
 	}
-
-
-	@OnEvent(value = "forceleaveroom")
-	public void forceLeaveRoom(SocketIOClient client, String data) {
-		onLeave(client,data);
-	}
-
-	@OnEvent(value = "applyleaveroom")
-	public void applyLeaveRoom(SocketIOClient client, String data) {
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
-
-
-	}
-
 
 
 	//玩家离开

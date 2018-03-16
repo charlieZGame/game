@@ -16,7 +16,7 @@ public class BeiMiStateContext<T,S> implements StateConfigurer<T,S>{
 	}
 
 	@Override
-	public StateConfigurer<T,S> state(T state) {
+	public StateConfigurer<T,S>  state(T state) {
 		this.stateContextList.add(state) ;
  		return this;
 	}

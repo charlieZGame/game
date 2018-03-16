@@ -1709,12 +1709,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": {
-      "__uuid__": "253332ae-d11c-49fe-8060-84bc6649812e"
-    },
-    "hoverSprite": {
-      "__uuid__": "253332ae-d11c-49fe-8060-84bc6649812e"
-    },
     "clickEvents": [
       {
         "__id__": 40
@@ -1738,6 +1732,18 @@
     },
     "_N$normalSprite": {
       "__uuid__": "b88a2664-cc3c-499a-870d-cfd82911976a"
+    },
+    "_N$pressedSprite": {
+      "__uuid__": "253332ae-d11c-49fe-8060-84bc6649812e"
+    },
+    "pressedSprite": {
+      "__uuid__": "253332ae-d11c-49fe-8060-84bc6649812e"
+    },
+    "_N$hoverSprite": {
+      "__uuid__": "253332ae-d11c-49fe-8060-84bc6649812e"
+    },
+    "hoverSprite": {
+      "__uuid__": "253332ae-d11c-49fe-8060-84bc6649812e"
     },
     "_N$disabledSprite": null,
     "_N$target": {
@@ -2123,7 +2129,10 @@
     "node": {
       "__id__": 41
     },
-    "_enabled": true
+    "_enabled": true,
+    "leaveDialogprefab": {
+      "__uuid__": "a4e79670-4342-4a8c-9a81-04ba14c3089e"
+    }
   },
   {
     "__type__": "cc.Node",
@@ -2285,12 +2294,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": {
-      "__uuid__": "3d9a39ac-11bf-436f-a3e4-0d0100034864"
-    },
-    "hoverSprite": {
-      "__uuid__": "3d9a39ac-11bf-436f-a3e4-0d0100034864"
-    },
     "clickEvents": [],
     "_N$interactable": true,
     "_N$enableAutoGrayEffect": false,
@@ -2310,6 +2313,18 @@
     },
     "_N$normalSprite": {
       "__uuid__": "019a354d-18a9-4436-914f-26c95cd8b9eb"
+    },
+    "_N$pressedSprite": {
+      "__uuid__": "3d9a39ac-11bf-436f-a3e4-0d0100034864"
+    },
+    "pressedSprite": {
+      "__uuid__": "3d9a39ac-11bf-436f-a3e4-0d0100034864"
+    },
+    "_N$hoverSprite": {
+      "__uuid__": "3d9a39ac-11bf-436f-a3e4-0d0100034864"
+    },
+    "hoverSprite": {
+      "__uuid__": "3d9a39ac-11bf-436f-a3e4-0d0100034864"
     },
     "_N$disabledSprite": null,
     "_N$target": {
@@ -2476,12 +2491,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": {
-      "__uuid__": "bdd00e71-9d85-4fa9-b213-1bc718dc545d"
-    },
-    "hoverSprite": {
-      "__uuid__": "bdd00e71-9d85-4fa9-b213-1bc718dc545d"
-    },
     "clickEvents": [],
     "_N$interactable": true,
     "_N$enableAutoGrayEffect": false,
@@ -2501,6 +2510,18 @@
     },
     "_N$normalSprite": {
       "__uuid__": "1d4a062f-34ea-4de1-a9cf-aae2e0f2376f"
+    },
+    "_N$pressedSprite": {
+      "__uuid__": "bdd00e71-9d85-4fa9-b213-1bc718dc545d"
+    },
+    "pressedSprite": {
+      "__uuid__": "bdd00e71-9d85-4fa9-b213-1bc718dc545d"
+    },
+    "_N$hoverSprite": {
+      "__uuid__": "bdd00e71-9d85-4fa9-b213-1bc718dc545d"
+    },
+    "hoverSprite": {
+      "__uuid__": "bdd00e71-9d85-4fa9-b213-1bc718dc545d"
     },
     "_N$disabledSprite": null,
     "_N$target": {
@@ -3272,8 +3293,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": null,
-    "hoverSprite": null,
     "clickEvents": [
       {
         "__id__": 78
@@ -3296,6 +3315,10 @@
       "a": 255
     },
     "_N$normalSprite": null,
+    "_N$pressedSprite": null,
+    "pressedSprite": null,
+    "_N$hoverSprite": null,
+    "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 75
@@ -3553,8 +3576,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": null,
-    "hoverSprite": null,
     "clickEvents": [
       {
         "__id__": 85
@@ -3577,6 +3598,10 @@
       "a": 255
     },
     "_N$normalSprite": null,
+    "_N$pressedSprite": null,
+    "pressedSprite": null,
+    "_N$hoverSprite": null,
+    "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 82
@@ -3699,8 +3724,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": null,
-    "hoverSprite": null,
     "clickEvents": [
       {
         "__id__": 89
@@ -3723,6 +3746,10 @@
       "a": 255
     },
     "_N$normalSprite": null,
+    "_N$pressedSprite": null,
+    "pressedSprite": null,
+    "_N$hoverSprite": null,
+    "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 86
@@ -3845,8 +3872,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": null,
-    "hoverSprite": null,
     "clickEvents": [
       {
         "__id__": 93
@@ -3869,6 +3894,10 @@
       "a": 255
     },
     "_N$normalSprite": null,
+    "_N$pressedSprite": null,
+    "pressedSprite": null,
+    "_N$hoverSprite": null,
+    "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 90
@@ -5170,8 +5199,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": null,
-    "hoverSprite": null,
     "clickEvents": [
       {
         "__id__": 125
@@ -5194,6 +5221,10 @@
       "a": 255
     },
     "_N$normalSprite": null,
+    "_N$pressedSprite": null,
+    "pressedSprite": null,
+    "_N$hoverSprite": null,
+    "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 122
@@ -7638,8 +7669,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": null,
-    "hoverSprite": null,
     "clickEvents": [
       {
         "__id__": 183
@@ -7662,6 +7691,10 @@
       "a": 255
     },
     "_N$normalSprite": null,
+    "_N$pressedSprite": null,
+    "pressedSprite": null,
+    "_N$hoverSprite": null,
+    "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 180
@@ -7784,8 +7817,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": null,
-    "hoverSprite": null,
     "clickEvents": [
       {
         "__id__": 187
@@ -7808,6 +7839,10 @@
       "a": 255
     },
     "_N$normalSprite": null,
+    "_N$pressedSprite": null,
+    "pressedSprite": null,
+    "_N$hoverSprite": null,
+    "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 184
@@ -7930,8 +7965,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": null,
-    "hoverSprite": null,
     "clickEvents": [
       {
         "__id__": 191
@@ -7954,6 +7987,10 @@
       "a": 255
     },
     "_N$normalSprite": null,
+    "_N$pressedSprite": null,
+    "pressedSprite": null,
+    "_N$hoverSprite": null,
+    "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 188
@@ -8076,8 +8113,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": null,
-    "hoverSprite": null,
     "clickEvents": [
       {
         "__id__": 195
@@ -8100,6 +8135,10 @@
       "a": 255
     },
     "_N$normalSprite": null,
+    "_N$pressedSprite": null,
+    "pressedSprite": null,
+    "_N$hoverSprite": null,
+    "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 192
@@ -8222,8 +8261,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": null,
-    "hoverSprite": null,
     "clickEvents": [
       {
         "__id__": 199
@@ -8246,6 +8283,10 @@
       "a": 255
     },
     "_N$normalSprite": null,
+    "_N$pressedSprite": null,
+    "pressedSprite": null,
+    "_N$hoverSprite": null,
+    "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 196
@@ -8819,8 +8860,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": null,
-    "hoverSprite": null,
     "clickEvents": [
       {
         "__id__": 214
@@ -8843,6 +8882,10 @@
       "a": 255
     },
     "_N$normalSprite": null,
+    "_N$pressedSprite": null,
+    "pressedSprite": null,
+    "_N$hoverSprite": null,
+    "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 211
@@ -8965,8 +9008,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": null,
-    "hoverSprite": null,
     "clickEvents": [
       {
         "__id__": 218
@@ -8989,6 +9030,10 @@
       "a": 255
     },
     "_N$normalSprite": null,
+    "_N$pressedSprite": null,
+    "pressedSprite": null,
+    "_N$hoverSprite": null,
+    "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 215
@@ -9111,8 +9156,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": null,
-    "hoverSprite": null,
     "clickEvents": [
       {
         "__id__": 222
@@ -9135,6 +9178,10 @@
       "a": 255
     },
     "_N$normalSprite": null,
+    "_N$pressedSprite": null,
+    "pressedSprite": null,
+    "_N$hoverSprite": null,
+    "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 219
@@ -9257,8 +9304,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": null,
-    "hoverSprite": null,
     "clickEvents": [
       {
         "__id__": 226
@@ -9281,6 +9326,10 @@
       "a": 255
     },
     "_N$normalSprite": null,
+    "_N$pressedSprite": null,
+    "pressedSprite": null,
+    "_N$hoverSprite": null,
+    "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 223
@@ -9403,8 +9452,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": null,
-    "hoverSprite": null,
     "clickEvents": [
       {
         "__id__": 230
@@ -9427,6 +9474,10 @@
       "a": 255
     },
     "_N$normalSprite": null,
+    "_N$pressedSprite": null,
+    "pressedSprite": null,
+    "_N$hoverSprite": null,
+    "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 227
@@ -9768,8 +9819,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": null,
-    "hoverSprite": null,
     "clickEvents": [
       {
         "__id__": 240
@@ -9792,6 +9841,10 @@
       "a": 255
     },
     "_N$normalSprite": null,
+    "_N$pressedSprite": null,
+    "pressedSprite": null,
+    "_N$hoverSprite": null,
+    "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 236
@@ -9998,8 +10051,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": null,
-    "hoverSprite": null,
     "clickEvents": [
       {
         "__id__": 246
@@ -10022,6 +10073,10 @@
       "a": 255
     },
     "_N$normalSprite": null,
+    "_N$pressedSprite": null,
+    "pressedSprite": null,
+    "_N$hoverSprite": null,
+    "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 242
@@ -10228,8 +10283,6 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "pressedSprite": null,
-    "hoverSprite": null,
     "clickEvents": [
       {
         "__id__": 252
@@ -10252,6 +10305,10 @@
       "a": 255
     },
     "_N$normalSprite": null,
+    "_N$pressedSprite": null,
+    "pressedSprite": null,
+    "_N$hoverSprite": null,
+    "hoverSprite": null,
     "_N$disabledSprite": null,
     "_N$target": {
       "__id__": 248
