@@ -36,6 +36,10 @@ public class PlayerCach implements PlayerCacheBean{
         }
     }
 
+    public void destoryRoom(String roomid ,String orgi){
+        this.getInstance().remove(roomid);
+    }
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public List<PlayUserClient> getCacheObject(String key, String orgi) {
 		/*PagingPredicate<String, GameRoom> pagingPredicate = null ;

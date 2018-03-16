@@ -336,8 +336,6 @@ public class GameEngine {
 	 * 检查是否所有玩家 都已经处于就绪状态，如果所有玩家都点击了 继续开始游戏，则发送一个 ALL事件，继续游戏，
 	 * 否则，等待10秒时间，到期后如果玩家还没有就绪，就将该玩家T出去，等待新玩家加入
 	 * @param roomid
-	 * @param userid
-	 * @param orgi
 	 * @return
 	 */
 	public void restartRequest(String roomid , PlayUserClient playerUser, BeiMiClient beiMiClient , boolean opendeal){

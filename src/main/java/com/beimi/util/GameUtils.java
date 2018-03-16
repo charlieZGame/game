@@ -10,13 +10,13 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.beimi.util.cache.hazelcast.impl.PlayerCach;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.data.domain.Sort;
 
 import com.beimi.config.web.model.Game;
 import com.beimi.core.BMDataContext;
-import com.beimi.core.engine.game.ActionTaskUtils;
 import com.beimi.core.engine.game.BeiMiGame;
 import com.beimi.core.engine.game.iface.ChessGame;
 import com.beimi.core.engine.game.impl.DizhuGame;
@@ -93,19 +93,23 @@ public class GameUtils {
 				playUser = (PlayUserClient) CacheHelper.getGamePlayerCacheBean().getPlayer(userid, orgi) ;
 				CacheHelper.getGamePlayerCacheBean().delete(userid, orgi) ;
 				CacheHelper.getRoomMappingCacheBean().delete(userid, orgi) ;
-				
+				((PlayerCach)CacheHelper.getGamePlayerCacheBean()).destoryRoom(playUser.getRoomid(),playUser.getOrgi());
+
 				/**
 				 * 检查，如果房间没   ，就可以解散房间了
 				 */
-				if(playUser!= null && !StringUtils.isBlank(playUser.getRoomid())){
+			//// TODO: 2018/3/16 zcl 这个逻辑暂时去掉
+			/*	if(playUser!= null && !StringUtils.isBlank(playUser.getRoomid())){
 					GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(playUser.getRoomid(), orgi) ;
 					if(gameRoom.getMaster().equals(playUser.getId())){
-						/**
+						*//**
 						 * 解散房间，应该需要一个专门的 方法来处理，别直接删缓存了，这样不好！！！
-						 */
+						 *//*
 						BMDataContext.getGameEngine().dismissRoom(gameRoom, userid, orgi);
 					}
-				}
+				}*/
+
+
 			}
 		}
 	}
