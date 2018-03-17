@@ -24,7 +24,7 @@ public class PlayerChartMsg<T> implements Serializable {
     public PlayerChartMsg() {
     }
 
-    public PlayerChartMsg(String srcUserId, String srcUserName, String desUserId, String desUserName,String returnCode, T msg) {
+    public PlayerChartMsg(String srcUserId, String srcUserName, String desUserId, String desUserName,String type, T msg) {
 
         this.srcUserId = srcUserId;
         this.srcUserName = srcUserName;

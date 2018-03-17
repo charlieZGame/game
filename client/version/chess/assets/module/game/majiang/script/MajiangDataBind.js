@@ -4,16 +4,6 @@ cc.Class({
     extends: beiMiCommon,
 
     properties: {
-        // foo: {
-        //    default: null,      // The default value will be used only when the component attaching
-        //                           to a node for the first time
-        //    url: cc.Texture2D,  // optional, default is typeof default
-        //    serializable: true, // optional, default is true
-        //    visible: true,      // optional, default is true
-        //    displayName: 'Foo', // optional
-        //    readonly: false,    // optional, default is false
-        // },
-        // ...
         playerprefab:{
             default : null ,
             type : cc.Prefab
@@ -173,6 +163,38 @@ cc.Class({
         mask:{
             default:null ,
             type : cc.Node
+        },
+
+        //离开房间UI逻辑
+        applyLeaveNode: {
+          default: null,
+          type: cc.Node
+        },
+
+        agreeNode: {
+          default: null,
+          type: cc.Node
+        },
+
+        refusedNode: {
+          default: null,
+          type: cc.Node
+        },
+
+        doneNode: {
+          default: null,
+          type: cc.Node
+        },
+
+        leaveTipLabel: {
+          default: null,
+          type: cc.Label
+        },
+
+
+        refusedNode: {
+          default: null,
+          type: cc.Node
         }
     },
 
@@ -335,7 +357,9 @@ cc.Class({
             this.map("playeready" , this.playeready_event) ;            //玩家点击了开始游戏 ， 即准备就绪
 
             socket.on("command" , function(result){
-                cc.beimi.gamestatus = "playing" ;
+                console.log("接受command指令===result=====>",result);
+                // 我修改的
+                // cc.beimi.gamestatus = "playing" ;
                 if(self.inited == true){
                     var data = self.parse(result) ;
                     self.route(data.command)(data , self);
@@ -351,8 +375,24 @@ cc.Class({
             socket.emit("joinroom" ,JSON.stringify(param)) ;
 
             this.inited = true ;
+
+            if (this.applyLeaveNode) {
+              self.applyLeaveNode.active = false;
+            }
+            console.log("self-11-->",self);
+            //玩家手动离开房间指令接收
+            if (this.ready()) {
+              let socket = this.socket();
+              socket.on("leaveroom", function(result) {
+                console.log("接收到离开房间指令===result=====>", result);
+                console.log("self--22-->",self);
+                self.handleLeaveRoom(self,result);
+              });
+            }
         }
     },
+
+
     initdata:function(initplayer){
         /**
          * 适配屏幕尺寸
@@ -439,6 +479,7 @@ cc.Class({
          */
         //this.statusbtn.active = true ;
     },
+
     /**
      * 房卡模式下，邀请的好友人到齐了
      * @param data
@@ -1221,6 +1262,7 @@ cc.Class({
             } , 200) ;
         }
     },
+
     /**
      * 回收系统资源，用于清理资源
      * @param context
@@ -1237,6 +1279,7 @@ cc.Class({
             }
         }
     },
+
     /**
      * 按钮操作，点击 开始游戏按钮后的触发动作，进入计时，然后等待服务端推送数据和 状态机流程流转
      */
@@ -1260,6 +1303,7 @@ cc.Class({
         let readybtn = null , waitting = null , selectbtn = null , banker = null ;
         for(var i=0 ; i<object.statebtn.children.length ; i++){
             let target = object.statebtn.children[i] ;
+
             if(target.name == "readybtn"){
                 readybtn = target ;
             }else if(target.name == "waitting"){
@@ -1271,6 +1315,8 @@ cc.Class({
             }
             target.active = false ;
         };
+
+        console.log("-----exchange_state---------",state);
         switch(state){
             case "init" :
                 object.desk_tip.active = false;
@@ -1285,6 +1331,7 @@ cc.Class({
                 break;
             case "ready" :
                 waitting.active = true ;
+                console.log("-----ready---------");
                 if(cc.beimi.data!=null && cc.beimi.data.enableai == true) {
                     object.timer(object, cc.beimi.data.waittime);
                 }else{
@@ -1428,6 +1475,7 @@ cc.Class({
          */
         object.schedule(object.callback, 1, times, 0);
     },
+
     clean:function(){
         /**
          * 销毁玩家数据
@@ -1509,8 +1557,35 @@ cc.Class({
         if(this.ready()){
             let socket = this.socket();
             socket.emit("start","true");
+            this.waittingForPlayers();
         }
+
     },
+
+    handleLeaveRoom:function(object,result){
+      if (cc.beimi.user.id == result.srcUserId) {
+        return;
+      } else if( result&& result.type == 3){
+        console.log("object--22-->",object);
+        object.applyLeaveNode.active = true;
+        object.doneNode.active = false;
+        object.leaveTipLabel.string = result.msg;
+        cc.beimi.leaveUserId= result.srcUserId;
+        this.agreeNode.active = true;
+        this.refusedNode.active = true;
+      } else if(  result&&result.type == 5){
+        cc.beimi.leaveUserId="";
+        object.alert(result.msg);
+        if(result.isAgree==1){
+          object.scene(cc.beimi.gametype, this);
+        }
+      }else if(  result&& result.type == 6){
+        object.alert(result.msg||'有人强制离场，房间解散');
+        object.scene(cc.beimi.gametype, this);
+      }
+    },
+
+
     onDestroy:function(){
         // if(this.ready()) {
         //     let socket = this.socket();

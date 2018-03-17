@@ -37,14 +37,14 @@ cc.Class({
         this.initMgr();
 
     },
-    start:function(){        
+    start:function(){
         var self = this;
         var SHOW_TIME = 3000;
         var FADE_TIME = 500;
         /***
-         * 
+         *
          * 控制登录界面或者广告首屏界面显示时间
-         * 
+         *
          */
     },
     initMgr:function(){
@@ -58,9 +58,6 @@ cc.Class({
             cc.beimi.http = require("HTTP");
             cc.beimi.seckey = "beimi";
             cc.beimi.gamestatus = "none" ;
-
-
-
 
             cc.beimi.dialog = null ;   //弹出的提示对话框，  alert
 

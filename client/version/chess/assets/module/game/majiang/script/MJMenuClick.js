@@ -6,74 +6,128 @@ cc.Class({
     leaveDialogprefab: {
       default: null,
       type: cc.Prefab
+    },
+
+    //离开房间UI逻辑
+    applyLeaveNode: {
+      default: null,
+      type: cc.Node
+    },
+
+    agreeNode: {
+      default: null,
+      type: cc.Node
+    },
+
+    refusedNode: {
+      default: null,
+      type: cc.Node
+    },
+
+    doneNode: {
+      default: null,
+      type: cc.Node
+    },
+
+    leaveTipLabel: {
+      default: null,
+      type: cc.Label
+    },
+    doneLabel: {
+      default: null,
+      type: cc.Label
     }
+
   },
 
   // use this for initialization
-  onLoad: function() {},
+  onLoad: function() {
+
+  },
+
+
   onBackClick: function() {
     console.log("------要离开");
+    if(cc.beimi.gamestatus != 'playing'){
+       this.leaveRoomOnNoPlaying();
+       this.scene(cc.beimi.gametype, this);
+    }else
     if (this.leaveDialogprefab) {
       cc.beimi.openwin = cc.instantiate(this.leaveDialogprefab);
       cc.beimi.openwin.parent = this.root();
     }
   },
 
-    forceLeaveRoom : function() {
-      if (this.ready()) {
-        let socket = this.socket();
-        var param = {
-          token: cc.beimi.authorization,
-          orgi: cc.beimi.user.orgi,
-          userid: cc.beimi.user.id
-        };
-        socket.emit("forceleaveroom", JSON.stringify(param));
-        this.registercallback(this.forceLeaveRoomCallBack);
-        console.log("已发送强制退出的请求forceleaveroom", JSON.stringify(param));
-      }
-    },
-
-    forceLeaveRoomCallBack : function(result, self) {
-      console.log("强制退出请求result-->", result);
-      var data = self.parse(result);
-      if (data.result == "ok") {
-        this.closeOpenWin();
-        this.scene(cc.beimi.gametype, this);
-      } else {
-        this.closeOpenWin();
-        self.alert("强制退出被拒绝");
-      }
-    },
-
-    applyLeaveRoom : function() {
-      if (this.ready()) {
-        let socket = this.socket();
-        var param = {
-          token: cc.beimi.authorization,
-          orgi: cc.beimi.user.orgi,
-          userid: cc.beimi.user.id
-        };
-        socket.emit("applyleaveroom", JSON.stringify(param));
-        this.registercallback(this.leaveRoomCallBack);
-        console.log("已发送申请退出的请求applyLeaveRoomCallBack", JSON.stringify(param));
-      }
-    },
-
-    applyLeaveRoomCallBack : function(result, self) {
-      console.log("申请退出请求result-->", result);
-      var data = self.parse(result);
-      if (data.result == "ok") {
-        // this.closeOpenWin();
-        // this.scene(cc.beimi.gametype, this);
-      } else {
-        this.closeOpenWin();
-        self.alert("申请退出被拒绝");
-      }
+  leaveRoomOnNoPlaying: function() {
+    if (this.ready()) {
+      let socket = this.socket();
+      //1 强制退出  2 申请退出  3服务器发送有人申请退出给其他玩家  4 其他玩家投票给服务器  5投票结果给申请退出人  6 有玩家强制退出
+      // 7 房间没开始我要退出
+      var param = {
+        type: '7'
+      };
+      socket.emit("leaveroom", JSON.stringify(param));
     }
+  },
+
+  forceLeaveRoom: function() {
+    if (this.ready()) {
+      let socket = this.socket();
+      //1 强制退出  2 申请退出  3服务器发送有人申请退出给其他玩家  4 其他玩家投票给服务器  5投票结果给申请退出人  6 有玩家强制退出
+      // 7 房间没开始我要退出   
+      var param = {
+        type: '1'
+      };
+      socket.emit("leaveroom", JSON.stringify(param));
+      this.closeOpenWin();
+      this.scene(cc.beimi.gametype, this);
+    }
+  },
+
+  applyLeaveRoom: function() {
+    if (this.ready()) {
+      let socket = this.socket();
+      var param = {
+        type: '2'
+      };
+      socket.emit("leaveroom", JSON.stringify(param));
+      this.closeOpenWin();
+      this.alert("申请退出已发出请耐心等待，1分钟之内会有答复");
+    }
+  },
+
+  agreeLeaveRoom: function() {
+    if (this.ready()) {
+      let socket = this.socket();
+      var param = {
+        type: '4',
+        isAgree: "1",
+        srcUserId: cc.beimi.leaveUserId
+      };
+      socket.emit("leaveroom", JSON.stringify(param));
+      this.doneNode.active = true;
+      this.doneLabel.string = '已同意';
+      this.agreeNode.active = false;
+      this.refusedNode.active = false;
+    }
+  },
+
+  refuseLeaveRoom: function() {
+    if (this.ready()) {
+      let socket = this.socket();
+      var param = {
+        type: '4',
+        isAgree: "0",
+        srcUserId: cc.beimi.leaveUserId
+      };
+      socket.emit("leaveroom", JSON.stringify(param));
+      this.doneNode.active = true;
+      this.doneLabel.string = '已拒绝';
+      this.agreeNode.active = false;
+      this.refusedNode.active = false;
+    }
+  },
 
 
-  // called every frame, uncomment this function to activate update callback
-  // update: function (dt) {
 
-  // },
 });

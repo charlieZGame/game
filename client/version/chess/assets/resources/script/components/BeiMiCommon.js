@@ -66,6 +66,7 @@ cc.Class({
 
         cc.beimi.socket.emit("gamestatus" , JSON.stringify(param));
         cc.beimi.socket.on("gamestatus" , function(result){
+
             if(result!=null) {
                 var data = self.parse(result) ;
                 if(cc.beimi.extparams !=null){
@@ -102,6 +103,8 @@ cc.Class({
                 cc.beimi.room_callback(result , self);
             }
         });
+
+      
         return cc.beimi.socket ;
     },
     disconnect:function(){
@@ -283,6 +286,7 @@ cc.Class({
             }
         }
     },
+
     route:function(command){
         return cc.beimi.routes[command] || function(){};
     },

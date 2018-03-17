@@ -1,6 +1,7 @@
 
 package com.beimi.util.server.handler;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +10,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.beimi.model.DefineMap;
 import com.beimi.model.OutRoom;
 import com.beimi.model.PlayCache;
-import com.beimi.util.rules.model.PlayerChartMsg;
+import com.beimi.util.rules.model.*;
+import com.beimi.web.model.*;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,13 +25,6 @@ import com.beimi.util.GameUtils;
 import com.beimi.util.UKTools;
 import com.beimi.util.cache.CacheHelper;
 import com.beimi.util.client.NettyClients;
-import com.beimi.util.rules.model.GameStatus;
-import com.beimi.util.rules.model.SearchRoom;
-import com.beimi.util.rules.model.SearchRoomResult;
-import com.beimi.web.model.GamePlayway;
-import com.beimi.web.model.GameRoom;
-import com.beimi.web.model.PlayUserClient;
-import com.beimi.web.model.Token;
 import com.beimi.web.service.repository.es.PlayUserClientESRepository;
 import com.beimi.web.service.repository.jpa.GameRoomRepository;
 import com.beimi.web.service.repository.jpa.PlayUserClientRepository;
@@ -110,26 +105,59 @@ public class GameEventHandler {
 	public void applyLeaveRoom(SocketIOClient client, String data) {
 		try {
 
+			long tid = System.currentTimeMillis();
 			logger.info("data:{} 离场请求数据信息",data);
 			Map<String, Object> map = JSONObject.parseObject(data, Map.class);
 			BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
 			logger.info("userId:{},room:{} 离场请求用户信息",beiMiClient.getUserid(),beiMiClient.getRoom(),beiMiClient.getToken());
 			if ("1".equals(map.get("type"))) {
 				logger.info("userId:{},room:{} 强制离场",beiMiClient.getUserid(),beiMiClient.getRoom(),beiMiClient.getToken());
-				onLeave(client, data);
 				//// TODO: 2018/3/16  标记用户是不友好用户 这个逻辑以后处理
-				signUserUnfriendly();
+				//signUserUnfriendly(tid,client,data);
+				onLeave(client, data);
+				onCommand(client,data);
 			} else if ("2".equals(map.get("type"))) {
 				logger.info("userId:{},room:{} 申请离场",beiMiClient.getUserid(),beiMiClient.getRoom(),beiMiClient.getToken());
-				acceptLeaveRoom(client, map);
+				acceptLeaveRoom(tid,client, map);
 			} else if ("4".equals(map.get("type"))) {
 				logger.info("userId:{},room:{} 得到用户投票相应 userID:{},投票结果：result:{}",beiMiClient.getUserid(),data);
-				applyLeaveRoomResponse(client, map);
+				if(applyLeaveRoomResponse(tid,client, map)){
+					onLeaveL(client,data);
+				}
+			}else if("7".equals(map.get("type"))){
+				userNormalExist(beiMiClient);
 				onLeaveL(client,data);
 			}
 		} catch (RuntimeException e) {
 			logger.error("请求退出异常", e);
 			throw e;
+		}
+	}
+
+	private void userNormalExist(BeiMiClient beiMiClient) {
+
+		String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
+		GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, beiMiClient.getOrgi());
+		List<PlayUserClient> playUserClients = CacheHelper.getGamePlayerCacheBean().getCacheObject(gameRoom.getId(), beiMiClient.getOrgi());
+
+		PlayUserClient temp = null;
+		List<PlayUserClient> playUsers = new ArrayList<PlayUserClient>();
+		for (PlayUserClient playUserClient : playUserClients) {
+			if (playUserClient.getId().equals(beiMiClient.getUserid())) {
+				continue;
+			}
+			playUsers.add(playUserClient);
+		}
+		GamePlayers gamePlayers = new GamePlayers(gameRoom.getPlayers(), playUsers, BMDataContext.BEIMI_PLAYERS_EVENT);
+
+		for (PlayUserClient playUserClient : playUserClients) {
+			if (playUserClient.getId().equals(beiMiClient.getUserid())) {
+				continue;
+			}
+			logger.info(" 人数未达到发出解散 userId:{}", playUserClient.getId());
+			BeiMiClient tmpClient = NettyClients.getInstance().getClient(playUserClient.getId());
+			tmpClient.getClient().sendEvent(BMDataContext.BEIMI_MESSAGE_EVENT, gamePlayers);
+
 		}
 	}
 
@@ -139,7 +167,7 @@ public class GameEventHandler {
 	 * @param client
 	 * @param map
      */
-	private void acceptLeaveRoom(SocketIOClient client,Map<String,Object> map){
+	private void acceptLeaveRoom(Long tid,SocketIOClient client,Map<String,Object> map){
 
 		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
 		String token = beiMiClient.getToken();
@@ -151,11 +179,14 @@ public class GameEventHandler {
 		String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
 		List<PlayUserClient> playerList = CacheHelper.getGamePlayerCacheBean().getCacheObject(roomid, beiMiClient.getOrgi());
 		PlayUserClient playUser = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
+		logger.info("tid:{} 准备发起投票 playerList:{}",tid,playerList.size());
 		for (PlayUserClient playUserClient : playerList) {
 			if (playUserClient.getId().equals(beiMiClient.getUserid())) {
 				continue;
 			}
-			client.sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new PlayerChartMsg<String>(playUser.getId(), playUser.getUsername(), playUserClient.getId(), playUserClient.getUsername(), "3", "用户 [" + playUser.getUsername() + "]请求离场"));
+			logger.info("tid:{} 发出投票请求 userId:{}",tid,playUserClient.getId());
+			BeiMiClient tmpClient = NettyClients.getInstance().getClient(playUserClient.getId());
+			tmpClient.getClient().sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new PlayerChartMsg<String>(playUser.getId(), playUser.getUsername(), playUserClient.getId(), playUserClient.getUsername(), "3", "用户 [" + playUser.getUsername() + "]请求离场"));
 		}
 
 	}
@@ -166,33 +197,47 @@ public class GameEventHandler {
 	 * @param client
 	 * @param response
      */
-	private void applyLeaveRoomResponse(SocketIOClient client, Map<String,Object> response) {
+	private boolean applyLeaveRoomResponse(long tid,SocketIOClient client, Map<String,Object> response) {
 
 		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
 		String token = beiMiClient.getToken();
 		if (StringUtils.isEmpty(token)) {
 			client.sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new DefineMap<String, String>().putData("type", "-1"));
-			return;
+			return false;
 		}
 
 		PlayCache.put(beiMiClient.getUserid(), new OutRoom().setApplyUserId(beiMiClient.getUserid()));
 
 		OutRoom outRoom = PlayCache.get((String)response.get("srcUserId"), OutRoom.class);
+		logger.info("outRoom:{} 信息",outRoom);
 		synchronized (outRoom) {
-			outRoom.getVolate().put(beiMiClient.getUserid(), (Integer) response.get("code") == 1 ? true : false);
-
+			outRoom.getVolate().put(beiMiClient.getUserid(), "1".equals(response.get("isAgree")) ? true : false);
+			logger.info("outRoomSize:{} 信息",outRoom.getVolate().size());
 			if (outRoom.getVolate().size() < 3) {
-				return;
+				logger.info("outRoomFalse:{} 信息",false);
+				return false;
 			}
+			logger.info("outRoomSize:{} 够三个",outRoom.getVolate().size());
 			for (Iterator<Boolean> it = outRoom.getVolate().values().iterator(); it.hasNext(); ) {
 				if (!it.next()) {
+					logger.info("outRoom :{} 有未赞成的用户",outRoom.getVolate().size());
 					PlayCache.clear(beiMiClient.getUserid());
-					client.sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new DefineMap<String, String>().putData("type", "5").putData("isAgree", "0"));
-					return;
+					BeiMiClient tmpClient = NettyClients.getInstance().getClient((String)response.get("srcUserId"));
+					tmpClient.getClient().sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new DefineMap<String, String>().putData("type", "5").putData("isAgree", "0").putData("msg","小伙伴让我告诉你,再玩会呗!"));
+					return false;
 				}
 			}
 			PlayCache.clear(beiMiClient.getUserid());
-			client.sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new DefineMap<String, String>().putData("type", "5").putData("isAgree", "1"));
+			PlayUserClient playUser = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
+			List<PlayUserClient> playerList = CacheHelper.getGamePlayerCacheBean().getCacheObject(playUser.getRoomid(), beiMiClient.getOrgi());
+			logger.info("tid:{} 准备发起解散 playerList:{}",tid,playerList.size());
+			for (PlayUserClient playUserClient : playerList) {
+				logger.info("tid:{} 发出解散 userId:{}", tid, playUserClient.getId());
+				BeiMiClient tmpClient = NettyClients.getInstance().getClient(playUserClient.getId());
+				tmpClient.getClient().sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new DefineMap<String, String>().putData("type", "5").putData("isAgree", "1").putData("msg", "小伙伴都同意解散房间"));
+			}
+
+			return true;
 		}
 	}
 
@@ -203,8 +248,19 @@ public class GameEventHandler {
 	}
 
 	
-	private void signUserUnfriendly(){
-		
+	private void signUserUnfriendly(long tid,SocketIOClient client, String data) {
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
+		List<PlayUserClient> playerList = CacheHelper.getGamePlayerCacheBean().getCacheObject(beiMiClient.getRoom(), beiMiClient.getOrgi());
+		PlayUserClient playUser = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
+		logger.info("tid:{} 玩家强制离场 playerList:{}", tid, playerList.size());
+		for (PlayUserClient playUserClient : playerList) {
+			logger.info("tid:{} 玩家强制离场 userId:{}", tid, playUserClient.getId());
+			BeiMiClient tmpClient = NettyClients.getInstance().getClient(playUserClient.getId());
+			tmpClient.getClient().sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new PlayerChartMsg<String>(playUser.getId(), playUser.getUsername(), playUserClient.getId(), playUserClient.getUsername(), "6", "玩家强制离场"));
+		}
+
+
 	}
 
 

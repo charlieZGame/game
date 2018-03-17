@@ -1997,11 +1997,11 @@ if(!cc.sys.isNative){
           };
           this.ws.onmessage = function(ev){
             self.onData(ev.data);
-            console.log("websocket 返回的是成功数据---------------------------ev.data-->",ev.data);
+            console.info("websocket 返回的是成功数据---------------------------ev.data-->",ev.data);
           };
           this.ws.onerror = function(e){
             self.onError('websocket error', e);
-            console.log("websocket 返回的是失败数据-error-->",ev.data);
+            console.error("websocket 返回的是失败数据-error-->",ev.data);
           };
         };
 
@@ -2061,9 +2061,9 @@ if(!cc.sys.isNative){
                   if (BrowserWebSocket) {
                     // TypeError is thrown when passing the second argument on Safari
                     self.ws.send(data);
-                    console.log("BrowserWebSocket====给服务器发送请求============>",JSON.stringify(data));
+                    console.info("BrowserWebSocket====给服务器发送请求============>",JSON.stringify(data));
                   } else {
-                    console.log("非BrowserWebSocket====给服务器发送请求============>",JSON.stringify(data),JSON.stringify(opts));
+                    console.info("非BrowserWebSocket====给服务器发送请求============>",JSON.stringify(data),JSON.stringify(opts));
                     self.ws.send(data, opts);
                   }
                 } catch (e){

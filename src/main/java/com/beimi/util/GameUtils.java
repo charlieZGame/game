@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import com.beimi.util.cache.hazelcast.impl.PlayerCach;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang.StringUtils;
+import org.elasticsearch.common.util.CollectionUtils;
 import org.springframework.data.domain.Sort;
 
 import com.beimi.config.web.model.Game;
@@ -90,10 +91,20 @@ public class GameUtils {
 			if(playUser!=null && isNeedClean){
 				//playUser = (PlayUserClient) CacheHelper.getGamePlayerCacheBean().getPlayer(userid, orgi) ;
 				//// TODO: 2018/3/13 ZCL
-				playUser = (PlayUserClient) CacheHelper.getGamePlayerCacheBean().getPlayer(userid, orgi) ;
 				CacheHelper.getGamePlayerCacheBean().delete(userid, orgi) ;
 				CacheHelper.getRoomMappingCacheBean().delete(userid, orgi) ;
-				((PlayerCach)CacheHelper.getGamePlayerCacheBean()).destoryRoom(playUser.getRoomid(),playUser.getOrgi());
+				List<PlayUserClient> players = CacheHelper.getGamePlayerCacheBean().getCacheObject(playUser.getRoomid(), playUser.getOrgi()) ;
+
+				if(players != null && players.size() == 0){
+					return ;
+				}
+				PlayUserClient temp = null;
+				for(PlayUserClient playUserClient : players) {
+					if (playUserClient.getId().equals(playUser.getId())) {
+						temp = playUserClient;
+					}
+				}
+				players.remove(temp);
 
 				/**
 				 * 检查，如果房间没   ，就可以解散房间了
