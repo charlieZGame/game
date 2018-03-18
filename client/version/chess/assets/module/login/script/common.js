@@ -19,6 +19,7 @@ cc.Class({
 
 
     login:function(){
+         cc.beimi.audio.playUiSound();
         if(!this.useragreement.active){
             this.alert("请先同意用户协议，再登录");
           return;

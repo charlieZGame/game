@@ -53,7 +53,7 @@ public class CreateSelectTask extends AbstractTask implements BeiMiGameTask{
 				for(Player ply : board.getPlayers()){
 					if(ply.getPlayuser().equals(player.getId())){
 						SelectColor color = new SelectColor( board.getBanker(), player.getId()) ;	
-						color.setColor(GameUtils.selectColor(ply.getCards()));
+						color.setColor(GameUtils.selectColor(ply.getCardsArray()));
 						ActionTaskUtils.sendEvent("selectresult" , color , gameRoom);
 						
 						ply.setColor(color.getColor()); 

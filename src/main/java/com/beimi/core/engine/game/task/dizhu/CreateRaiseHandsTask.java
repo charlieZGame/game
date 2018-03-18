@@ -49,9 +49,9 @@ public class CreateRaiseHandsTask extends AbstractTask implements ValueWithExpir
 				board.setLasthands(lastHands);
 				
 				board.setNextplayer(new NextPlayer(player.getPlayuser(), false));
-				player.setCards(ArrayUtils.addAll(player.getCards(), lastHands)) ;//翻底牌 
-				Arrays.sort(player.getCards());									  //重新排序
-				player.setCards(GameUtils.reverseCards(player.getCards()));		  //从大到小 倒序
+				player.setCards(ArrayUtils.addAll(player.getCardsArray(), lastHands)) ;//翻底牌
+				Arrays.sort(player.getCardsArray());									  //重新排序
+				player.setCards(GameUtils.reverseCards(player.getCardsArray()));		  //从大到小 倒序
 				lastHandsPlayer = player ;
 				break ;
 			}

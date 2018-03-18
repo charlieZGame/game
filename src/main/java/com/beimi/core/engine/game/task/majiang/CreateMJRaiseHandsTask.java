@@ -46,7 +46,7 @@ public class CreateMJRaiseHandsTask extends AbstractTask implements ValueWithExp
 			}
 			if(!player.isSelected()){
 				SelectColor color = new SelectColor( board.getBanker(), player.getPlayuser()) ;
-				color.setColor(GameUtils.selectColor(player.getCards()));
+				color.setColor(GameUtils.selectColor(player.getCardsArray()));
 				ActionTaskUtils.sendEvent("selectresult" , color , gameRoom);
 				player.setColor(color.getColor()); 
 				player.setSelected(true);break ;

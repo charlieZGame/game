@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.alibaba.fastjson.JSONObject;
 import com.beimi.config.web.model.Game;
 import com.beimi.core.BMDataContext;
 import com.beimi.core.engine.game.task.AbstractTask;
@@ -139,6 +140,7 @@ public class ActionTaskUtils {
 	 */
 	public static void sendEvent(PlayUserClient playerUser  , Message message){
 		if(online(playerUser.getId() , playerUser.getOrgi())){
+			System.out.println(JSONObject.toJSONString(message));
 			NettyClients.getInstance().sendGameEventMessage(playerUser.getId(), BMDataContext.BEIMI_MESSAGE_EVENT , message);
 		}
 	}

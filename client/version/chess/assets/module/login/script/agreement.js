@@ -32,17 +32,19 @@ cc.Class({
     },
 
     onAgreement:function(){
-
+     cc.beimi.audio.playUiSound();
       this.user_agreement.active = !this.isAgreement;
       this.isAgreement = !this.isAgreement;
         console.log("onAgreement---------",this.user_agreement.active );
     },
 
     showAgreement:function(){
+      cc.beimi.audio.playUiSound();
       this.agreement_dialog.active = true;
     },
 
     hideAgreement:function(){
+      cc.beimi.audio.playUiSound();
       this.agreement_dialog.active = false;
     },
 

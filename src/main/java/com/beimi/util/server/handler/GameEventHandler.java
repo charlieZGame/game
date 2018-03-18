@@ -114,8 +114,8 @@ public class GameEventHandler {
 				logger.info("userId:{},room:{} 强制离场",beiMiClient.getUserid(),beiMiClient.getRoom(),beiMiClient.getToken());
 				//// TODO: 2018/3/16  标记用户是不友好用户 这个逻辑以后处理
 				//signUserUnfriendly(tid,client,data);
+				signUserUnfriendly(tid,client,data);
 				onLeave(client, data);
-				onCommand(client,data);
 			} else if ("2".equals(map.get("type"))) {
 				logger.info("userId:{},room:{} 申请离场",beiMiClient.getUserid(),beiMiClient.getRoom(),beiMiClient.getToken());
 				acceptLeaveRoom(tid,client, map);
@@ -241,25 +241,26 @@ public class GameEventHandler {
 		}
 	}
 
+/*
 
 	@OnEvent(value = "forceleaveroom")
-	public void forceLeaveRoom(SocketIOClient client, String data) {
-		onLeave(client,data);
+	public void forceLeaveRoom(BeiMiClient beiMiClient , String data) {
+		List<PlayUserClient> playerList = CacheHelper.getGamePlayerCacheBean().getCacheObject(beiMiClient.getRoom(), beiMiClient.getOrgi());
+		tmpClient.getClient().sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new DefineMap<String, String>().putData("type", "5").putData("isAgree", "0").putData("msg","小伙伴让我告诉你,再玩会呗!"));
 	}
+*/
 
 	
 	private void signUserUnfriendly(long tid,SocketIOClient client, String data) {
 		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
 		String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
-		List<PlayUserClient> playerList = CacheHelper.getGamePlayerCacheBean().getCacheObject(beiMiClient.getRoom(), beiMiClient.getOrgi());
-		PlayUserClient playUser = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
+		List<PlayUserClient> playerList = CacheHelper.getGamePlayerCacheBean().getCacheObject(roomid, beiMiClient.getOrgi());
 		logger.info("tid:{} 玩家强制离场 playerList:{}", tid, playerList.size());
 		for (PlayUserClient playUserClient : playerList) {
 			logger.info("tid:{} 玩家强制离场 userId:{}", tid, playUserClient.getId());
 			BeiMiClient tmpClient = NettyClients.getInstance().getClient(playUserClient.getId());
-			tmpClient.getClient().sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new PlayerChartMsg<String>(playUser.getId(), playUser.getUsername(), playUserClient.getId(), playUserClient.getUsername(), "6", "玩家强制离场"));
+			tmpClient.getClient().sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new DefineMap<String, String>().putData("type", "6"));
 		}
-
 
 	}
 

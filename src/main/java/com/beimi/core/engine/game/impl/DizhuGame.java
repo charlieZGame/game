@@ -57,14 +57,14 @@ public class DizhuGame implements ChessGame{
 		}
 		for(int i = 0 ; i<gameRoom.getCardsnum()*gameRoom.getPlayers(); i++){
 			int pos = i%players.length ; 
-			players[pos].getCards()[i/players.length] = cards[i] ;
+			players[pos].getCardsArray()[i/players.length] = cards[i] ;
 			if(i == board.getPosition()){
 				players[pos].setRandomcard(true);		//起到地主牌的人
 			}
 		}
 		for(Player tempPlayer : players){
-			Arrays.sort(tempPlayer.getCards());
-			tempPlayer.setCards(GameUtils.reverseCards(tempPlayer.getCards()));
+			Arrays.sort(tempPlayer.getCardsArray());
+			tempPlayer.setCards(GameUtils.reverseCards(tempPlayer.getCardsArray()));
 		}
 		board.setRoom(gameRoom.getId());
 		Player tempbanker = players[0];

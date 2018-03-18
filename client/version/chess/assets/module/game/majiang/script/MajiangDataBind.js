@@ -318,6 +318,7 @@ cc.Class({
                 this.initgame();
             }
         }
+          cc.beimi.audio.playBGM("bgFight.mp3");
     },
     initgame:function(){
         let self = this ;
@@ -357,7 +358,7 @@ cc.Class({
             this.map("playeready" , this.playeready_event) ;            //玩家点击了开始游戏 ， 即准备就绪
 
             socket.on("command" , function(result){
-                console.log("接受command指令===result=====>",result);
+                console.log("接受command指令===result=====>",JSON.stringify(result));
                 // 我修改的
                 // cc.beimi.gamestatus = "playing" ;
                 if(self.inited == true){
@@ -379,14 +380,33 @@ cc.Class({
             if (this.applyLeaveNode) {
               self.applyLeaveNode.active = false;
             }
-            console.log("self-11-->",self);
             //玩家手动离开房间指令接收
             if (this.ready()) {
-              let socket = this.socket();
               socket.on("leaveroom", function(result) {
                 console.log("接收到离开房间指令===result=====>", result);
-                console.log("self--22-->",self);
-                self.handleLeaveRoom(self,result);
+                let resultObj=self.parse(result);
+                if (cc.beimi.user.id == result.srcUserId) {
+                  return;
+                } else if(resultObj.type == 3||resultObj.type == "3"){
+                  console.log("-------handleLeaveRoom---2222---");
+                  self.applyLeaveNode.active = true;
+                  self.doneNode.active = false;
+                  self.leaveTipLabel.string = resultObj.msg;
+                  cc.beimi.leaveUserId= resultObj.srcUserId;
+                  self.agreeNode.active = true;
+                  self.refusedNode.active = true;
+                } else if( resultObj!=null&&(resultObj.type == 5 || resultObj.type == "5")){
+                  cc.beimi.leaveUserId="";
+                  self.alert(resultObj.msg);
+                  if(resultObj.isAgree==1){
+                    self.scene(cc.beimi.gametype, this);
+                  }
+                }else if(result!=null&& (resultObj.type == 6 ||resultObj.type =="6")){
+                  self.alert(resultObj.msg||'有人强制离场，房间解散');
+                  self.scene(cc.beimi.gametype, self);
+                }else {
+                    console.log("-------handleLeaveRoom---没对应结果---");
+                }
               });
             }
         }
@@ -1029,11 +1049,13 @@ cc.Class({
 
 
         var temp_player = data.player ;
+        console.log("编码cards之前===》",temp_player.cards);
         var cards = context.decode(temp_player.cards);
+        console.error("编码cards之后===》",cards);
 
         setTimeout(function(){
             context.calcdesc_cards(context , 136 , data.deskcards) ;
-        } , 0) ;
+        } , 0);
         var groupNums = 0 ;
         for(var times = 0 ; times < 4 ; times++){
             context.initMjCards(groupNums , context , cards , temp_player.banker) ;
@@ -1562,28 +1584,43 @@ cc.Class({
 
     },
 
-    handleLeaveRoom:function(object,result){
-      if (cc.beimi.user.id == result.srcUserId) {
-        return;
-      } else if( result&& result.type == 3){
-        console.log("object--22-->",object);
-        object.applyLeaveNode.active = true;
-        object.doneNode.active = false;
-        object.leaveTipLabel.string = result.msg;
-        cc.beimi.leaveUserId= result.srcUserId;
-        this.agreeNode.active = true;
-        this.refusedNode.active = true;
-      } else if(  result&&result.type == 5){
-        cc.beimi.leaveUserId="";
-        object.alert(result.msg);
-        if(result.isAgree==1){
-          object.scene(cc.beimi.gametype, this);
-        }
-      }else if(  result&& result.type == 6){
-        object.alert(result.msg||'有人强制离场，房间解散');
-        object.scene(cc.beimi.gametype, this);
-      }
-    },
+    // handleLeaveRoom:function(object,result){
+    //   console.log("-------handleLeaveRoom-----0000----",result,cc.beimi.user.id)
+    //   console.log("-------handleLeaveRoom-----0333----",result.type);
+    //          console.log(result.type == "3");
+    //            console.log("-------handleLeaveRoom-----0444----");
+    //            console.log(result.type == "4");
+    //              console.log("-------handleLeaveRoom-----0555----");
+    //              console.log(result.type == "5");
+    //                console.log("-------handleLeaveRoom-----0666----");
+    //                console.log(result.type == "6");
+    //   if (cc.beimi.user.id == result.srcUserId) {
+    //       console.log("-------handleLeaveRoom-----1111---");
+    //     return;
+    //   } else if(result.type == 3||result.type == "3"){
+    //     console.log("-------handleLeaveRoom---2222---");
+    //     console.log("object--22-->",object);
+    //     object.applyLeaveNode.active = true;
+    //     object.doneNode.active = false;
+    //     object.leaveTipLabel.string = result.msg;
+    //     cc.beimi.leaveUserId= result.srcUserId;
+    //     this.agreeNode.active = true;
+    //     this.refusedNode.active = true;
+    //   } else if( result!=null&&(result.type == 5 || result.type == "5")){
+    //     console.log("-------handleLeaveRoom---333---");
+    //     cc.beimi.leaveUserId="";
+    //     object.alert(result.msg);
+    //     if(result.isAgree==1){
+    //       object.scene(cc.beimi.gametype, this);
+    //     }
+    //   }else if(result!=null&& (result.type == 6 ||result.type =="6")){
+    //       console.log("-------handleLeaveRoom---444---");
+    //     object.alert(result.msg||'有人强制离场，房间解散');
+    //     object.scene(cc.beimi.gametype, this);
+    //   }else {
+    //       console.log("-------handleLeaveRoom---555---");
+    //   }
+    // },
 
 
     onDestroy:function(){

@@ -313,9 +313,11 @@
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
-					<encoding>UTF-8</encoding>
+					<compilerArguments>
+						<bootclasspath>C:/Java/jdk1.8.0_101/jre/lib/rt.jar;C:/Java/jdk1.8.0_101/jre/lib/jce.jar</bootclasspath>
+					</compilerArguments>
+					<source>1.8</source>
+					<target>1.8</target>
 				</configuration>
 			</plugin>
 

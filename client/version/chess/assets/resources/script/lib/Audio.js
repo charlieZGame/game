@@ -15,7 +15,7 @@ cc.Class({
         bgVolume:1.0,           // 背景音量
 
         deskVolume:1.0,         //   房间 房间音量
-        
+
         bgAudioID:-1            //   背景 音乐  id
     },
 
@@ -23,15 +23,15 @@ cc.Class({
     init: function () {
         var t = cc.sys.localStorage.getItem("bgVolume");
         if(t != null){
-            this.bgVolume = parseFloat(t);    
+            this.bgVolume = parseFloat(t);
         }
-        
+
         var t = cc.sys.localStorage.getItem("deskVolume");
 
         if(t != null){
-            this. deskVolume = parseFloat(t);    
+            this. deskVolume = parseFloat(t);
         }
-        
+
         cc.game.on(cc.game.EVENT_HIDE, function () {
             cc.audioEngine.pauseAll();
         });
@@ -40,15 +40,17 @@ cc.Class({
         });
     },
 
+
+
     // called every frame, uncomment this function to activate update callback
     // update: function (dt) {
 
     // },
-    
+
     getUrl:function(url){
         return cc.url.raw("resources/sounds/" + url);
     },
-    
+
     playBGM:function(url){
         var audioUrl = this.getUrl(url);
         if(this.bgAudioID >= 0){
@@ -56,24 +58,27 @@ cc.Class({
         }
         this.bgAudioID = cc.audioEngine.play(audioUrl,true,this.bgVolume);
     },
-    
+
     playSFX:function(url){
         var audioUrl = this.getUrl(url);
-        if(this.sfxVolume > 0){
-            var audioId = cc.audioEngine.play(audioUrl,false,this.deskVolume);    
+        if(this.deskVolume > 0){
+            var audioId = cc.audioEngine.play(audioUrl,false,this.deskVolume);
         }
     },
-    
+
     setSFXVolume:function(v){
-        if(this.sfxVolume != v){
+        if(this.deskVolume != v){
             cc.sys.localStorage.setItem("deskVolume",v);
             this.deskVolume = v;
         }
     },
+
+
     getState:function(){
         return cc.audioEngine.getState(this.bgAudioID);
     },
     setBGMVolume:function(v,force){
+        console.log("------setBGMVolume----000--v--", v );
         if(this.bgAudioID >= 0){
             if(v > 0 && cc.audioEngine.getState(this.bgAudioID) === cc.audioEngine.AudioState.PAUSED){
                 cc.audioEngine.resume(this.bgAudioID);
@@ -83,15 +88,21 @@ cc.Class({
         }
         if(this.bgVolume != v || force){
             cc.sys.localStorage.setItem("bgVolume",v);
-            this.bgmVolume = v;
+            this.bgVolume = v;
             cc.audioEngine.setVolume(this.bgAudioID,v);
         }
+
+        console.log("------setBGMVolume--------",  this.bgVolume );
     },
-    
+
+    playUiSound:function(){
+      this.playSFX("ui_click.mp3");
+    },
+
     pauseAll:function(){
         cc.audioEngine.pauseAll();
     },
-    
+
     resumeAll:function(){
         cc.audioEngine.resumeAll();
     }

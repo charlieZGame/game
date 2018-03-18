@@ -2,15 +2,21 @@ package com.beimi.web.handler;
 
 import com.alibaba.fastjson.JSONObject;
 import com.beimi.model.GameResponse;
+import com.beimi.web.handler.wechart.WChartLoginHandler;
+import com.beimi.web.model.ResultData;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -20,7 +26,8 @@ import java.util.Map;
  * Created by zhengchenglei on 2018/3/15.
  */
 @Controller
-@RequestMapping("/wchartLogin")
+//@RequestMapping("/wchartLogin")
+//@RequestMapping("/login")
 public class WLoginController extends Handler {
 
     private String loginCheckUrl = "http://oauth.anysdk.com/api/User/LoginOauth/";
@@ -30,52 +37,41 @@ public class WLoginController extends Handler {
     private int timeOut = 30000;
 
     private static final String userAgent = "px v1.0";
+    @Autowired
+    WChartLoginHandler loginHandler;
 
     private Logger logger = LoggerFactory.getLogger(WLoginController.class);
 
 
     @ResponseBody
-    @RequestMapping({"check"})
-    public boolean check(HttpServletRequest request, HttpServletResponse response) {
+    //@RequestMapping("/check")
+    public ResponseEntity<ResultData> check(HttpServletRequest request, HttpServletResponse response) {
         long tid = System.currentTimeMillis();
         try {
-            Map params = request.getParameterMap();
+            Map<String, String[]> params = request.getParameterMap();
             String validateResponse = paramValidate(params);
             if (StringUtils.isNotEmpty(validateResponse)) {
                 logger.error("tid:{} wechart user login failue. userInfo:{} reason:{}",tid,JSONObject.toJSONString(params),validateResponse);
-                sendToClient(response, GameResponse.gameErrorResponse(validateResponse,null));
-                return false;
+                ResultData resultData = new ResultData(false,"request parameter illegal",null);
+                return new ResponseEntity<>(resultData , HttpStatus.OK);
             }
 
-            String queryString = getQueryString(request);
+           // String openId = loginHandler.getOpenId((String)(params.get("uapi_key")[0]),(String)(params.get("uapi_secret")[0]),(String)(params.get("code")[0]),this);
+            String openId = loginHandler.getOpenIdByServer();
 
-            URL url = new URL(this.loginCheckUrl);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestProperty("User-Agent", "px v1.0");
-            conn.setReadTimeout(this.timeOut);
-            conn.setConnectTimeout(this.connectTimeOut);
-            conn.setRequestMethod("POST");
-            conn.setDoInput(true);
-            conn.setDoOutput(true);
+            logger.info("获取OPENID 信息 openId:{}",openId);
 
-            OutputStream os = conn.getOutputStream();
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-            writer.write(queryString);
-            writer.flush();
-            tryClose(writer);
-            tryClose(os);
-            conn.connect();
+            ResultData resultData = loginHandler.getUserInfo(openId,request);
 
-            InputStream is = conn.getInputStream();
-            String result = stream2String(is);
-            sendToClient(response, new GameResponse<String>(1,"OK",result));
-            return true;
+            return new ResponseEntity<ResultData>(resultData, HttpStatus.OK);
+
         } catch (Exception e) {
             logger.error("tid:{} wechart login failed",tid,e);
             e.printStackTrace();
-            sendToClient(response, GameResponse.gameErrorResponse(e.getMessage(),null));
+            ResultData resultData = new ResultData(false,e.getMessage(),null);
+            return new ResponseEntity<>(resultData , HttpStatus.OK);
         }
-        return false;
+
     }
 
 
@@ -85,14 +81,17 @@ public class WLoginController extends Handler {
      * @return
      */
     private String paramValidate(Map<String, String[]> params) {
-        if (!params.containsKey("channel")) {
+        if (!params.containsKey("channel") || params.get("channel") == null ||  params.get("channel").length <= 0) {
             return "channel can't be null";
         }
-        if (!params.containsKey("uapi_key")) {
+        if (!params.containsKey("uapi_key") || params.get("uapi_key") == null ||  params.get("uapi_key").length <= 0) {
             return "uapi key can't be null";
         }
-        if(!params.containsKey("uapi_secret") ){
+        if(!params.containsKey("uapi_secret")|| params.get("uapi_secret") == null ||  params.get("uapi_secret").length <= 0 ){
             return "uapi_secret can't be null";
+        }
+        if(!params.containsKey("code") ||  params.get("code") == null || params.get("code").length <= 0 ){
+            return "code is null";
         }
         return null;
     }

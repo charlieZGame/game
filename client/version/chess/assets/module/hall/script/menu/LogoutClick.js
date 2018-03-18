@@ -20,6 +20,7 @@ cc.Class({
 
     },
     onClick:function(){
+        cc.beimi.audio.playUiSound();
         this.logout();
         this.scene("login", this) ;
     }

@@ -25,7 +25,7 @@ cc.Class({
     },
     onClick:function(){
         let self = this ;
-
+        cc.beimi.audio.playUiSound();
         var selectPlayway = this.getCommon("SelectPlayway");
 
         let thisplayway = this.playway.getComponent("Playway");
@@ -45,8 +45,4 @@ cc.Class({
         },200);
     }
 
-    // called every frame, uncomment this function to activate update callback
-    // update: function (dt) {
-
-    // },
 });

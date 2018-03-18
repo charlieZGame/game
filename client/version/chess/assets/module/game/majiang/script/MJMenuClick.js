@@ -7,6 +7,10 @@ cc.Class({
       default: null,
       type: cc.Prefab
     },
+    setting:{
+      default: null,
+      type: cc.Prefab
+    },
 
     //离开房间UI逻辑
     applyLeaveNode: {
@@ -47,7 +51,7 @@ cc.Class({
 
 
   onBackClick: function() {
-    console.log("------要离开");
+    console.log("------要离开房间");
     if(cc.beimi.gamestatus != 'playing'){
        this.leaveRoomOnNoPlaying();
        this.scene(cc.beimi.gametype, this);
@@ -57,6 +61,13 @@ cc.Class({
       cc.beimi.openwin.parent = this.root();
     }
   },
+
+  onSettingsClick: function() {
+      cc.beimi.audio.playUiSound();
+      cc.beimi.openwin = cc.instantiate(this.setting) ;
+      cc.beimi.openwin.parent = this.root();
+   },
+
 
   leaveRoomOnNoPlaying: function() {
     if (this.ready()) {
@@ -74,7 +85,7 @@ cc.Class({
     if (this.ready()) {
       let socket = this.socket();
       //1 强制退出  2 申请退出  3服务器发送有人申请退出给其他玩家  4 其他玩家投票给服务器  5投票结果给申请退出人  6 有玩家强制退出
-      // 7 房间没开始我要退出   
+      // 7 房间没开始我要退出
       var param = {
         type: '1'
       };

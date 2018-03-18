@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletResponse;
  * @version 1.0
  */
 @Controller
-@RequestMapping("/login")
+@RequestMapping("login")
 public class Login {
 
     /**
@@ -98,6 +98,7 @@ public class Login {
 
             InputStream is = conn.getInputStream();
             String result = stream2String(is);
+            System.out.println("result==="+result);
             sendToClient(response, result);
         } catch (Exception e) {
             e.printStackTrace();

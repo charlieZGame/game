@@ -222,7 +222,7 @@ public class DuZhuBoard extends Board implements java.io.Serializable{
 			takeCards.setUserid(player.getPlayuser());
 		}
 		if(takeCards!=null){		//通知出牌
-			takeCards.setCardsnum(player.getCards().length);
+			takeCards.setCardsnum(player.getCardsArray().length);
 			takeCards.setAllow(true);
 			if(takeCards.getCards()!=null){
 				Arrays.sort(takeCards.getCards());
@@ -379,7 +379,7 @@ public class DuZhuBoard extends Board implements java.io.Serializable{
 					summaryPlayer.setBalance(result.getBalance());
 				}
 			}
-			summaryPlayer.setCards(player.getCards()); //未出完的牌
+			summaryPlayer.setCards(player.getCardsArray()); //未出完的牌
 			summary.getPlayers().add(summaryPlayer) ;
 		}
 		if(dizhuSummaryPlayer!=null){

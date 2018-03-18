@@ -24,6 +24,7 @@ cc.Class({
 
     },
     onClick:function(event, data){
+        cc.beimi.audio.playUiSound();
         this.loadding();
         let object = this ;
         setTimeout(function(){
@@ -31,11 +32,12 @@ cc.Class({
         } , 200);
     },
     onClickJoinRoom:function(){
+       cc.beimi.audio.playUiSound();
         if(this.roomidDialog){
             cc.beimi.openwin = cc.instantiate(this.roomidDialog) ;
             cc.beimi.openwin.parent = this.root();
         }
-    }
+    },
 
     // called every frame, uncomment this function to activate update callback
     // update: function (dt) {

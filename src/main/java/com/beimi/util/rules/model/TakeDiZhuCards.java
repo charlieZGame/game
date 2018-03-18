@@ -52,12 +52,12 @@ public class TakeDiZhuCards extends TakeCards implements Message , java.io.Seria
 		this.userid = player.getPlayuser() ;
 		this.cards = getAIMostSmall(player, 0) ;
 		if(this.cards != null){
-			player.setCards(this.removeCards(player.getCards() , cards));
+			player.setCards(this.removeCards(player.getCardsArray() , cards));
 			this.cardType =  ActionTaskUtils.identification(cards);
 			this.type = cardType.getCardtype() ;
 		}
 		this.allow = true ;
-		this.cardsnum = player.getCards().length ;
+		this.cardsnum = player.getCardsArray().length ;
 	}
 	/**
 	 * 最小出牌 ， 管住 last
@@ -82,13 +82,13 @@ public class TakeDiZhuCards extends TakeCards implements Message , java.io.Seria
 		}
 		if(cards!=null){
 			if(take == true){
-				player.setCards(this.removeCards(player.getCards() , cards));
+				player.setCards(this.removeCards(player.getCardsArray() , cards));
 			}
 			this.allow = true ;
 			this.cardType =  ActionTaskUtils.identification(cards);
 			this.type = cardType.getCardtype() ;
 		}
-		this.cardsnum = player.getCards().length ;
+		this.cardsnum = player.getCardsArray().length ;
 	}
 	
 	
@@ -107,11 +107,11 @@ public class TakeDiZhuCards extends TakeCards implements Message , java.io.Seria
 			this.cards = playCards ;
 		}
 		if(this.cards!=null){
-			player.setCards(this.removeCards(player.getCards() , this.cards));
+			player.setCards(this.removeCards(player.getCardsArray() , this.cards));
 			this.cardType =  ActionTaskUtils.identification(cards);
 			this.type = cardType.getCardtype() ;
 		}
-		this.cardsnum = player.getCards().length ;
+		this.cardsnum = player.getCardsArray().length ;
 		this.allow = true;
 	}
 	
@@ -130,7 +130,7 @@ public class TakeDiZhuCards extends TakeCards implements Message , java.io.Seria
 			this.cardType =  ActionTaskUtils.identification(cards);
 			this.type = cardType.getCardtype() ;
 		}
-		this.cardsnum = player.getCards().length ;
+		this.cardsnum = player.getCardsArray().length ;
 		this.allow = true;
 	}
 	
@@ -143,28 +143,28 @@ public class TakeDiZhuCards extends TakeCards implements Message , java.io.Seria
 	 */
 	public byte[] search(Player player , TakeCards lastTakeCards){
 		byte[] retValue = null ;
-		Map<Integer,Integer> types = ActionTaskUtils.type(player.getCards()) ;
+		Map<Integer,Integer> types = ActionTaskUtils.type(player.getCardsArray()) ;
 		if(lastTakeCards!=null && lastTakeCards.getCardType()!=null){
 			switch(lastTakeCards.getCardType().getCardtype()){
 				case 1 : //单张
-					retValue = this.getSingle(player.getCards(), types, lastTakeCards.getCardType().getMaxcard(), 1) ;
+					retValue = this.getSingle(player.getCardsArray(), types, lastTakeCards.getCardType().getMaxcard(), 1) ;
 					break ;
 				case 2 : //一对儿
-					retValue = this.getPair(player.getCards(), types, lastTakeCards.getCardType().getMaxcard() ,1) ;
+					retValue = this.getPair(player.getCardsArray(), types, lastTakeCards.getCardType().getMaxcard() ,1) ;
 					break ;
 				case 3 : //三张
-					retValue = this.getThree(player.getCards(), types, lastTakeCards.getCardType().getMaxcard() ,1) ;
+					retValue = this.getThree(player.getCardsArray(), types, lastTakeCards.getCardType().getMaxcard() ,1) ;
 					break ;
 				case 4 : //三带一
-					retValue = this.getThree(player.getCards(), types, lastTakeCards.getCardType().getMaxcard() ,1) ;
+					retValue = this.getThree(player.getCardsArray(), types, lastTakeCards.getCardType().getMaxcard() ,1) ;
 					if(retValue!=null && retValue.length == 3){
 						byte[] supplement = null ;
 						if(lastTakeCards.getCards().length == 4){	//三带一
-							supplement = this.getSingle(player.getCards(), types, -1 , 1) ;
+							supplement = this.getSingle(player.getCardsArray(), types, -1 , 1) ;
 						}else if(lastTakeCards.getCards().length == 5){	//三带一对儿
-							supplement = this.getPair(player.getCards(), types , -1, 1) ;
+							supplement = this.getPair(player.getCardsArray(), types , -1, 1) ;
 						}else if(lastTakeCards.getCards().length == 6){	//三顺
-							supplement = this.getThree(player.getCards(), types , -1, 1) ;
+							supplement = this.getThree(player.getCardsArray(), types , -1, 1) ;
 						}
 						if(supplement!=null){
 							retValue = ArrayUtils.addAll(retValue, supplement) ;
@@ -293,7 +293,7 @@ public class TakeDiZhuCards extends TakeCards implements Message , java.io.Seria
 	 * @return
 	 */
 	public byte[] getAIMostSmall(Player player , int start){
-		Map<Integer,Integer> types = ActionTaskUtils.type(player.getCards()) ;
+		Map<Integer,Integer> types = ActionTaskUtils.type(player.getCardsArray()) ;
 		int value = getMinCards(types , false) ;
 		/**
 		 * 可以增加机器人 出 4带二 / 连串 / 飞机 / 顺子 等牌型的功能 
@@ -302,12 +302,12 @@ public class TakeDiZhuCards extends TakeCards implements Message , java.io.Seria
 			value = getMinCards(types , true) ;
 		}
 		int num = types.get(value) ;
-		byte[] takeCards = getSubCards(player.getCards(), value, num);
+		byte[] takeCards = getSubCards(player.getCardsArray(), value, num);
 		
 		if(takeCards!=null && takeCards.length == 3){
-			byte[] supplement = this.getSingle(player.getCards(), types, -1 , 1) ;
+			byte[] supplement = this.getSingle(player.getCardsArray(), types, -1 , 1) ;
 			if(supplement == null){
-				this.getPair(player.getCards(), types, -1 , 2) ;
+				this.getPair(player.getCardsArray(), types, -1 , 2) ;
 			}
 			if(supplement!=null){
 				takeCards = ArrayUtils.addAll(takeCards, supplement) ;
@@ -361,9 +361,9 @@ public class TakeDiZhuCards extends TakeCards implements Message , java.io.Seria
 	 */
 	public byte[] getMostSmall(Player player, int start ){
 		byte[] takeCards = null;
-		if(player.getCards().length>0){
-			takeCards = ArrayUtils.subarray(player.getCards(),player.getCards().length - 1,player.getCards().length) ;
-			player.setCards(this.removeCards(player.getCards(), player.getCards().length - 1,player.getCards().length));
+		if(player.getCardsArray().length>0){
+			takeCards = ArrayUtils.subarray(player.getCardsArray(),player.getCardsArray().length - 1,player.getCardsArray().length) ;
+			player.setCards(this.removeCards(player.getCardsArray(), player.getCardsArray().length - 1,player.getCardsArray().length));
 		}
 		return takeCards ;
 	}

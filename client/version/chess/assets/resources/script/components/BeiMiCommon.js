@@ -104,7 +104,7 @@ cc.Class({
             }
         });
 
-      
+
         return cc.beimi.socket ;
     },
     disconnect:function(){
@@ -215,27 +215,30 @@ cc.Class({
     root:function(){
         return cc.find("Canvas");
     },
+
     decode:function(data){
         var cards = new Array();
-
-        if(!cc.sys.isNative) {
-            var dataView = new DataView(data);
-            for(var i= 0 ; i<data.byteLength ; i++){
-                cards[i] = dataView.getInt8(i);
-            }
-        }else{
-            var Base64 = require("Base64");
-            var strArray = Base64.decode(data) ;
-
-            if(strArray && strArray.length > 0){
-                for(var i= 0 ; i<strArray.length ; i++){
-                    cards[i] = strArray[i];
-                }
-            }
+        if (data!=null) {
+          cards = data.split(",");
         }
 
+        // if(!cc.sys.isNative) {
+        //     var dataView = new DataView(data);
+        //     for(var i= 0 ; i<data.byteLength ; i++){
+        //         cards[i] = dataView.getInt8(i);
+        //     }
+        // }else{
+        //     var Base64 = require("Base64");
+        //     var strArray = Base64.decode(data) ;
+        //     if(strArray && strArray.length > 0){
+        //         for(var i= 0 ; i<strArray.length ; i++){
+        //             cards[i] = strArray[i];
+        //         }
+        //     }
+        // }
         return cards ;
     },
+
     parse:function(result){
         var data ;
         if(!cc.sys.isNative){

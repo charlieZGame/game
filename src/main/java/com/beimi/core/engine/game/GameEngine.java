@@ -462,11 +462,11 @@ public class GameEngine {
 					int color = card / 36 ;
 					int value = card % 36 / 4 ;
 					List<Byte> otherCardList = new ArrayList<Byte>(); 
-					for(int i=0 ; i<player.getCards().length ; i++){
-						if(player.getCards()[i]/36 == color && (player.getCards()[i]%36) / 4 == value){
+					for(int i=0 ; i<player.getCardsArray().length ; i++){
+						if(player.getCardsArray()[i]/36 == color && (player.getCardsArray()[i]%36) / 4 == value){
 							continue ;
 						}
-						otherCardList.add(player.getCards()[i]) ;
+						otherCardList.add(player.getCardsArray()[i]) ;
 					}
 					byte[] otherCards = new byte[otherCardList.size()] ;
 					for(int i=0 ; i<otherCardList.size() ; i++){
@@ -486,7 +486,7 @@ public class GameEngine {
 					
 				}else if(!StringUtils.isBlank(action) && action.equals(BMDataContext.PlayerAction.GANG.toString()) && allowAction(card, player.getActions() , BMDataContext.PlayerAction.GANG.toString())){
 					if(board.getNextplayer().getNextplayer().equals(userid)){
-						card = GameUtils.getGangCard(player.getCards()) ;
+						card = GameUtils.getGangCard(player.getCardsArray()) ;
 						actionEvent = new ActionEvent(board.getBanker() , userid , card , action);
 						actionEvent.setActype(BMDataContext.PlayerGangAction.AN.toString());
 					}else{
@@ -507,11 +507,11 @@ public class GameEngine {
 					int color = card / 36 ;
 					int value = card % 36 / 4 ;
 					List<Byte> otherCardList = new ArrayList<Byte>(); 
-					for(int i=0 ; i<player.getCards().length ; i++){
-						if(player.getCards()[i]/36 == color && (player.getCards()[i]%36) / 4 == value){
+					for(int i=0 ; i<player.getCardsArray().length ; i++){
+						if(player.getCardsArray()[i]/36 == color && (player.getCardsArray()[i]%36) / 4 == value){
 							continue ;
 						}
-						otherCardList.add(player.getCards()[i]) ;
+						otherCardList.add(player.getCardsArray()[i]) ;
 					}
 					byte[] otherCards = new byte[otherCardList.size()] ;
 					for(int i=0 ; i<otherCardList.size() ; i++){

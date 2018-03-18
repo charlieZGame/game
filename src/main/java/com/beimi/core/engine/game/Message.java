@@ -12,4 +12,5 @@ public interface Message {
 	 * @param command
 	 */
 	public void setCommand(String command) ;
+
 }

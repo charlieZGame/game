@@ -62,7 +62,6 @@ public class MaJiangBoard extends Board implements java.io.Serializable{
 	
 	/**
 	 * 找到玩家
-	 * @param board
 	 * @param userid
 	 * @return
 	 */
@@ -78,7 +77,6 @@ public class MaJiangBoard extends Board implements java.io.Serializable{
 	
 	/**
 	 * 找到玩家的 位置
-	 * @param board
 	 * @param userid
 	 * @return
 	 */
@@ -96,7 +94,6 @@ public class MaJiangBoard extends Board implements java.io.Serializable{
 	
 	/**
 	 * 找到下一个玩家
-	 * @param board
 	 * @param index
 	 * @return
 	 */
@@ -131,7 +128,6 @@ public class MaJiangBoard extends Board implements java.io.Serializable{
 	/**
 	 * 
 	 * @param player
-	 * @param current
 	 * @return
 	 */
 	public TakeCards takecard( Player player , boolean allow , byte[] playCards) {
@@ -141,7 +137,6 @@ public class MaJiangBoard extends Board implements java.io.Serializable{
 	/**
 	 * 当前玩家随机出牌，能管住当前出牌的 最小牌
 	 * @param player
-	 * @param current
 	 * @return
 	 */
 	public TakeCards takecard(Player player) {
@@ -151,7 +146,6 @@ public class MaJiangBoard extends Board implements java.io.Serializable{
 	/**
 	 * 当前玩家随机出牌，能管住当前出牌的 最小牌
 	 * @param player
-	 * @param current
 	 * @return
 	 */
 	public TakeCards takecard(Player player , TakeCards last) {
@@ -181,7 +175,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable{
 			takeCards = board.takecard(player , true , playCards) ;
 			
 			if(takeCards!=null){		//通知出牌
-				takeCards.setCardsnum(player.getCards().length);
+				takeCards.setCardsnum(player.getCardsArray().length);
 				
 				board.setLast(takeCards);
 				
@@ -246,7 +240,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable{
 	 * @return
 	 */
 	public MJCardMessage checkMJCard(Player player , byte card , boolean deal){
-		MJCardMessage mjCard = GameUtils.processMJCard(player,player.getCards(), card , deal) ;
+		MJCardMessage mjCard = GameUtils.processMJCard(player,player.getCardsArray(), card , deal) ;
 		mjCard.setDeal(deal);
 		mjCard.setTakeuser(player.getPlayuser());
 		return mjCard ;
@@ -278,7 +272,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable{
 				ActionTaskUtils.sendEvent(next.getPlayuser(), mjCard);
 			}
 			
-			next.setCards(ArrayUtils.add(next.getCards(), newCard));
+			next.setCards(ArrayUtils.add(next.getCardsArray(), newCard));
 			
 			/**
 			 * 抓牌 , 下一个玩家收到的牌里会包含 牌面，其他玩家的则不包含牌面
@@ -337,7 +331,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable{
 			/**
 			 * 查花猪
 			 */
-			summaryPlayer.setCards(player.getCards()); //未出完的牌
+			summaryPlayer.setCards(player.getCardsArray()); //未出完的牌
 			summary.getPlayers().add(summaryPlayer) ;
 		}
 		summary.setGameRoomOver(gameRoomOver);	//有玩家破产，房间解散

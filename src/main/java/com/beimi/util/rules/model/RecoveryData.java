@@ -52,7 +52,7 @@ public class RecoveryData implements Message{
 		List<CardsInfo> tempList = new ArrayList<CardsInfo>();
 		for(Player temp : board.getPlayers()){
 			if(!temp.getPlayuser().equals(player.getPlayuser())){
-				tempList.add(new CardsInfo(temp.getPlayuser() , temp.getCards().length , temp.getHistory() , temp.getActions() , board , temp)) ;
+				tempList.add(new CardsInfo(temp.getPlayuser() , temp.getCardsArray().length , temp.getHistory() , temp.getActions() , board , temp)) ;
 			}
 			
 		}
@@ -84,7 +84,8 @@ public class RecoveryData implements Message{
 
 	public void setNextplayer(String nextplayer) {
 		this.nextplayer = nextplayer;
-	}
+	}
+
 	public int getTime() {
 		return time;
 	}

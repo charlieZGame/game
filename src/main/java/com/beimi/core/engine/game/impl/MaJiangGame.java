@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang.StringUtils;
 
 import com.beimi.core.engine.game.iface.ChessGame;
@@ -98,7 +99,7 @@ public class MaJiangGame implements ChessGame{
 		for(int i = 0 ; i<3; i++){
 			for(int j = 0 ; j<gameRoom.getPlayers(); j++){
 				for(int cs=0 ; cs < 4 ; cs++){
-					players[j].getCards()[i*4+cs] = temp.remove(0) ;
+					players[j].getCardsArray()[i*4+cs] = temp.remove(0) ;
 				}
 			}
 		}
@@ -107,14 +108,14 @@ public class MaJiangGame implements ChessGame{
 		 */
 		for(int i=0 ; i< players.length ; i++){
 			if(players[i].isBanker()){
-				players[i].getCards()[12] = temp.remove(0) ;
-				players[i].getCards()[13] = temp.remove(1) ;
+				players[i].getCardsArray()[12] = temp.remove(0) ;
+				players[i].getCardsArray()[13] = temp.remove(1) ;
 			}else{
-				players[i].getCards()[12] = temp.remove(0) ;
+				players[i].getCardsArray()[12] = temp.remove(0) ;
 			}
 		}
 		for(Player tempPlayer : players){
-			Arrays.sort(tempPlayer.getCards());
+			Arrays.sort(tempPlayer.getCardsArray());
 		}
 		board.setDeskcards(temp);	//待打 的麻将 牌
 		board.setRoom(gameRoom.getId());
@@ -132,7 +133,10 @@ public class MaJiangGame implements ChessGame{
 		if(tempbanker!=null){
 			board.setBanker(tempbanker.getPlayuser());
 		}
+		System.out.println(JSONObject.toJSONString(board));
 		return board;
+
+
 	}
 
 }

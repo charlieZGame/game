@@ -39,29 +39,35 @@ cc.Class({
 
     // use this for initialization
     onLoad: function () {
-      
+
     },
     onSettingClick:function(){
+        cc.beimi.audio.playUiSound();
         cc.beimi.openwin = cc.instantiate(this.setting) ;
         cc.beimi.openwin.parent = this.root();
     },
     onMessageClick:function(){
+        cc.beimi.audio.playUiSound();
         cc.beimi.openwin = cc.instantiate(this.message) ;
         cc.beimi.openwin.parent = this.root();
     },
     onShareClick:function(){
+        cc.beimi.audio.playUiSound();
         cc.beimi.openwin = cc.instantiate(this.share) ;
         cc.beimi.openwin.parent = this.root();
     },
     onPlaywayClick:function(){
+        cc.beimi.audio.playUiSound();
         cc.beimi.openwin = cc.instantiate(this.playway) ;
         cc.beimi.openwin.parent = this.root();
     },
     onRecordClick:function(){
+        cc.beimi.audio.playUiSound();
         cc.beimi.openwin = cc.instantiate(this.playway) ;
         cc.beimi.openwin.parent = this.root();
     },
     onFeedBackClick:function(){
+        cc.beimi.audio.playUiSound();
         cc.beimi.openwin = cc.instantiate(this.feedback) ;
         cc.beimi.openwin.parent = this.root();
     }

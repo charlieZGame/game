@@ -54,7 +54,7 @@ cc.Class({
 
       this.refreshNotice();
     }
-
+    cc.beimi.audio.playBGM("bgMain.mp3");
   },
 
   update: function(dt) {
@@ -103,7 +103,9 @@ cc.Class({
   },
 
   error: function(object) {
-    this.lblNoticeLayout.active = false;
+    if (this.lblNoticeLayout) {
+        this.lblNoticeLayout.active = false;
+    }
     console.log("获取公告失败");
   }
 });

@@ -53,12 +53,12 @@ public class TakeMaJiangCards extends TakeCards implements Message , java.io.Ser
 		this.userid = player.getPlayuser() ;
 		this.cards = getAIMostSmall(player, 0) ;
 		if(this.cards != null){
-			player.setCards(this.removeCards(player.getCards() , cards));
+			player.setCards(this.removeCards(player.getCardsArray() , cards));
 			this.cardType =  ActionTaskUtils.identification(cards);
 			this.type = cardType.getCardtype() ;
 		}
 		this.allow = true ;
-		this.cardsnum = player.getCards().length ;
+		this.cardsnum = player.getCardsArray().length ;
 	}
 	/**
 	 * 最小出牌 ， 管住 last
@@ -73,12 +73,12 @@ public class TakeMaJiangCards extends TakeCards implements Message , java.io.Ser
 			this.cards = getAIMostSmall(player, 0) ;
 		}
 		if(cards!=null){
-			player.setCards(this.removeCards(player.getCards() , cards));
+			player.setCards(this.removeCards(player.getCardsArray() , cards));
 			this.allow = true ;
 			this.cardType =  ActionTaskUtils.identification(cards);
 			this.type = cardType.getCardtype() ;
 		}
-		this.cardsnum = player.getCards().length ;
+		this.cardsnum = player.getCardsArray().length ;
 	}
 	
 	
@@ -97,10 +97,10 @@ public class TakeMaJiangCards extends TakeCards implements Message , java.io.Ser
 			this.cards = playCards ;
 		}
 		if(this.cards!=null && this.cards.length > 0){
-			player.setCards(this.removeCards(player.getCards() , this.cards));
+			player.setCards(this.removeCards(player.getCardsArray() , this.cards));
 			this.setCard(this.cards[0]);
 		}
-		this.cardsnum = player.getCards().length ;
+		this.cardsnum = player.getCardsArray().length ;
 		this.allow = true;
 	}
 	
@@ -112,7 +112,7 @@ public class TakeMaJiangCards extends TakeCards implements Message , java.io.Ser
 	 */
 	public byte[] search(Player player , TakeCards lastTakeCards){
 		byte[] retValue = null ;
-		Map<Integer,Integer> types = ActionTaskUtils.type(player.getCards()) ;
+		Map<Integer,Integer> types = ActionTaskUtils.type(player.getCardsArray()) ;
 		if(lastTakeCards.getCardType().getTypesize() <= 3){//三带一 、 四带二
 			if(lastTakeCards.getCardType().getCardnum() == 4 || lastTakeCards.getCardType().getCardnum() == 3){
 				for(int i=lastTakeCards.getCardType().getMincard() + 1; i<14 ; i++){
@@ -121,16 +121,16 @@ public class TakeMaJiangCards extends TakeCards implements Message , java.io.Ser
 						Map<Integer,Integer> exist = new HashMap<Integer ,Integer>();
 						exist.put(i, i) ;
 						if(lastTakeCards.getCardType().getTypesize() == 1){
-							supplement = this.getPair(player.getCards(), types , -1, 1, exist) ;
+							supplement = this.getPair(player.getCardsArray(), types , -1, 1, exist) ;
 						}else{
-							supplement = this.getSingle(player.getCards(), types, -1 , 2, exist) ;
+							supplement = this.getSingle(player.getCardsArray(), types, -1 , 2, exist) ;
 						}
 						if(supplement!=null){
 							retValue = new byte[types.get(i)] ;
 							int length = 0 ;
-							for(int inx =0 ; inx < player.getCards().length ; inx++){
-								if(player.getCards()[inx] / 4 == i){
-									retValue[length++] = player.getCards()[inx] ;
+							for(int inx =0 ; inx < player.getCardsArray().length ; inx++){
+								if(player.getCardsArray()[inx] / 4 == i){
+									retValue[length++] = player.getCardsArray()[inx] ;
 								}
 							}
 							retValue = ArrayUtils.addAll(retValue, supplement) ;
@@ -138,11 +138,11 @@ public class TakeMaJiangCards extends TakeCards implements Message , java.io.Ser
 					}
 				}
 			}else if(lastTakeCards.getCardType().getCardnum() == 2){	//对子
-				retValue = this.getPair(player.getCards(), types, lastTakeCards.getCardType().getMincard() ,1, new HashMap<Integer , Integer>()) ;
+				retValue = this.getPair(player.getCardsArray(), types, lastTakeCards.getCardType().getMincard() ,1, new HashMap<Integer , Integer>()) ;
 			}else if(lastTakeCards.getCardType().getCardnum() == 3){	//对子
-				retValue = this.getThree(player.getCards(), types, lastTakeCards.getCardType().getMincard() ,1, new HashMap<Integer , Integer>()) ;
+				retValue = this.getThree(player.getCardsArray(), types, lastTakeCards.getCardType().getMincard() ,1, new HashMap<Integer , Integer>()) ;
 			}else{	//单张
-				retValue = this.getSingle(player.getCards(), types, lastTakeCards.getCardType().getMincard(), 1, new HashMap<Integer , Integer>()) ;
+				retValue = this.getSingle(player.getCardsArray(), types, lastTakeCards.getCardType().getMincard(), 1, new HashMap<Integer , Integer>()) ;
 			}
 		}else{//单顺，双顺， 三顺
 			
@@ -273,7 +273,7 @@ public class TakeMaJiangCards extends TakeCards implements Message , java.io.Ser
 		byte[] retCards = new byte[1] ;
 		boolean found = false ;
 		if(player.isSelected()){
-			for(byte card : player.getCards()){
+			for(byte card : player.getCardsArray()){
 				if(card/36 == player.getColor()){
 					retCards[0] = card ;found = true ; break ;
 				}
@@ -281,7 +281,7 @@ public class TakeMaJiangCards extends TakeCards implements Message , java.io.Ser
 			
 		}
 		if(found == false){
-			retCards = ArrayUtils.subarray(player.getCards(), player.getCards().length-1, player.getCards().length) ;
+			retCards = ArrayUtils.subarray(player.getCardsArray(), player.getCardsArray().length-1, player.getCardsArray().length) ;
 		}
 		return retCards;
 	}
@@ -294,9 +294,9 @@ public class TakeMaJiangCards extends TakeCards implements Message , java.io.Ser
 	 */
 	public byte[] getMostSmall(Player player, int start ){
 		byte[] takeCards = null;
-		if(player.getCards().length>0){
-			takeCards = ArrayUtils.subarray(player.getCards(),player.getCards().length - 1,player.getCards().length) ;
-			player.setCards(this.removeCards(player.getCards(), player.getCards().length - 1,player.getCards().length));
+		if(player.getCardsArray().length>0){
+			takeCards = ArrayUtils.subarray(player.getCardsArray(),player.getCardsArray().length - 1,player.getCardsArray().length) ;
+			player.setCards(this.removeCards(player.getCardsArray(), player.getCardsArray().length - 1,player.getCardsArray().length));
 		}
 		return takeCards ;
 	}

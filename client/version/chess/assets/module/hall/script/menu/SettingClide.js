@@ -50,8 +50,10 @@ cc.Class({
     onLoad: function () {
         this.musicSlider.progress = cc.beimi.audio.bgVolume;
         this.music.fillRange  = cc.beimi.audio.bgVolume ;
+        this.soundSlider.progress  = cc.beimi.audio.deskVolume ;
+        this.sound.fillRange  = cc.beimi.audio.deskVolume ;
 
-        if(cc.beimi.audio.getState() == cc.audioEngine.AudioState.PLAYING){
+        if(cc.beimi.audio.bgVolume>0){
             this.musicon.active = true ;
             this.musicoff.active =  false;
         }else{
@@ -59,29 +61,62 @@ cc.Class({
             this.musicoff.active =  true
         }
 
+        if(cc.beimi.audio.deskVolume>0){
+            this.soundon.active = true ;
+            this.soundoff.active =  false;
+        }else{
+            this.soundon.active = false ;
+            this.soundoff.active =  true
+        }
+
     },
     onMusicSlide:function(slider){
         this.music.fillRange  = slider.progress ;
-        cc.beimi.audio.setBGMVolume(slider.progress) ;
-        this.musicon.active = true ;
-        this.musicoff.active =  false;
+        cc.beimi.audio.setBGMVolume(slider.progress,true) ;
+        if (slider.progress==0) {
+          this.musicon.active = false ;
+          this.musicoff.active =  true;
+        }else {
+          this.musicon.active = true ;
+          this.musicoff.active =  false;
+        }
     },
-    onSoundSlide:function(slider){
-        this.sound.fillRange  = slider.progress ;
-    },
+
+
     onMusiceBtnClick:function(){
-        if(cc.beimi.audio.getState() == cc.audioEngine.AudioState.PLAYING){
+        if(cc.beimi.audio.bgVolume>0){
             this.musicon.active = false ;
             this.musicoff.active =  true;
-            cc.beimi.audio.pauseAll();
+            cc.beimi.audio.setBGMVolume(0,true);
         }else{
             this.musicon.active = true ;
             this.musicoff.active =  false;
-            cc.beimi.audio.resumeAll();
+            cc.beimi.audio.setBGMVolume(this.musicSlider.progress,true);
         }
-    }
-    // called every frame, uncomment this function to activate update callback
-    // update: function (dt) {
+    },
 
-    // },
+    onSoundSlide:function(slider){
+      this.sound.fillRange  = slider.progress ;
+      cc.beimi.audio.setSFXVolume(slider.progress,true) ;
+      if (slider.progress==0) {
+        this.soundon.active = false ;
+        this.soundoff.active =  true;
+      }else {
+        this.soundon.active = true ;
+        this.soundoff.active =  false;
+      }
+    },
+
+
+    onSoundBtnClick:function(){
+      if(cc.beimi.audio.deskVolume>0){
+        this.soundon.active = false ;
+        this.soundoff.active =  true;
+        cc.beimi.audio.setSFXVolume(0);
+      }else{
+        this.soundon.active = true ;
+        this.soundoff.active =  false;
+        cc.beimi.audio.setSFXVolume(this.soundSlider.progress,true);
+      }
+    }
 });

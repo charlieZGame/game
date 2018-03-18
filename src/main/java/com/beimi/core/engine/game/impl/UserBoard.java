@@ -32,7 +32,7 @@ public class UserBoard implements Message,Serializable{
 				player = temp ;
 			}else{
 				Player clonePlayer = temp.clone() ;
-				clonePlayer.setDeskcards(clonePlayer.getCards().length);
+				clonePlayer.setDeskcards(clonePlayer.getCardsArray().length);
 				clonePlayer.setCards(null);	//克隆对象，然后将 其他玩家手里的牌清空
 				players[inx++] = clonePlayer;
 			}

@@ -78,6 +78,7 @@ cc.Class({
 
     },
     onClick:function(event, data){
+        cc.beimi.audio.playUiSound();
         this.disMenu("second") ;
         var girlAni = this.global.getComponent("DefaultHallDataBind");
         girlAni.playToLeft();
@@ -116,26 +117,31 @@ cc.Class({
         }
     },
     onRoomClick:function(){
+        cc.beimi.audio.playUiSound();
         this.disMenu("third") ;
         this._menuDisplay = this.third.getComponent(cc.Animation);
         this._menuDisplay.play("play_room_display");
     },
     onSecondBack:function(event ,data){
+        cc.beimi.audio.playUiSound();
         var girlAni = this.global.getComponent("DefaultHallDataBind");
         girlAni.playToRight();
         this.collect();
         this.disMenu("first") ;
     },
     onThirddBack:function(event ,data){
+        cc.beimi.audio.playUiSound();
         this.disMenu("first") ;
     },
     collect:function(){
+        cc.beimi.audio.playUiSound();
         for(var inx =0 ; inx < this.playwayarray.length ; inx++){
             this.playwaypool.put(this.playwayarray[inx]);
         }
         this.playwayarray.splice(0 ,this.playwayarray.length );
     },
     disMenu:function(order){
+        cc.beimi.audio.playUiSound();
         if(order == 'first'){
             this.first.active = true ;
             this.second.active = false ;
@@ -155,9 +161,6 @@ cc.Class({
                 this.third.active = true ;
             }
         }
-    }
-    // called every frame, uncomment this function to activate update callback
-    // update: function (dt) {
+    },
 
-    // },
 });

@@ -40,8 +40,19 @@ public class Player implements Message,java.io.Serializable , Cloneable{
 	private byte[] played ;	//杠碰吃胡
 	private List<Action> actions = new ArrayList<Action>();
 
-	public byte[] getCards() {
+	public byte[] getCardsArray() {
 		return cards;
+	}
+
+	public String getCards(){
+		if(this.cards == null || this.cards.length == 0){
+			return "";
+		}
+		StringBuilder sb = new StringBuilder();
+		for(byte _b : this.cards){
+			sb.append(",").append(_b);
+		}
+		return sb.substring(1);
 	}
 
 	public void setCards(byte[] cards) {
