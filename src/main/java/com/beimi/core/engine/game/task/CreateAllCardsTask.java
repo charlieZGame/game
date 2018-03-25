@@ -13,6 +13,10 @@ import com.beimi.web.model.GamePlayway;
 import com.beimi.web.model.GameRoom;
 import com.beimi.web.model.PlayUserClient;
 
+
+/**
+ * 游戏结束 清理资源 回收房卡
+ */
 public class CreateAllCardsTask extends AbstractTask implements ValueWithExpiryTime  , BeiMiGameTask{
 
 	private long timer  ;

@@ -17,6 +17,11 @@ import com.beimi.util.rules.model.Board;
 import com.beimi.web.model.GameRoom;
 import com.beimi.web.model.PlayUserClient;
 
+
+/**
+ *  设置庄
+ *  发牌操作
+ */
 public class CreateBeginTask extends AbstractTask implements ValueWithExpiryTime  , BeiMiGameTask{
 
 	private long timer  ;
@@ -40,7 +45,7 @@ public class CreateBeginTask extends AbstractTask implements ValueWithExpiryTime
 		 * 
 		 * 顺手 把牌发了，注：此处应根据 GameRoom的类型获取 发牌方式
 		 */
-		boolean inroom = false;
+		boolean inroom = false; //初始设置当前不是新开房间
 		if(!StringUtils.isBlank(gameRoom.getLastwinner())){
 			for(PlayUserClient player : playerList){
 				if(player.getId().equals(gameRoom.getLastwinner())){
@@ -48,7 +53,7 @@ public class CreateBeginTask extends AbstractTask implements ValueWithExpiryTime
 				}
 			}
 		}
-		if(inroom == false){
+		if(inroom == false){//如果是新开房间 设置第一个进入房间的人为庄
 			gameRoom.setLastwinner(playerList.get(0).getId());
 		}
 		/**
@@ -70,7 +75,7 @@ public class CreateBeginTask extends AbstractTask implements ValueWithExpiryTime
 			/**
 			 * 每个人收到的 牌面不同，所以不用 ROOM发送广播消息，而是用 遍历房间里所有成员发送消息的方式
 			 */
-			ActionTaskUtils.sendEvent(playerUser, new UserBoard(board , playerUser.getId() , "play"));
+			ActionTaskUtils.sendEvent(playerUser, new UserBoard(board , playerUser.getId() , "play",gameRoom.getNumofgames(),gameRoom.getCurrentnum()));
 		}
 		
 		CacheHelper.getGameRoomCacheBean().put(gameRoom.getId(), gameRoom, gameRoom.getOrgi());

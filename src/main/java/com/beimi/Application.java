@@ -20,6 +20,7 @@ public class Application {
 	public static void main(String[] args) {
 		SpringApplication springApplication = new SpringApplication(Application.class) ;
 		BMDataContext.setApplicationContext(springApplication.run(args));
+
 	}
-	
+
 }

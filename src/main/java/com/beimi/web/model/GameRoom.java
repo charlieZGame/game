@@ -69,6 +69,8 @@ public class GameRoom implements UserEvent, java.io.Serializable, Comparable<Gam
 	private PlayUser masterUser ;	//房间的创建人
 	private GamePlayway gamePlayway ;	//房间玩法
 
+	private Integer powerfulsize = 1;
+
 	private Map<String,String> extparams ;//房卡模式下的自定义参数
 	
 	@Id
@@ -265,6 +267,15 @@ public class GameRoom implements UserEvent, java.io.Serializable, Comparable<Gam
 
 	public void setExtparams(Map<String, String> extparams) {
 		this.extparams = extparams;
+	}
+
+
+	public Integer getPowerfulsize() {
+		return powerfulsize;
+	}
+
+	public void setPowerfulsize(Integer powerfulsize) {
+		this.powerfulsize = powerfulsize;
 	}
 
 	@Override

@@ -36,10 +36,14 @@ public class MaJiangGame implements ChessGame{
 		/**
 		 * 血流/战玩法 ， 无风 ，广东麻将， 有风 ， 需要根据配置的玩法 获取
 		 */
-		if(playway.isWind()){
+		/*if(playway.isWind()){
 			for(int i= -4 ; i>-32 ; i--){
 				temp.add(0 , (byte)i) ;
 			}
+		}*/
+		// 来源麻将 都有风
+		for(int i= -4 ; i>-32 ; i--){
+			temp.add(0 , (byte)i) ;
 		}
 		/**
 		 * 洗牌次数，参数指定，建议洗牌次数 为1次，多次洗牌的随机效果更好，例如：7次
@@ -55,31 +59,12 @@ public class MaJiangGame implements ChessGame{
 		
 		board.setRatio(2); 	//默认番 ： 2
 		
-		/**
-		 * 以下为定癞子牌(根据玩法需要)
-		 */
+
+
 		int random = (byte)new Random().nextInt(6) ;		//骰子 0~6
 		
-		board.setPosition(random);	
-		
-		
-		byte[] powerful = new byte[1];
-		if(cards[cards.length - 2] >=0){
-			if(cards[cards.length - 2]/4 % 9 == 8){
-				powerful[0] = (byte) (cards[cards.length - 2]/4 - 8) ; //癞子牌， 万筒条牌面 ， +1
-			}else{
-				powerful[0] = (byte) (cards[cards.length - 2]/4 + 1) ; //癞子牌， 万筒条牌面 ， +1
-			}
-		}else{//东南西北风， 中发白 ， 是中的 跳过
-			if(cards[cards.length - 2] / 4 == -3){
-				powerful[0] = -2 ;
-			}else if(cards[cards.length - 2] / 4 == -1){
-				powerful[0] = -7 ;
-			}else{
-				powerful[0] = (byte) (cards[cards.length - 2] / 4 + 1) ;
-			}
-		}
-		board.setPowerful(powerful);	//填癞子牌
+		board.setPosition(random);
+
 		Player[] players = new Player[playUsers.size()];
 		
 		int inx = 0 ;
@@ -93,6 +78,12 @@ public class MaJiangGame implements ChessGame{
 			}
 			players[inx++] = player ;
 		}
+
+		/**
+		 * 以下为定癞子牌(根据玩法需要)
+		 */
+		generatePowerfull(board,cards,playway,players,gameRoom.getPowerfulsize());
+
 		/**
 		 * 切墩 ， 每次 4张， 发够 12张，然后再挑一张牌 ， 切墩 跳过了 骰子
 		 */
@@ -133,10 +124,109 @@ public class MaJiangGame implements ChessGame{
 		if(tempbanker!=null){
 			board.setBanker(tempbanker.getPlayuser());
 		}
-		System.out.println(JSONObject.toJSONString(board));
+
+		gameRoom.setCurrentnum(gameRoom.getCurrentnum()+1);
 		return board;
 
 
 	}
+
+
+	private void generatePowerfull(Board board ,byte[] cards,GamePlayway playway,Player[] players,Integer size) {
+
+		/*if (playway == null || playway.getPowerfulNum() == 0) {
+			return;
+		}*/
+
+		if(size <= 0 || size > 3){
+			return ;
+		}
+
+		//for (int i = 0; i < playway.getPowerfulNum(); i++) { 8
+		for (int i = 0; i < 1; i++) {
+			byte[] powerful = new byte[1];
+			if (cards[cards.length - 2] >= 0) {
+				if (cards[cards.length - 2] / 4 % 9 == 8) { // 癞子是一门循环填充
+					powerful[0] = (byte) (cards[cards.length - 2] / 4 - 8); //癞子牌， 万筒条牌面 ， +1
+				} else {
+					powerful[0] = (byte) (cards[cards.length - 2] / 4 + 1); //癞子牌， 万筒条牌面 ， +1
+				}
+			} else {//东南西北风， 中发白 ， 是中的 跳过  //// TODO: 2018/3/24 ZCL 风的逻辑先屏蔽
+			/*	if (cards[cards.length - 2] / 4 == -3) {
+					powerful[0] = -2;
+				} else if (cards[cards.length - 2] / 4 == -1) {
+					powerful[0] = -7;
+				} else {
+					powerful[0] = (byte) (cards[cards.length - 2] / 4 + 1);
+				}*/
+
+				powerful[0] = (byte)(cards[cards.length - 2]/4);
+				//powerful[0] = cards[cards.length - 2];
+			}
+
+			byte[] b = new byte[size];
+			b[0] = (byte) (powerful[0] * 4);
+			if(cards[cards.length - 2] >= 0) {
+				switch (size) {
+					case 2: {
+						if (powerful[0] % 9 == 8) {
+							b[1] = (byte) ((powerful[0] - 7) * 4);
+						} else if ((powerful[0] + 1) % 9 == 8) {
+							b[1] = (byte) ((powerful[0] - 8) * 4);
+						} else {
+							b[1] = (byte) ((powerful[0] + 2) * 4);
+						}
+					}
+					case 3: {
+						if (powerful[0] % 9 == 8) {
+							b[1] = (byte) ((powerful[0] - 8) * 4);
+							b[2] = (byte) ((powerful[0] - 7) * 4);
+						} else if ((powerful[0] + 1) % 9 == 8) {
+							b[1] = (byte) ((powerful[0] + 1) * 4);
+							b[2] = (byte) ((powerful[0] - 8) * 4);
+						} else {
+							b[1] = (byte) ((powerful[0] + 1) * 4);
+							b[2] = (byte) ((powerful[0] + 2) * 4);
+						}
+					}
+				}
+			}else{
+				switch (size){
+					case 2 : {
+						if(powerful[0]==7){
+							b[1] = (byte) ((powerful[0] + 5) * 4);
+						}else if(powerful[0]==6){
+							b[1] = (byte) ((powerful[0] + 6) * 4);
+						}else{
+							b[1] = (byte) ((powerful[0] - 2) * 4);
+						}
+					}
+					case  3 : {
+						if(powerful[0]==7){
+							b[1] = (byte) ((powerful[0] + 6) * 4);
+							b[2] = (byte) ((powerful[0] + 5) * 4);
+						}else if(powerful[0]==6){
+							b[2] = (byte) ((powerful[0] - 1) * 4);
+							b[1] = (byte) ((powerful[0] + 6) * 4);
+						}else{
+							b[1] = (byte) ((powerful[0] - 1) * 4);
+							b[2] = (byte) ((powerful[0] - 2) * 4);
+						}
+					}
+				}
+			}
+
+			for (Player player : players) {
+				player.setPowerfull(b);
+			}
+
+			byte[] temp = new byte[size];
+			for(int j = 0 ; j < b.length ; j++){
+				temp[j] = (byte) (b[j]/4);
+			}
+			board.setPowerful(temp);    //填癞子牌
+		}
+	}
+
 
 }

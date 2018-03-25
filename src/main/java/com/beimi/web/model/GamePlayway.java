@@ -45,8 +45,8 @@ public class GamePlayway implements java.io.Serializable{
 	private int shuffletimes	;	//洗牌次数
 	
 	
-	private String powerful ;	//癞子生成规则  ， 
-	
+	private String powerful ;	//癞子生成规则  ，
+
 	
 	private int cardsnum ;	//每个玩家获牌数量
 	
@@ -302,4 +302,5 @@ public class GamePlayway implements java.io.Serializable{
 	public void setWintype(String wintype) {
 		this.wintype = wintype;
 	}
+
 }

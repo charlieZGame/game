@@ -33,7 +33,13 @@ public class ActionTaskUtils {
 	public static AbstractTask createAutoTask(int times , GameRoom gameRoom){
 		return new CreateAutoTask(times , gameRoom , gameRoom.getOrgi()) ;
 	}
-	
+
+	/**
+	 * 根据房间发送消息
+	 * @param event
+	 * @param message
+	 * @param gameRoom
+     */
 	public static void sendEvent(String event, Message message,GameRoom gameRoom){
 		message.setCommand(event);
 		List<PlayUserClient> players = CacheHelper.getGamePlayerCacheBean().getCacheObject(gameRoom.getId(), gameRoom.getOrgi()) ;

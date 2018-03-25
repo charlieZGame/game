@@ -6,6 +6,8 @@ import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
+import com.beimi.web.model.*;
+import com.beimi.web.service.repository.jpa.AnnouncementRespository;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,13 +24,6 @@ import com.beimi.util.MessageEnum;
 import com.beimi.util.UKTools;
 import com.beimi.util.cache.CacheHelper;
 import com.beimi.web.handler.Handler;
-import com.beimi.web.model.AccountConfig;
-import com.beimi.web.model.AiConfig;
-import com.beimi.web.model.GameConfig;
-import com.beimi.web.model.PlayUser;
-import com.beimi.web.model.PlayUserClient;
-import com.beimi.web.model.ResultData;
-import com.beimi.web.model.Token;
 import com.beimi.web.service.repository.es.PlayUserClientESRepository;
 import com.beimi.web.service.repository.es.PlayUserESRepository;
 import com.beimi.web.service.repository.es.TokenESRepository;
@@ -46,6 +41,9 @@ public class GuestPlayerController extends Handler{
 	
 	@Autowired
 	private PlayUserRepository playUserRes ;
+
+	@Autowired
+	private AnnouncementRespository announcementRespository;
 	
 	@Autowired
 	private TokenESRepository tokenESRes ;
@@ -131,6 +129,13 @@ public class GuestPlayerController extends Handler{
 			playerResultData.setEnableai(aiConfig.isEnableai());
 			playerResultData.setWaittime(aiConfig.getWaittime());
 		}
+
+		// 查询公告信息
+		Announcement announcement = announcementRespository.findByType("1");
+		if(announcement != null){
+			playerResultData.setAnnouncement(announcement.getContent());
+		}
+
 		/**
 		 * 根据游戏配置 ， 选择 返回的 玩法列表
 		 */

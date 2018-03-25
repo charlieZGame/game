@@ -63,8 +63,14 @@ cc.Class({
     },
     onRecordClick:function(){
         cc.beimi.audio.playUiSound();
-        cc.beimi.openwin = cc.instantiate(this.playway) ;
+        let dialog = cc.instantiate(this.playway) ;
+        cc.beimi.openwin = dialog;
         cc.beimi.openwin.parent = this.root();
+        let dialogScript = dialog.getComponent("PlayWayDialog");
+        console.log("----------onRecordClick-------------",dialogScript);
+        if (dialogScript) {
+          dialogScript.init(1);
+        }
     },
     onFeedBackClick:function(){
         cc.beimi.audio.playUiSound();

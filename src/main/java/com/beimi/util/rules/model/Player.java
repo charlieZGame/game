@@ -1,6 +1,7 @@
 package com.beimi.util.rules.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.beimi.core.engine.game.Message;
@@ -38,6 +39,9 @@ public class Player implements Message,java.io.Serializable , Cloneable{
 	private boolean accept ;	//抢地主 : 过地主
 	private boolean banker ;	//庄家
 	private byte[] played ;	//杠碰吃胡
+
+	private byte[] powerfull; //混子
+
 	private List<Action> actions = new ArrayList<Action>();
 
 	public byte[] getCardsArray() {
@@ -48,6 +52,7 @@ public class Player implements Message,java.io.Serializable , Cloneable{
 		if(this.cards == null || this.cards.length == 0){
 			return "";
 		}
+		Arrays.sort(this.cards);
 		StringBuilder sb = new StringBuilder();
 		for(byte _b : this.cards){
 			sb.append(",").append(_b);
@@ -194,5 +199,24 @@ public class Player implements Message,java.io.Serializable , Cloneable{
 
 	public void setEnd(boolean end) {
 		this.end = end;
+	}
+
+	public String getPowerfull() {
+		if(this.powerfull == null || this.powerfull.length == 0 ){
+			return null;
+		}
+		StringBuffer sb = new StringBuffer();
+		for(int i = 0;i< this.powerfull.length;i++){
+			sb.append(",").append(this.powerfull[i]);
+		}
+		return sb.substring(1);
+	}
+
+	public byte[] getPowerfullArray(){
+		return this.powerfull;
+	}
+
+	public void setPowerfull(byte[] powerfull) {
+		this.powerfull = powerfull;
 	}
 }

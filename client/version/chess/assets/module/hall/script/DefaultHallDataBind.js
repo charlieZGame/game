@@ -89,23 +89,12 @@ cc.Class({
   },
 
   refreshNotice: function() {
-    this.io = require("IOUtils");
-    var data = JSON.parse(this.io.get("userinfo"));
-    var xhr = cc.beimi.http.httpGet("/api/guest?token=" + data.token.id, this.sucess, this.error, this);
-  },
-
-  sucess: function(result, object) {
-    var data = JSON.parse(result);
-    if (data != null && data.token != null && data.data != null) {
-      console.log("获取公告成功");
-      object.lblNotice.string = '我是获取的公告信息---------';
-    }
-  },
-
-  error: function(object) {
-    if (this.lblNoticeLayout) {
+    if (cc.beimi.announcement!=null&&cc.beimi.announcement!='') {
+        this.lblNotice.string = cc.beimi.announcement;
+    }else {
         this.lblNoticeLayout.active = false;
     }
-    console.log("获取公告失败");
-  }
+
+  },
+
 });

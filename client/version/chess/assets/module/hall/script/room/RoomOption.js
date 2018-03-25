@@ -2,16 +2,6 @@ var beiMiCommon = require("BeiMiCommon");
 cc.Class({
     extends: beiMiCommon,
     properties: {
-        // foo: {
-        //    default: null,      // The default value will be used only when the component attaching
-        //                           to a node for the first time
-        //    url: cc.Texture2D,  // optional, default is typeof default
-        //    serializable: true, // optional, default is true
-        //    visible: true,      // optional, default is true
-        //    displayName: 'Foo', // optional
-        //    readonly: false,    // optional, default is false
-        // },
-        // ...
         atlas: {
             default: null,
             type: cc.SpriteAtlas
@@ -44,17 +34,89 @@ cc.Class({
             default:null ,
             type : cc.Node
         },
+
+        daikaiNode:{
+          default:null ,
+          type : cc.Node
+        },
+
+        middlecreatebt:{
+          default:null ,
+          type : cc.Node
+        },
+
+        rightcreatebt:{
+          default:null ,
+          type : cc.Node
+        },
+
+
         freeopt:{
             default:null ,
             type : cc.Node
-        }
+        },
+
+        freedaikaiNode:{
+          default:null ,
+          type : cc.Node
+        },
+
+        freemiddlecreatebt:{
+          default:null ,
+          type : cc.Node
+        },
+
+        freerightcreatebt:{
+          default:null ,
+          type : cc.Node
+        },
     },
 
     // use this for initialization
     onLoad: function () {
         let self = this ;
         this.group = new Array();
+
+        //创建房间
         this.node.on('createroom', function (event) {
+            cc.beimi.audio.playUiSound();
+            /**
+             * 把参数 汇总一下， 然后转JSON以后序列化成字符串，发送 创建房间的请求
+             */
+            var extparams = {} ;
+            let values = new Array();
+            for(var inx=0 ; inx<self.group.length ; inx++){
+                let groupitem = self.group[inx] ;
+                let value = "" ;
+                for(var j=0 ; j<groupitem.groupoptions.length ; j++){
+                    let option = groupitem.groupoptions[j] ;
+                    if(option.checked == true){
+                        if(value != ""){
+                            value = value + "," ;
+                        }
+                        value = value + option.item.value ;
+                    }
+                }
+                extparams[groupitem.data.code] = value ;
+            }
+            /**
+             * 藏到全局变量里去，进入场景后使用，然后把这个参数置空
+             * @type {{}}
+             */
+            extparams.gametype = self.data.code ;
+            extparams.playway = self.data.id;
+            extparams.gamemodel = "room" ;
+            /**
+             * 发送创建房间开始游戏的请求
+             */
+            event.stopPropagation() ;
+            console.log("发送创建房间开始游戏的请求======socket=preload======>",JSON.stringify(extparams));
+            self.preload(extparams , self) ;
+        });
+
+        //代开房间
+        this.node.on('daikai', function (event) {
+            cc.beimi.audio.playUiSound();
             /**
              * 把参数 汇总一下， 然后转JSON以后序列化成字符串，发送 创建房间的请求
              */
@@ -89,6 +151,7 @@ cc.Class({
             self.preload(extparams , self) ;
         });
     },
+
     init:function(playway){
         this.data = playway ;
         if(this.memo != null && playway.memo!=null && playway.memo!=""){
@@ -100,9 +163,27 @@ cc.Class({
         if(playway.free == true){
             this.freeopt.active = true;
             this.createroom.active = false ;
+            if (true) {
+              this.freedaikaiNode.active = true;
+              this.freemiddlecreatebt.active = false;
+              this.freerightcreatebt.active = true;
+            }else {
+              this.freedaikaiNode.active = false;
+              this.freemiddlecreatebt.active = true;
+              this.freerightcreatebt.active = false;
+            }
         }else{
             this.freeopt.active = false;
             this.createroom.active = true ;
+            if (true) {
+              this.daikaiNode.active = true;
+              this.middlecreatebt.active = false;
+              this.rightcreatebt.active = true;
+            }else {
+              this.daikaiNode.active = false;
+              this.middlecreatebt.active = true;
+              this.rightcreatebt.active = false;
+            }
         }
         if(playway.roomtitle!=null && playway.roomtitle!=""){
             let frame = this.atlas.getSpriteFrame(playway.roomtitle);

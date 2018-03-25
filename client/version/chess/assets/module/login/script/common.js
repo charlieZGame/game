@@ -60,7 +60,45 @@ cc.Class({
     error:function(object){
         object.closeloadding(object.loaddingDialog);
         object.alert("网络异常，服务访问失败");
-    }
+    },
+
+
+    wxlogin:function(){
+        cc.beimi.audio.playUiSound();
+        if(!this.useragreement.active){
+            this.alert("请先同意用户协议，再登录");
+          return;
+        }
+        this.loadding();
+        var agent = anysdk.agentManager;
+        var user_plugin = agent.getUserPlugin();
+
+        user_plugin.setListener(this.onUserResult, this);
+
+        user_plugin.login();
+  },
+
+  onUserResult:function(code, msg){
+      cc.log("on user result action.");
+      cc.log("msg:"+msg);
+      cc.log("code:"+code); //这里可以根据返回的 code 和 msg 做相应的处理
+      object.closeloadding(object.loaddingDialog);
+      switch(code) {
+          case anysdk.UserActionResultCode.kLoginSuccess:
+              // 登录成功！
+              break;
+          case anysdk.UserActionResultCode.kLoginNetworkError: //登陆网络出错回调
+              // 登录失败：网络异常，请稍后再试
+              break;
+          case anysdk.UserActionResultCode.kLoginCancel: //登陆取消回调
+              // 您取消了登录
+              break;
+          case anysdk.UserActionResultCode.kLoginFail: //登陆失败回调
+              //登陆失败后，游戏相关处理
+              // "登录失败：" + msg
+              break;
+      }
+  }
 
     // called every frame, uncomment this function to activate update callback
     // update: function (dt) {

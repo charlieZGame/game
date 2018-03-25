@@ -99,6 +99,10 @@ cc.Class({
             cc.beimi.audio = new Audio();
             cc.beimi.audio.init();
 
+            var VoiceMgr = require("VoiceMgr");
+            cc.beimi.voiceMgr = new VoiceMgr();
+            cc.beimi.voiceMgr.init();
+
             if(cc.sys.isNative){
                 window.io = SocketIO;
             }else{

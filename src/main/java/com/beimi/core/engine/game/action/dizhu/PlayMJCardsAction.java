@@ -12,7 +12,7 @@ import com.beimi.util.rules.model.Board;
 import com.beimi.web.model.GameRoom;
 
 /**
- * 凑够了，开牌
+ * 出牌逻辑
  * @author iceworld
  *
  */

@@ -57,23 +57,23 @@ public class BeiMiMaJiangStateMachineConfig<T, S>  {
 	        	.and()
             .withExternal()	
                 .source(BeiMiGameEnum.WAITTING.toString()).target(BeiMiGameEnum.READY.toString())
-                .event(BeiMiGameEvent.ENOUGH.toString()).action(new EnoughAction<String, String>())
+                .event(BeiMiGameEvent.ENOUGH.toString()).action(new EnoughAction<String, String>()) // 设置庄，发牌
                 .and()
             .withExternal()
                 .source(BeiMiGameEnum.READY.toString()).target(BeiMiGameEnum.BEGIN.toString())
-                .event(BeiMiGameEvent.AUTO.toString()).action(new SelectAction<String,String>())	//抢地主 
+                .event(BeiMiGameEvent.AUTO.toString()).action(new SelectAction<String,String>())	// 定缺
                 .and()
             .withExternal()
                 .source(BeiMiGameEnum.BEGIN.toString()).target(BeiMiGameEnum.LASTHANDS.toString())
-                .event(BeiMiGameEvent.RAISEHANDS.toString()).action(new MJRaiseHandsAction<String,String>())
+                .event(BeiMiGameEvent.RAISEHANDS.toString()).action(new MJRaiseHandsAction<String,String>()) // 判断是否都选了缺，同时指定下一个出牌人是庄
                 .and()
             .withExternal()
                 .source(BeiMiGameEnum.LASTHANDS.toString()).target(BeiMiGameEnum.LASTHANDS.toString())
-                .event(BeiMiGameEvent.DEAL.toString()).action(new DealMJCardAction<String,String>())
+                .event(BeiMiGameEvent.DEAL.toString()).action(new DealMJCardAction<String,String>()) // 取牌逻辑 通知下一个玩家取牌 并判断是否是碰吃杠糊
                 .and()
              .withExternal()
                 .source(BeiMiGameEnum.LASTHANDS.toString()).target(BeiMiGameEnum.PLAY.toString())
-                .event(BeiMiGameEvent.PLAYCARDS.toString()).action(new PlayMJCardsAction<String,String>())
+                .event(BeiMiGameEvent.PLAYCARDS.toString()).action(new PlayMJCardsAction<String,String>()) // 打牌逻辑 通知出牌
                 .and()
             .withExternal()
                 .source(BeiMiGameEnum.PLAY.toString()).target(BeiMiGameEnum.END.toString())

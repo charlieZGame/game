@@ -23,10 +23,15 @@ cc.Class({
         /**
          * 关闭ALERT的回调动作
          */
+         let self = this;
         this.node.on("close", function (event) {
             if(cc.beimi!=null && cc.beimi.sessiontimeout == true){
                 cc.beimi.sessiontimeout = null;
                 self.scene("login" , self) ;
+            }else if (cc.beimi!=null &&cc.beimi.isLeaveroom) {
+               console.log("====cc.beimi.isLeaveroom==========",cc.beimi.isLeaveroom);
+                self.scene(cc.beimi.gametype, self);
+                cc.beimi.isLeaveroom= false;
             }
             event.stopPropagation();
         });

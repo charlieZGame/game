@@ -11,7 +11,7 @@ import com.beimi.util.cache.CacheHelper;
 import com.beimi.web.model.GameRoom;
 
 /**
- * 抓牌
+ * 抓牌 取牌逻辑
  * @author iceworld
  *
  * @param <T>

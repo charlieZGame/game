@@ -1,16 +1,16 @@
 {
-  "appKey": "",
-  "appSecret": "",
+  "appKey": "C7C2C1C0-0C70-B338-55DE-64B7D3E72D76",
+  "appSecret": "ec80e700bd600ede14013ee050558606",
   "encryptJs": true,
   "excludeScenes": [],
-  "includeAnySDK": false,
+  "includeAnySDK": true,
   "includeSDKBox": false,
   "inlineSpriteFrames": true,
   "inlineSpriteFrames_native": true,
   "jailbreakPlatform": false,
   "md5Cache": false,
   "mergeStartScene": false,
-  "oauthLoginServer": "",
+  "oauthLoginServer": "http://suncity.ink:8080/login/check",
   "optimizeHotUpdate": false,
   "orientation": {
     "landscapeLeft": true,
@@ -18,16 +18,16 @@
     "portrait": false,
     "upsideDown": false
   },
-  "packageName": "org.cocos2d.helloworld",
-  "privateKey": "",
+  "packageName": "com.ding.yuanshi",
+  "privateKey": "4B80B0F07DA667D8A6714618A25C8B65",
   "renderMode": "0",
   "startScene": "1db3d56a-e495-44b9-a343-d13e8a09ce72",
-  "title": "hello_world",
+  "title": "majiang",
   "webOrientation": "auto",
   "wechatgame": {
     "appid": "",
     "orientation": "portrait"
   },
-  "xxteaKey": "e3abd5ab-5322-4c",
+  "xxteaKey": "ca9512d5-04d7-4b",
   "zipCompressJs": true
 }

@@ -2,16 +2,6 @@ cc.Class({
     extends: cc.Component,
 
     properties: {
-        // foo: {
-        //    default: null,      // The default value will be used only when the component attaching
-        //                           to a node for the first time
-        //    url: cc.Texture2D,  // optional, default is typeof default
-        //    serializable: true, // optional, default is true
-        //    visible: true,      // optional, default is true
-        //    displayName: 'Foo', // optional
-        //    readonly: false,    // optional, default is false
-        // },
-        // ...
         atlas: {
             default: null,
             type: cc.SpriteAtlas
@@ -29,12 +19,17 @@ cc.Class({
             type: cc.Node
         },
 
+        laizi:{
+            default: null,
+            type: cc.Node
+        },
     },
 
     // use this for initialization
     onLoad: function () {
         this.lastonecard = false ;
         this.take = false ;
+        this.laizi.active = false;
         this.node.on('mousedown', function ( event ) {
             console.log('Hello!');
         });
@@ -42,6 +37,7 @@ cc.Class({
             console.log('Hello Mover!');
         });
     },
+
     init:function(cvalue){
         this.value = cvalue ;
         let cardframe ;
@@ -71,25 +67,29 @@ cc.Class({
         }
         this.cardvalue.getComponent(cc.Sprite).spriteFrame = cardframe;
 
-        var anim = this.getComponent(cc.Animation);
-        anim.play("majiang_current");
+        // var anim = this.getComponent(cc.Animation);
+        // anim.play("majiang_current");
     },
+
     lastone:function(){
         if(this.lastonecard == false){
             this.lastonecard = true;
             this.target.width = this.target.width + 30 ;
         }
     },
+
     selected:function(){
         this.target.opacity = 168 ;
         this.selectcolor = true ;
     },
+
     relastone:function(){
         if(this.lastonecard == true){
             this.lastonecard = false;
             this.target.width = this.target.width - 30 ;
         }
     },
+
     reinit:function(){
         this.relastone();
 
@@ -102,10 +102,16 @@ cc.Class({
             this.target.y = this.target.y - 30 ;
             this.take = false ;
         }
+    },
+
+    setLaizi:function(){
+      this.laizicard = true;
+      this.laizi.active = true;
+    },
+
+    koucard:function(){
+      var anim = this.getComponent(cc.Animation);
+      anim.play("majiang_kou");
     }
 
-    // called every frame, uncomment this function to activate update callback
-    // update: function (dt) {
-
-    // },
 });

@@ -21,6 +21,7 @@ public class BMDataContext {
 	public static final String BEIMI_SYSTEM_GAME_ROOMTITLE_DIC = "com.dic.game.room.title";
 	
 	public static final String BEIMI_MESSAGE_EVENT = "command" ;
+	public static final String CHAT = "chat" ;
 	public static final String BEIMI_PLAYERS_EVENT = "players" ;
 	
 	public static final String BEIMI_GAMESTATUS_EVENT = "gamestatus" ;

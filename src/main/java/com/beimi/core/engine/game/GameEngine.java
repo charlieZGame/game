@@ -3,9 +3,11 @@ package com.beimi.core.engine.game;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Resource;
 
+import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.kie.api.runtime.KieSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,8 +49,8 @@ public class GameEngine {
 	@Resource
 	private KieSession kieSession;
 	
-	public void gameRequest(String userid ,String playway , String room , String orgi , PlayUserClient userClient , BeiMiClient beiMiClient ){
-		GameEvent gameEvent = gameRequest(userClient.getId(), beiMiClient.getPlayway(), beiMiClient, beiMiClient.getOrgi(), userClient) ; //如果是新玩家，创建房间，加入队列等待
+	public void gameRequest(String userid ,String playway , String room , String orgi , PlayUserClient userClient , BeiMiClient beiMiClient,String data ){
+		GameEvent gameEvent = gameRequest(userClient.getId(), beiMiClient.getPlayway(), beiMiClient, beiMiClient.getOrgi(), userClient,data) ; //如果是新玩家，创建房间，加入队列等待
 		if(gameEvent != null){
 			/**
 			 * 举手了，表示游戏可以开始了
@@ -83,7 +85,9 @@ public class GameEngine {
 					if((board.getLast()!=null && board.getLast().getUserid().equals(currentPlayer.getPlayuser())) || (board.getLast() == null && board.getBanker().equals(currentPlayer.getPlayuser()))){
 						automic = true ;
 					}
+/*
 					ActionTaskUtils.sendEvent("recovery", new RecoveryData(currentPlayer , board.getLasthands() , board.getNextplayer()!=null ? board.getNextplayer().getNextplayer() : null , 25 , automic , board) , gameEvent.getGameRoom());
+*/
 				}
 			}else{
 				//通知状态
@@ -99,8 +103,9 @@ public class GameEngine {
 	 * @param orgi
 	 * @return
 	 */
-	public GameEvent gameRequest(String userid ,String playway , BeiMiClient beiMiClient , String orgi , PlayUserClient playUser){
+	public GameEvent gameRequest(String userid ,String playway , BeiMiClient beiMiClient , String orgi , PlayUserClient playUser,String data){
 		GameEvent gameEvent = null ;
+
 		String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(userid, orgi) ;
 		//String roomid = ((GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(userid, orgi)).getRoomid() ;
 		GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(playway, orgi) ;
@@ -146,6 +151,21 @@ public class GameEngine {
 				 * 设置游戏当前已经进行的局数
 				 */
 				gameRoom.setCurrentnum(0);
+
+				// 更新混子
+				if(StringUtils.isNotEmpty(data)) {
+					Map<String, Object> map = JSONObject.parseObject(data, Map.class);
+					if(map != null && !map.isEmpty() && map.containsKey("extparams")){
+						JSONObject jsonObject = (JSONObject)map.get("extparams");
+						if(jsonObject != null && StringUtils.isNotEmpty((String)jsonObject.get("hun"))){
+							gameRoom.setPowerfulsize(Integer.parseInt(jsonObject.get("hun").toString()));
+						}
+						if(jsonObject != null && StringUtils.isNotEmpty((String)jsonObject.get("jun"))){
+							gameRoom.setNumofgames(Integer.parseInt(jsonObject.get("jun").toString()));
+						}
+					}
+				}
+
 				/**
 				 * 更新缓存
 				 */
@@ -313,11 +333,11 @@ public class GameEngine {
 	 * @param roomid
 	 * 
 	 * @param auto 是否自动出牌，超时/托管/AI会调用 = true
-
+     *
 	 * @param orgi
 	 * @return
 	 */
-	public TakeCards takeCardsRequest(String roomid, String playUserClient, String orgi , boolean auto , byte[] playCards){
+	public TakeCards takeCardsRequest(String roomid, String playUserClient, String orgi , boolean auto , byte[] playCards){// playCards 为打出去的牌
 		TakeCards takeCards = null ;
 		GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, orgi) ;
 		if(gameRoom!=null){
@@ -362,7 +382,7 @@ public class GameEngine {
 			 */
 			this.startGameRequest(roomid, playerUser, playerUser.getOrgi(), opendeal);
 		}else if(playerList == null || playerList.size() == 0 || gameRoom == null){//房间已解散
-			BMDataContext.getGameEngine().gameRequest(playerUser.getId(), beiMiClient.getPlayway(), beiMiClient.getRoom(), beiMiClient.getOrgi(), playerUser , beiMiClient) ;
+			BMDataContext.getGameEngine().gameRequest(playerUser.getId(), beiMiClient.getPlayway(), beiMiClient.getRoom(), beiMiClient.getOrgi(), playerUser , beiMiClient,null) ;
 			/**
 			 * 结算后重新开始游戏
 			 */

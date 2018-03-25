@@ -59,6 +59,7 @@ cc.Class({
 
         cc.beimi.socket.on('disconnect', function (data) {
             console.log("disconnected from server");
+
             //self.alert("disconnected from server");
 
         });
@@ -219,7 +220,10 @@ cc.Class({
     decode:function(data){
         var cards = new Array();
         if (data!=null) {
-          cards = data.split(",");
+          const tempCards = data.split(",");
+          for (var i = 0; i < tempCards.length; i++) {
+            cards.push(parseInt(tempCards[i]));
+          }
         }
 
         // if(!cc.sys.isNative) {
@@ -253,7 +257,8 @@ cc.Class({
         cc.beimi.authorization = data.token.id ;
         cc.beimi.user = data.data ;
         cc.beimi.games = data.games ;
-        cc.beimi.gametype = data.gametype ;
+        cc.beimi.gametype = data.gametype;
+        cc.beimi.announcement = data.announcement;
 
         cc.beimi.data = data ;
         cc.beimi.playway = null ;
@@ -293,6 +298,7 @@ cc.Class({
     route:function(command){
         return cc.beimi.routes[command] || function(){};
     },
+
     /**
      * 解决Layout的渲染顺序和显示顺序不一致的问题
      * @param target
@@ -308,7 +314,6 @@ cc.Class({
             for(var inx = 0 ; inx < temp.length ; inx++){
                 target.removeChild(temp[inx]) ;
             }
-
             temp.sort(func) ;
             for(var inx =0 ; inx<temp.length ; inx++){
                 temp[inx].parent = target ;

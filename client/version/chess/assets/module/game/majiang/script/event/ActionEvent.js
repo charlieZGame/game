@@ -21,6 +21,7 @@ cc.Class({
 
     },
     onClick:function(event , data){
+        console.log("自定义事件收到点击==============",data);
         this.node.dispatchEvent( new cc.Event.EventCustom(data, true) );
     }
     // called every frame, uncomment this function to activate update callback

@@ -40,7 +40,8 @@ cc.Class({
     doneLabel: {
       default: null,
       type: cc.Label
-    }
+    },
+
 
   },
 
@@ -60,6 +61,7 @@ cc.Class({
       cc.beimi.openwin = cc.instantiate(this.leaveDialogprefab);
       cc.beimi.openwin.parent = this.root();
     }
+
   },
 
   onSettingsClick: function() {
@@ -138,7 +140,6 @@ cc.Class({
       this.refusedNode.active = false;
     }
   },
-
 
 
 });

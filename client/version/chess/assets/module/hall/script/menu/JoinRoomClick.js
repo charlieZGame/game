@@ -32,6 +32,7 @@ cc.Class({
         this.roomid = new Array() ;
     },
     onClick:function(event,data){
+        cc.beimi.audio.playUiSound();
         if(this.roomid.length < 6){
             this.roomid.push(data);
             this.disRoomId();
@@ -80,14 +81,17 @@ cc.Class({
         }
     },
     onDeleteClick:function(){
+        cc.beimi.audio.playUiSound();
         this.roomid.splice(this.roomid.length-1 , this.roomid.length) ;
         this.disRoomId();
     },
     onCleanClick:function(){
+        cc.beimi.audio.playUiSound();
         this.roomid.splice(0 , this.roomid.length) ;
         this.disRoomId();
     },
     disRoomId:function(){
+        cc.beimi.audio.playUiSound();
         let children = this.numdata.children ;
         for(var inx = 0 ; inx < 6 ; inx ++){
             if(inx < this.roomid.length){

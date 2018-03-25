@@ -16,6 +16,13 @@ import com.beimi.web.model.GameRoom;
  *
  * @param <T>
  * @param <S>
+ *
+ * modify zhengchenglei
+ * /**
+ * 判断人员是否选缺，如果没有选缺 系统自动帮他选缺， 选缺的规则是 玩家手里牌最少的一个
+ *
+ * 设置下一个出牌玩家是庄，且庄不需要取牌
+ *
  */
 public class MJRaiseHandsAction<T,S> implements Action<T, S>{
 

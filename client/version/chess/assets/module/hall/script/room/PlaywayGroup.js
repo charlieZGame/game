@@ -2,16 +2,6 @@ var beiMiCommon = require("BeiMiCommon");
 cc.Class({
     extends: beiMiCommon,
     properties: {
-        // foo: {
-        //    default: null,      // The default value will be used only when the component attaching
-        //                           to a node for the first time
-        //    url: cc.Texture2D,  // optional, default is typeof default
-        //    serializable: true, // optional, default is true
-        //    visible: true,      // optional, default is true
-        //    displayName: 'Foo', // optional
-        //    readonly: false,    // optional, default is false
-        // },
-        // ...
         grouptitle:{
             default:null ,
             type : cc.Label
@@ -32,14 +22,32 @@ cc.Class({
             default:null ,
             type : cc.Label
         },
+
+        checkboxlayout:{
+            default:null ,
+            type : cc.Node
+        },
+
         checkbox:{
             default:null ,
             type : cc.Node
         },
+
         checkboxnode:{
             default:null ,
             type : cc.Node
-        }
+        },
+
+        radiolayout:{
+            default:null ,
+            type : cc.Node
+        },
+
+        radioselect:{
+            default:null ,
+            type : cc.Node
+        },
+
     },
 
     // use this for initialization
@@ -70,6 +78,29 @@ cc.Class({
             }
             event.stopPropagation() ;
         });
+
+        this.node.on('radio', function (event) {
+            if(self.radiolayout!=null){
+                if(self.checked == false){
+                    if(self.data.type == "radio"){
+                        for(var inx = 0 ; inx < self.options.length ; inx++){
+                            let script = self.options[inx] ;
+                            script.doUnChecked() ;
+                        }
+                    }
+                    self.doChecked();
+                }else{
+                    if(self.data.type == "radio"){
+                        for(var inx = 0 ; inx < self.options.length ; inx++){
+                            let script = self.options[inx] ;
+                            script.doUnChecked() ;
+                        }
+                        self.doChecked();
+                    }
+                }
+            }
+            event.stopPropagation() ;
+        });
     },
     init:function(group , itempre , items , parentoptions){
         this.data = group ;
@@ -77,7 +108,6 @@ cc.Class({
 
         this.groupoptions = new Array();
         this.checked = false ;
-
 
         this.grouptitle.string = group.name ;
         if(this.groupbox!=null && itempre!=null){
@@ -138,13 +168,31 @@ cc.Class({
             this.checkboxnode.x = -76 ;
         }
     },
+
     doChecked:function(){
         this.checked = true ;
-        this.checkbox.active = true ;
+        if(this.data.type == "radio"){
+          this.checkboxlayout.active = false;
+          this.radiolayout.active = true;
+          this.radioselect.active = true ;
+        }else {
+            this.checkboxlayout.active = true;
+            this.checkbox.active = true ;
+            this.radiolayout.active = false;
+        }
+
     },
     doUnChecked:function(){
         this.checked = false ;
-        this.checkbox.active = false;
+        if(this.data.type == "radio"){
+          this.checkboxlayout.active = false;
+          this.radiolayout.active = true;
+          this.radioselect.active = false ;
+        }else {
+            this.checkboxlayout.active = true;
+            this.checkbox.active = false ;
+            this.radiolayout.active = false;
+        }
     }
 
     // called every frame, uncomment this function to activate update callback

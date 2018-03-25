@@ -265,9 +265,7 @@
     "atlas": {
       "__uuid__": "9917343c-0dbb-427b-929c-0e01f0eb67fa"
     },
-    "beimi0": {
-      "__uuid__": "9917343c-0dbb-427b-929c-0e01f0eb67fa"
-    },
+    "beimi0": null,
     "cardvalue": {
       "__id__": 3
     },

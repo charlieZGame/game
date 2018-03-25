@@ -34,8 +34,8 @@ public class CreateDealMJCardTask extends AbstractTask implements ValueWithExpir
 	 */
 	public void execute(){
 		Board board = (Board) CacheHelper.getBoardCacheBean().getCacheObject(gameRoom.getId(), gameRoom.getOrgi());
-		if(board!=null){
-			board.dealRequest(gameRoom, board, orgi , false,  null);
+		if(board!=null) {
+			board.dealRequest(gameRoom, board, orgi, false, null);
 		}
 	}
 }

@@ -86,8 +86,6 @@ public class TakeMaJiangCards extends TakeCards implements Message , java.io.Ser
 	 * 
 	 * 玩家出牌，不做校验，传入之前的校验结果
 	 * @param player
-	 * @param last
-	 * @param cards
 	 */
 	public TakeMaJiangCards(Player player , boolean allow , byte[] playCards){
 		this.userid = player.getPlayuser() ;
@@ -107,7 +105,6 @@ public class TakeMaJiangCards extends TakeCards implements Message , java.io.Ser
 	/**
 	 * 搜索符合条件的当前最小 牌型
 	 * @param player
-	 * @param last
 	 * @return
 	 */
 	public byte[] search(Player player , TakeCards lastTakeCards){
@@ -265,7 +262,6 @@ public class TakeMaJiangCards extends TakeCards implements Message , java.io.Ser
 	
 	/**
 	 * 找到机器人或托管的牌 ， 优先检查是否有 定缺，如果有定缺，就查找定缺的牌
-	 * @param cards
 	 * @param start
 	 * @return
 	 */
@@ -288,7 +284,6 @@ public class TakeMaJiangCards extends TakeCards implements Message , java.io.Ser
 	
 	/**
 	 * 找到托管玩家或超时玩家的最小的牌 ，不管啥牌，从最小的开始出
-	 * @param cards
 	 * @param start
 	 * @return
 	 */
@@ -322,8 +317,6 @@ public class TakeMaJiangCards extends TakeCards implements Message , java.io.Ser
 	/**
 	 * 移除出牌
 	 * @param cards
-	 * @param start
-	 * @param end
 	 * @return
 	 */
 	public byte[] removeCards(byte[] cards , byte[] playcards){

@@ -12,6 +12,7 @@ import com.beimi.web.model.GameRoom;
 
 /**
  * 凑够了，开牌
+ * ZCL 定缺
  * @author iceworld
  *
  */

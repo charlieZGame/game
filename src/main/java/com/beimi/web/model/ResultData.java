@@ -33,10 +33,13 @@ public class ResultData implements java.io.Serializable{
 	private String recmsg ;		//金币不足进行充值的时候的提示
 	
 	private int lefttimes ;		//当天剩余补助次数
-	
+
 	private Token token ;
 	private List<BeiMiGame> games ;		//游戏配置里选择的游戏类型
-	
+
+	private String announcement;  // 广告配置信息
+
+
 	public ResultData(boolean status , String msg , Object data){
 		this.status = status ;
 		this.msg = msg ;
@@ -180,4 +183,13 @@ public class ResultData implements java.io.Serializable{
 	public void setRecmsg(String recmsg) {
 		this.recmsg = recmsg;
 	}
+
+	public String getAnnouncement() {
+		return announcement;
+	}
+
+	public void setAnnouncement(String announcement) {
+		this.announcement = announcement;
+	}
+
 }

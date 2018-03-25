@@ -29,6 +29,7 @@ cc.Class({
     onLoad :function() {},
 
     onClick : function() {
+        cc.beimi.audio.playUiSound();
         if(this.playway!=null){
             let script = this.playway.getComponent("RoomPlayway") ;
             let roomplayway = cc.instantiate(script.roomoption) ;
