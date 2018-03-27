@@ -4,7 +4,7 @@
 
 开源棋牌游戏，包含麻将、德州、斗地主。首个版本会采用当前最流行的房卡模式。
 
-贝密游戏是一系列棋牌游戏的名称，其中包含麻将、斗地主、德州，目前正在进行UI设计以及后台系统（JAVA）开发，7月中发布0.1.0版本，仅包含前端UI方案，预计8月份发布首个版本，敬请关注！
+涞源麻将游戏是一系列棋牌游戏的名称，其中包含麻将、斗地主、德州，目前正在进行UI设计以及后台系统（JAVA）开发，7月中发布0.1.0版本，仅包含前端UI方案，预计8月份发布首个版本，敬请关注！
 
 
 1. 开发工具：Cocos Creater
@@ -18,7 +18,7 @@
 
 
  ** 
-美术资源已经移动到 [贝密美术资源](https://gitee.com/beimi_admin/beimi-psd)
+美术资源已经移动到 [涞源麻将美术资源](https://gitee.com/beimi_admin/beimi-psd)
  ** 
 
 
@@ -27,7 +27,7 @@
 
 [![输入图片说明](https://git.oschina.net/uploads/images/2017/0609/233259_8ab02715_1387891.png "在这里输入图片标题")](http:////shang.qq.com/wpa/qunwpa?idkey=3735ebb729ef696009be07fa2e2eba7feee6acf89c07e6e68a9b56504d9fabd0)
 
-关注微信公众号，购买付费视频课程，微信公众号：贝密信息，yunbeimi
+关注微信公众号，购买付费视频课程，微信公众号：涞源麻将信息，yunbeimi
 
 ![输入图片说明](https://gitee.com/uploads/images/2018/0108/081612_5e29673b_1387891.jpeg "qrcode_for_gh_b21c83fa3ff9_344.jpg")
 

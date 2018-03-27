@@ -94,4 +94,20 @@ public class MJCardMessage implements Message,java.io.Serializable{
 	public void setDeal(boolean deal) {
 		this.deal = deal;
 	}
+
+
+	@Override
+	public String toString() {
+		return "MJCardMessage{" +
+				"gang=" + gang +
+				", peng=" + peng +
+				", chi=" + chi +
+				", hu=" + hu +
+				", deal=" + deal +
+				", card=" + card +
+				", command='" + command + '\'' +
+				", userid='" + userid + '\'' +
+				", takeuser='" + takeuser + '\'' +
+				'}';
+	}
 }

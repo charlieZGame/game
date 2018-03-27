@@ -75,6 +75,7 @@ public class GamePlayway implements java.io.Serializable{
 
 	private String cardsrules ;	//定义允许的出牌规则
     private String mjwinrules ; //麻将允许的胡牌规则
+	private String gameType;    //游戏类型，例如涞源麻将混扣
 	
 	@Id
 	@Column(length = 32)
@@ -303,4 +304,11 @@ public class GamePlayway implements java.io.Serializable{
 		this.wintype = wintype;
 	}
 
+	public String getGameType() {
+		return gameType;
+	}
+
+	public void setGameType(String gameType) {
+		this.gameType = gameType;
+	}
 }

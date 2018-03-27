@@ -553,6 +553,7 @@ public class GameEventHandler {
 				String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(userToken.getUserid(), userToken.getOrgi());
 				String[] cards = data.split(",");
 
+				logger.info("用户打出来的牌为 data:{}",data);
 				byte[] playCards = new byte[cards.length];
 				for (int i = 0; i < cards.length; i++) {
 					playCards[i] = Byte.parseByte(cards[i]);
@@ -592,7 +593,7 @@ public class GameEventHandler {
 		}
 	}
 
-	//出牌  // TODO: 2018/3/15 吃碰杠方法调用
+	//出牌  // TODO: 2018/3/15 吃碰杠胡方法调用
 	@OnEvent(value = "selectaction")
 	public void onActionEvent(SocketIOClient client, String data) {
 		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());

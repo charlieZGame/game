@@ -16,8 +16,13 @@ import com.beimi.util.rules.model.Player;
 import com.beimi.web.model.GamePlayway;
 import com.beimi.web.model.GameRoom;
 import com.beimi.web.model.PlayUserClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MaJiangGame implements ChessGame{
+
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
+
 	/**
 	 * 开始麻将游戏 ， 麻将牌 生成规则（总共136张牌，还不会玩 带 春夏秋冬 梅兰竹菊 的玩法，暂不处理） ， 
 	 * 1~108:1万~9万小计 36 ， 1筒~9筒小计36，1条~9条小计36  0-107
@@ -82,7 +87,7 @@ public class MaJiangGame implements ChessGame{
 		/**
 		 * 以下为定癞子牌(根据玩法需要)
 		 */
-		generatePowerfull(board,cards,playway,players,gameRoom.getPowerfulsize());
+		generatePowerful(board,cards,playway,players,gameRoom.getPowerfulsize());
 
 		/**
 		 * 切墩 ， 每次 4张， 发够 12张，然后再挑一张牌 ， 切墩 跳过了 骰子
@@ -132,7 +137,7 @@ public class MaJiangGame implements ChessGame{
 	}
 
 
-	private void generatePowerfull(Board board ,byte[] cards,GamePlayway playway,Player[] players,Integer size) {
+	private void generatePowerful(Board board ,byte[] cards,GamePlayway playway,Player[] players,Integer size) {
 
 		/*if (playway == null || playway.getPowerfulNum() == 0) {
 			return;
@@ -176,7 +181,7 @@ public class MaJiangGame implements ChessGame{
 						} else {
 							b[1] = (byte) ((powerful[0] + 2) * 4);
 						}
-					}
+					}break;
 					case 3: {
 						if (powerful[0] % 9 == 8) {
 							b[1] = (byte) ((powerful[0] - 8) * 4);
@@ -188,31 +193,31 @@ public class MaJiangGame implements ChessGame{
 							b[1] = (byte) ((powerful[0] + 1) * 4);
 							b[2] = (byte) ((powerful[0] + 2) * 4);
 						}
-					}
+					}break;
 				}
 			}else{
 				switch (size){
 					case 2 : {
-						if(powerful[0]==7){
+						if(powerful[0]==-7){
 							b[1] = (byte) ((powerful[0] + 5) * 4);
-						}else if(powerful[0]==6){
+						}else if(powerful[0]==-6){
 							b[1] = (byte) ((powerful[0] + 6) * 4);
 						}else{
 							b[1] = (byte) ((powerful[0] - 2) * 4);
 						}
-					}
+					}break;
 					case  3 : {
-						if(powerful[0]==7){
+						if(powerful[0]==-7){
 							b[1] = (byte) ((powerful[0] + 6) * 4);
 							b[2] = (byte) ((powerful[0] + 5) * 4);
-						}else if(powerful[0]==6){
+						}else if(powerful[0]==-6){
 							b[2] = (byte) ((powerful[0] - 1) * 4);
 							b[1] = (byte) ((powerful[0] + 6) * 4);
 						}else{
 							b[1] = (byte) ((powerful[0] - 1) * 4);
 							b[2] = (byte) ((powerful[0] - 2) * 4);
 						}
-					}
+					}break;
 				}
 			}
 
@@ -220,11 +225,12 @@ public class MaJiangGame implements ChessGame{
 				player.setPowerfull(b);
 			}
 
-			byte[] temp = new byte[size];
+			StringBuilder sb = new StringBuilder();
 			for(int j = 0 ; j < b.length ; j++){
-				temp[j] = (byte) (b[j]/4);
+				sb.append(",").append(b);
 			}
-			board.setPowerful(temp);    //填癞子牌
+			logger.info("RoomId:{} 生成混子是 hun:{}",board.getId(),"["+sb.substring(1)+"]");
+			board.setPowerful(b);    //填癞子牌
 		}
 	}
 

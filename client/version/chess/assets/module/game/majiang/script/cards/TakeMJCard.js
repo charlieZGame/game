@@ -14,6 +14,10 @@ cc.Class({
     onClick:function(){
         let handCards = this.target.getComponent("HandCards")
         let self = this ;
+        console.log('点击的handCards.isLaizi---->',handCards);
+        if(handCards.laizi.active){
+          return
+        }
         if(this.clickstate == true){
             //出牌
             this.node.dispatchEvent( new cc.Event.EventCustom('takecard', true) );
@@ -31,5 +35,5 @@ cc.Class({
             } , 500) ;
         }
     }
-  
+
 });

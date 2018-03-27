@@ -29,9 +29,13 @@
     ],
     "_tag": -1,
     "_active": true,
-    "_components": [],
+    "_components": [
+      {
+        "__id__": 34
+      }
+    ],
     "_prefab": {
-      "__id__": 34
+      "__id__": 35
     },
     "_id": "",
     "_opacity": 255,
@@ -219,8 +223,8 @@
       "width": 79,
       "height": 111
     },
-    "_rotationX": 0,
-    "_rotationY": 0,
+    "_rotationX": 180,
+    "_rotationY": 180,
     "_scaleX": 0.5,
     "_scaleY": 0.5,
     "_position": {
@@ -1088,6 +1092,39 @@
     },
     "fileId": "f60hBeZS5BSZWhMLpgiInV",
     "sync": false
+  },
+  {
+    "__type__": "0fe67JecMpLz5GGCrRtpy0D",
+    "_name": "",
+    "_objFlags": 0,
+    "node": {
+      "__id__": 1
+    },
+    "_enabled": true,
+    "atlas": {
+      "__uuid__": "9917343c-0dbb-427b-929c-0e01f0eb67fa"
+    },
+    "beimi0": {
+      "__uuid__": "9917343c-0dbb-427b-929c-0e01f0eb67fa"
+    },
+    "card_one": {
+      "__id__": 4
+    },
+    "card_two": {
+      "__id__": 12
+    },
+    "card_three": {
+      "__id__": 20
+    },
+    "card_four": {
+      "__id__": 28
+    },
+    "card_last": {
+      "__id__": 26
+    },
+    "target": {
+      "__id__": 1
+    }
   },
   {
     "__type__": "cc.PrefabInfo",

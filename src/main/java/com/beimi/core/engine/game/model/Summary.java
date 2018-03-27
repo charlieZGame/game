@@ -15,7 +15,8 @@ public class Summary implements Message,java.io.Serializable{
 	private String game ;		//房间ID
 	private String board;		//场次 ID
 	private int ratio ;			//倍率
-	private String command ;	
+	private String command ;
+	private boolean isHu;
 	private boolean finished = true ;
 	private boolean gameRoomOver ;	
 	
@@ -77,5 +78,28 @@ public class Summary implements Message,java.io.Serializable{
 	}
 	public void setGameRoomOver(boolean gameRoomOver) {
 		this.gameRoomOver = gameRoomOver;
+	}
+
+	public boolean isHu() {
+		return isHu;
+	}
+
+	@Override
+	public String toString() {
+		return "Summary{" +
+				"game='" + game + '\'' +
+				", board='" + board + '\'' +
+				", ratio=" + ratio +
+				", command='" + command + '\'' +
+				", isHu=" + isHu +
+				", finished=" + finished +
+				", gameRoomOver=" + gameRoomOver +
+				", score=" + score +
+				", players=" + players +
+				'}';
+	}
+
+	public void setHu(boolean hu) {
+		isHu = hu;
 	}
 }

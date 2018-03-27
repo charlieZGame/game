@@ -1,5 +1,7 @@
 package com.beimi.core.engine.game.task;
 
+import com.beimi.core.engine.game.model.MJCardMessage;
+import com.beimi.util.GameUtils;
 import org.cache2k.expiry.ValueWithExpiryTime;
 
 import com.beimi.core.BMDataContext;
@@ -12,6 +14,9 @@ import com.beimi.util.rules.model.Player;
 import com.beimi.web.model.GamePlayway;
 import com.beimi.web.model.GameRoom;
 import com.beimi.web.model.PlayUserClient;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -33,7 +38,8 @@ public class CreateAllCardsTask extends AbstractTask implements ValueWithExpiryT
 	public long getCacheExpiryTime() {
 		return System.currentTimeMillis()+timer*1000;	//5秒后执行
 	}
-	
+
+
 	public void execute(){
 		Board board = (Board) CacheHelper.getBoardCacheBean().getCacheObject(gameRoom.getId(), gameRoom.getOrgi());
 		board.setFinished(true);
@@ -44,6 +50,8 @@ public class CreateAllCardsTask extends AbstractTask implements ValueWithExpiryT
 			 * 结算信息 ， 更新 玩家信息
 			 */
 			Summary summary = board.summary(board, gameRoom, gamePlayWay) ;
+
+
 			sendEvent("allcards",  summary , gameRoom) ;	//通知所有客户端结束牌局，进入结算
 			if(summary.isGameRoomOver()){
 				gameOver = true ;

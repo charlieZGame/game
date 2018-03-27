@@ -79,7 +79,6 @@ cc.Class({
       this.bgVolume = v;
       cc.audioEngine.setVolume(this.bgAudioID, v);
     }
-
     console.log("------setBGMVolume--------", this.bgVolume);
   },
 
@@ -123,9 +122,22 @@ cc.Class({
         this.playSFX("fix_msg_9.mp3");
         break;
       default:
-
     }
   },
+
+
+  playActionSound(action) {
+    if (action=="peng") {
+      this.playSFX("nv/peng.mp3");
+    }else if (action=="chi") {
+      this.playSFX("nv/chi.mp3");
+    }else if (action=="gang") {
+      this.playSFX("nv/gang.mp3");
+    }else if (action=="hu") {
+      this.playSFX("nv/hu.mp3");
+    }
+  },
+
 
   //打牌
   playTakeCard(cardValue) {
@@ -137,10 +149,10 @@ cc.Class({
           this.playSFX("nv/31.mp3");
           break;
         case 2:
-          this.playSFX("nv/41.mp3");
+          this.playSFX("nv/51.mp3");
           break;
         case 3:
-          this.playSFX("nv/51.mp3");
+          this.playSFX("nv/41.mp3");
           break;
         case 4:
           this.playSFX("nv/61.mp3");
@@ -239,6 +251,7 @@ cc.Class({
           break;
         case 16:
           this.playSFX("nv/28.mp3");
+          break;
         case 17:
           this.playSFX("nv/29.mp3");
           break;

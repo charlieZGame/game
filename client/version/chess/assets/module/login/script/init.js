@@ -22,6 +22,11 @@ cc.Class({
         alertPrefab: {
             default: null,
             type: cc.Prefab
+        },
+
+        quitDialogPrefab: {
+            default: null,
+            type: cc.Prefab
         }
     },
 
@@ -68,6 +73,10 @@ cc.Class({
 
             cc.beimi.dialog = new cc.NodePool();
             cc.beimi.dialog.put(cc.instantiate(this.alertPrefab)); // 创建节点
+
+            cc.beimi.quitDialog = new cc.NodePool();
+            cc.beimi.quitDialog.put(cc.instantiate(this.quitDialogPrefab)); // 创建节点
+
 
             /**
              * 游客登录，无需弹出注册对话框，先从本地获取是否有过期的对话数据，如果有过期的对话数据，则使用过期的对话数据续期

@@ -497,6 +497,7 @@ public class GameEngine {
 					
 					board.setNextplayer(new NextPlayer(userid , false));
 					
+					//actionEvent.setTarget(board.getLast().getUserid());
 					actionEvent.setTarget(board.getLast().getUserid());
 					ActionTaskUtils.sendEvent("selectaction", actionEvent , gameRoom);
 					
@@ -539,8 +540,12 @@ public class GameEngine {
 					}
 					player.setCards(otherCards);
 					player.getActions().add(playerAction) ;
-					
-					actionEvent.setTarget("all");	//只有明杠 是 其他人打出的 ， target 是单一对象
+
+					if(BMDataContext.PlayerGangAction.MING.toString().equals(actionEvent.getActype())) {
+						actionEvent.setTarget(board.getLast().getUserid());
+					}else {
+						actionEvent.setTarget("all");    //只有明杠 是 其他人打出的 ， target 是单一对象
+					}
 					
 					ActionTaskUtils.sendEvent("selectaction", actionEvent , gameRoom);
 					
@@ -556,6 +561,10 @@ public class GameEngine {
 					 * 不同的胡牌方式，处理流程不同，推倒胡，直接进入结束牌局 ， 血战：当前玩家结束牌局，血流：继续进行，下一个玩家
 					 */
 					if(gamePlayway.getWintype().equals(BMDataContext.MaJiangWinType.TUI.toString())){		//推倒胡
+						actionEvent = new ActionEvent(board.getBanker() , userid , card , action);
+						actionEvent.setActype(BMDataContext.PlayerAction.HU.toString());
+						actionEvent.setTarget(board.getLast().getUserid());
+						ActionTaskUtils.sendEvent("selectaction", actionEvent , gameRoom);
 						GameUtils.getGame(gameRoom.getPlayway() , orgi).change(gameRoom , BeiMiGameEvent.ALLCARDS.toString() , 0);	//打完牌了,通知结算
 					}else{ //血战到底
 						 if(gamePlayway.getWintype().equals(BMDataContext.MaJiangWinType.END.toString())){		//标记当前玩家的状态 是 已结束

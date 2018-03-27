@@ -30,6 +30,7 @@ cc.Class({
     },
     connect:function(){
         let self = this ;
+        cc.beimi.isConnect = false;
         /**
          * 登录成功后，创建 Socket链接，
          */
@@ -44,24 +45,26 @@ cc.Class({
         } ;
 
         cc.game.on(cc.game.EVENT_HIDE, function(event) {
-            console.log("游戏在前台运行");
+            console.log("游戏在后台运行");
             //self.alert("HIDE TRUE");
         });
         cc.game.on(cc.game.EVENT_SHOW, function(event) {
-            console.log("游戏在后台台运行");
+            console.log("游戏在前台运行");
             //self.alert("SHOW TRUE");
         });
 
         cc.beimi.socket.on('connect', function (data) {
-            console.log("connected to server");
+            console.log("已经连接服务器");
+            cc.beimi.isConnect = true;
             //self.alert("connected to server");
         });
 
         cc.beimi.socket.on('disconnect', function (data) {
-            console.log("disconnected from server");
-
-            //self.alert("disconnected from server");
-
+            console.log("与服务器连接中断");
+            cc.beimi.isConnect = false;
+            if(cc.find("Canvas/loadding")){
+              self.alert("网络繁忙，请稍后再试");
+            }
         });
 
 
@@ -134,6 +137,8 @@ cc.Class({
             animState.wrapMode = cc.WrapMode.Loop;
         }
     },
+
+
     alert:function(message){
         if(cc.beimi.dialog.size() > 0){
             this.alertdialog = cc.beimi.dialog.get();
@@ -145,6 +150,15 @@ cc.Class({
         }
         this.closeloadding();
     },
+
+    showQuitApp:function(){
+      if(cc.beimi.quitDialog.size() > 0){
+          this.quitDialog = cc.beimi.quitDialog.get();
+          this.quitDialog.parent = cc.find("Canvas");
+      }
+      this.closeloadding();
+    },
+
     closeloadding:function(){
         if(cc.find("Canvas/loadding")){
             cc.beimi.loadding.put(cc.find("Canvas/loadding"));
@@ -184,11 +198,14 @@ cc.Class({
         let win = cc.director.getWinSize() ;
         cc.view.setDesignResolutionSize(win.width, win.height, cc.ResolutionPolicy.EXACT_FIT);
     },
+
     closealert:function(){
         if(cc.find("Canvas/alert")){
             cc.beimi.dialog.put(cc.find("Canvas/alert"));
         }
     },
+
+
     scene:function(name , self){
         cc.director.preloadScene(name, function () {
             if(cc.beimi){
@@ -199,6 +216,12 @@ cc.Class({
     },
 
     preload:function(extparams , self){
+
+        if(!cc.beimi.isConnect){
+          self.alert("网络繁忙，请稍后再试");
+          return
+        }
+
         this.loadding();
         /**
          *切换游戏场景之前，需要先检查是否 是在游戏中，如果是在游戏中，则直接进入该游戏，如果不在游戏中，则执行 新场景游戏
@@ -211,7 +234,7 @@ cc.Class({
             token:cc.beimi.authorization,
             orgi:cc.beimi.user.orgi
         } ;
-        cc.beimi.socket.emit("gamestatus" , JSON.stringify(param));
+        var req = cc.beimi.socket.emit("gamestatus" , JSON.stringify(param));
     },
     root:function(){
         return cc.find("Canvas");

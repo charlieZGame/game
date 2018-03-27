@@ -160,5 +160,10 @@ cc.Class({
   onChatClick: function(event, data) {
     cc.beimi.audio.playUiSound();
     this.node.dispatchEvent(new cc.Event.EventCustom(data, true));
-  }
+  },
+
+  onShareFriendsClick: function(event) {
+    cc.beimi.audio.playUiSound();
+    console.log("---------分享好友--------");
+  },
 });

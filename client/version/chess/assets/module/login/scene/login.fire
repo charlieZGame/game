@@ -45,7 +45,7 @@
     "_globalZOrder": 0,
     "_opacityModifyRGB": false,
     "groupIndex": 0,
-    "autoReleaseAssets": null
+    "autoReleaseAssets": false
   },
   {
     "__type__": "cc.Node",
@@ -1933,6 +1933,9 @@
     },
     "alertPrefab": {
       "__uuid__": "7225babf-48d1-4485-86dd-f2da82fa0cfd"
+    },
+    "quitDialogPrefab": {
+      "__uuid__": "09c9d126-266c-4248-bde8-bd5fc415190c"
     }
   }
 ]

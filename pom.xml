@@ -8,7 +8,7 @@
 	<packaging>war</packaging>
 
 	<name>chess</name>
-	<description>贝密游戏</description>
+	<description>涞源麻将游戏</description>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>

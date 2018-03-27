@@ -72,7 +72,8 @@ cc.Class({
       default: null,
       type: cc.Prefab
     },
-    deskcards_current_panel: {
+
+    deskcards_current_panel: { //我的和 对家出的牌的位置节点
       default: null,
       type: cc.Node
     },
@@ -88,6 +89,7 @@ cc.Class({
       default: null,
       type: cc.Node
     },
+
     searchlight: {
       default: null,
       type: cc.Node
@@ -112,6 +114,7 @@ cc.Class({
       default: null,
       type: cc.Node
     },
+
     action_gang_ming_prefab: {
       default: null,
       type: cc.Prefab
@@ -120,14 +123,53 @@ cc.Class({
       default: null,
       type: cc.Prefab
     },
-    cards_gang_ming_prefab: {
+
+    action_peng_prefab: {
       default: null,
       type: cc.Prefab
     },
-    cards_gang_an_prefab: {
+
+    action_chi_prefab: {
       default: null,
       type: cc.Prefab
     },
+
+    cards_gang_ming_prefab: { //我的名杠，碰，吃
+      default: null,
+      type: cc.Prefab
+    },
+    cards_gang_an_prefab: { //我的暗杠
+      default: null,
+      type: cc.Prefab
+    },
+
+    cards_gang_ming_left_prefab: { //左边玩家名杠，碰，吃
+      default: null,
+      type: cc.Prefab
+    },
+    cards_gang_an_left_prefab: { //左边玩家暗杠
+      default: null,
+      type: cc.Prefab
+    },
+
+    cards_gang_ming_right_prefab: { //右边玩家名杠，碰，吃
+      default: null,
+      type: cc.Prefab
+    },
+    cards_gang_an_right_prefab: { //右边玩家暗杠
+      default: null,
+      type: cc.Prefab
+    },
+
+    cards_gang_ming_top_prefab: { //上边玩家名杠，碰，吃
+      default: null,
+      type: cc.Prefab
+    },
+    cards_gang_an_top_prefab: { //上边玩家暗杠
+      default: null,
+      type: cc.Prefab
+    },
+
     roomid: {
       default: null,
       type: cc.Label
@@ -136,6 +178,19 @@ cc.Class({
       default: null,
       type: cc.Node
     },
+    gang_left: { //动作节点
+      default: null,
+      type: cc.Node
+    },
+    gang_right: { //动作节点
+      default: null,
+      type: cc.Node
+    },
+    gang_top: { //动作节点
+      default: null,
+      type: cc.Node
+    },
+
     summary: {
       default: null,
       type: cc.Prefab
@@ -204,6 +259,11 @@ cc.Class({
     laiziNode: {
       default: null,
       type: cc.Node
+    },
+
+    ju: {
+      default: null,
+      type: cc.Label
     }
   },
 
@@ -231,9 +291,9 @@ cc.Class({
     }, self);
 
     this.chatScrollView.on('mousedown', function(event) {
-        console.log("场景中的鼠标点击事件--聊天框---------");
-        event.stopPropagation();
-      }, self);
+      console.log("场景中的鼠标点击事件--聊天框---------");
+      event.stopPropagation();
+    }, self);
 
     if (this.ready()) {
       let socket = this.socket();
@@ -245,6 +305,7 @@ cc.Class({
       this.playersarray = new Array(); //玩家列表
 
       this.playercards = new Array(); //手牌对象
+      this.laizicards = new Array(); //赖子对象
 
       this.leftcards = new Array(); //左侧玩家手牌
       this.rightcards = new Array(); //右侧玩家手牌
@@ -253,6 +314,11 @@ cc.Class({
       this.deskcards = new Array(); //当前玩家和 对家 已出牌
 
       this.actioncards = new Array(); //当前玩家和 对家 已出牌
+      this.leftactioncards = new Array();
+      this.rightactioncards = new Array();
+      this.topactioncards = new Array();
+
+      this.laiziValues = new Array();
 
       this.inited = false;
 
@@ -272,6 +338,7 @@ cc.Class({
         let card = event.target.getComponent("TakeMJCard");
         if (card != null) {
           let card_script = card.target.getComponent("HandCards");
+
           /**
           * 提交数据，等待服务器返回
           */
@@ -368,7 +435,6 @@ cc.Class({
       /**
              * 接受指令
              */
-
       this.map("joinroom", this.joinroom_event); //加入房价
       this.map("players", this.players_event); //接受玩家列表
 
@@ -378,11 +444,11 @@ cc.Class({
 
       this.map("selectcolor", this.selectcolor_event); //从服务端发送的 定缺的 指令，如果服务端玩法里不包含定缺， 可以不发送这个指令而是直接开始打牌
 
-      this.map("selectresult", this.selectresult_event); //从服务端发送的 定缺的 指令，如果服务端玩法里不包含定缺， 可以不发送这个指令而是直接开始打牌
+      // this.map("selectresult", this.selectresult_event); //暂时去掉定缺 从服务端发送的 定缺的 指令，如果服务端玩法里不包含定缺， 可以不发送这个指令而是直接开始打牌
 
       this.map("lasthands", this.lasthands_event); //庄家开始打牌了，允许出牌
 
-      this.map("takecards", this.takecard_event); //我出的牌
+      this.map("takecards", this.takecard_event); //揭牌
 
       this.map("action", this.action_event); //服务端发送的 动作事件，有杠碰吃胡过可以选择
 
@@ -394,7 +460,7 @@ cc.Class({
 
       this.map("recovery", this.recovery_event); //恢复牌局数据
 
-      this.map("roomready", this.roomready_event); //提示
+      this.map("roomready", this.roomready_event); //提示  这个指令后台没发
 
       this.map("playeready", this.playeready_event); //玩家点击了开始游戏 ， 即准备就绪
 
@@ -415,7 +481,6 @@ cc.Class({
           self.route("chat")(data, self);
         }
       });
-
 
       var param = {
         token: cc.beimi.authorization,
@@ -453,8 +518,7 @@ cc.Class({
           } else if (result != null && (resultObj.type == 6 || resultObj.type == "6")) {
             cc.beimi.isLeaveroom = true;
             self.alert(resultObj.msg || '有人强制离场，房间解散');
-          } else {
-          }
+          } else {}
         });
       }
     }
@@ -527,7 +591,7 @@ cc.Class({
     var player = context.playerspool.get();
 
     //新添加的代码
-    if (player==null) {
+    if (player == null) {
       /**
              * 预制的 对象池
              * @type {cc.NodePool}
@@ -542,7 +606,6 @@ cc.Class({
       }
       player = context.playerspool.get();
     }
-
 
     var playerscript = player.getComponent("MaJiangPlayer");
     //var playerscript = player.getComponent("MaJiangPlayer");
@@ -638,13 +701,21 @@ cc.Class({
           desk_card.parent = context.deskcards_current_panel;
         } else {
           handcards.relastone();
-          if (handcards.selectcolor == true) {
-            context.playercards[inx].zIndex = 1000 + handcards.value;
-          } else {
+          if (handcards.laizi.active) {
             if (handcards.value >= 0) {
-              context.playercards[inx].zIndex = handcards.value;
+              context.playercards[inx].zIndex = handcards.value - 1000;
             } else {
-              context.playercards[inx].zIndex = 200 + handcards.value;
+              context.playercards[inx].zIndex = handcards.value - 800;
+            }
+          } else {
+            if (handcards.selectcolor == true) {
+              context.playercards[inx].zIndex = 1000 + handcards.value;
+            } else {
+              if (handcards.value >= 0) {
+                context.playercards[inx].zIndex = handcards.value;
+              } else {
+                context.playercards[inx].zIndex = 200 + handcards.value;
+              }
             }
           }
           inx = inx + 1; //遍历 ++,不处理移除的 牌
@@ -747,13 +818,13 @@ cc.Class({
       desk_card.parent = deskcardpanel;
     }
   },
-  /**
+  /**  揭牌
      * 下一个玩家抓牌的事件， 如果上一个玩家出牌后，没有其他玩家杠、碰、吃、胡等动作，则会同时有一个抓牌的事件，否则，会等待玩家 杠、碰、吃、胡完成
      * @param data
      * @param context
      */
   dealcard_event: function(data, context) {
-    console.log("-----dealcard_event-------",data);
+    console.log("-----dealcard_event-------", data);
     let player = context.player(data.userid, context);
     context.select_action_searchlight(data, context, player);
     if (data.userid == cc.beimi.user.id) {
@@ -790,7 +861,7 @@ cc.Class({
     setTimeout(function() {
       context.summarypage = cc.instantiate(context.summary);
       context.summarypage.parent = context.root();
-      let temp = context.summarypage.getComponent("MaJiangSummary");
+      let temp = context.summarypage.getComponent("summary");
       temp.create(context, data);
 
       if (data.gameRoomOver == true) { //房间解散
@@ -861,6 +932,7 @@ cc.Class({
       }
     }
   },
+
   playerexist: function(player, context) {
     var inroom = false;
     if (player.id == cc.beimi.user.id) {
@@ -897,16 +969,16 @@ cc.Class({
 
   //接受聊天消息
   chat_event: function(data, context) {
-    if(!context){
+    if (!context) {
       context = this;
     }
-    console.log("chat_event-------->",JSON.stringify(data));
+    console.log("chat_event-------->", JSON.stringify(data));
     for (var inx = 0; inx < context.playersarray.length; inx++) {
       let temp = context.playersarray[inx].getComponent("MaJiangPlayer");
       if (temp.data.id == data.srcUserId) {
         temp.setChatMessage(data.sound);
-        setTimeout(function () {
-            temp.hideChatMessage();
+        setTimeout(function() {
+          temp.hideChatMessage();
         }, 3000);
         break;
       }
@@ -942,6 +1014,8 @@ cc.Class({
     for (var i = 0; i < data.cardsnum.length; i++) {
       let temp = data.cardsnum[i];
       context.selectresult_event(temp.selectcolor, context);
+
+      //这里有个错误
       var hiscards = context.decode(temp.hiscards);
       for (var j = 0; j < hiscards.length; j++) {
         context.recover_desk_cards(temp.userid, hiscards[j], context);
@@ -961,7 +1035,7 @@ cc.Class({
      * @param context
      */
   action_event: function(data, context) {
-    console.error("接受服务器通知的peng--------》");
+    console.error("接受服务器通知的杠碰、吃胡等动作--------》");
     context.setAction("take", context);
     if (cc.beimi.user.id == data.userid) {
       /**
@@ -1063,8 +1137,9 @@ cc.Class({
     }
   },
 
-
   selectaction_event: function(data, context) {
+    console.error("-----有人碰杠吃--selectaction_event--------", data);
+    cc.beimi.audio.playActionSound(data.action);
     let player = context.player(data.userid, context);
     /**
          * 杠碰吃，胡都需要将牌从 触发玩家的 桌牌 里 移除，然后放入当前玩家 桌牌列表里，如果是胡牌，则放到 胡牌 列表里，首先
@@ -1072,24 +1147,15 @@ cc.Class({
          * 然后将此牌 移除即可，如果对象是 all， 则不用做任何处理即可
          */
     if (cc.beimi.user.id == data.userid) {
+      console.error("-------我自己碰杠吃胡-------");
       /**
              * 碰，显示碰的动画，
              * 杠，显示杠的动画，杠分为：明杠，暗杠，弯杠，每种动画效果不同，明杠/暗杠需要扣三家分，弯杠需要扣一家分
              * 胡，根据玩法不同，推倒胡和血流/血战
              */
-      if (data.target == "all") {
-        let rightpre = cc.instantiate(context.action_gang_ming_prefab);
-        rightpre.parent = context.deskcards_right_panel.parent;
-
-        let toppre = cc.instantiate(context.action_gang_ming_prefab);
-        toppre.parent = context.deskcards_top_panel.parent;
-
-        let leftpre = cc.instantiate(context.action_gang_ming_prefab);
-        leftpre.parent = context.deskcards_left_panel.parent;
-      } else {
-        //碰的特效
-        context.select_action_searchlight(data, context, player);
-      }
+      console.error("-------我自己碰杠吃胡----执行碰的特效---");
+      //碰的特效
+      context.select_action_searchlight(data, context, player);
 
       if (data.action == "hu") {
         //胡牌了，把胡的牌放入到胡牌列表里，然后 ， 把当前的玩家的牌局置为不可点击
@@ -1101,11 +1167,11 @@ cc.Class({
         hu_card.setScale(0.5, 0.5);
         hu_card.parent = context.hu_cards_current;
         context.mask.active = true; //遮罩，不让操作了
-
+        console.error("-------我自己胡了---");
       } else {
         /**
-                 * 杠后移除当前手牌，进入到 杠 列表里
-                 */
+         * 杠后移除当前手牌，进入到 杠 列表里
+         */
         for (var inx = 0; inx < context.playercards.length;) {
           let temp = context.playercards[inx].getComponent("HandCards");
           if (data.cardtype == temp.mjtype && data.cardvalue == temp.mjvalue) {
@@ -1117,10 +1183,9 @@ cc.Class({
         }
 
         let cards_gang;
-
         /**
-                 * 刚和碰共用一个 Prefab，都是来自于 cards_gang_ming_prefab ，显示方式也相同， 区别在于：刚显示四张牌，碰显示两张牌
-                 */
+         * 刚和碰共用一个 Prefab，都是来自于 cards_gang_ming_prefab ，显示方式也相同， 区别在于：刚显示四张牌，碰显示两张牌
+         */
         if (data.actype == "an") {
           cards_gang = cc.instantiate(context.cards_gang_an_prefab);
         } else {
@@ -1132,6 +1197,7 @@ cc.Class({
         } else {
           temp_script.init(data.card, false);
         }
+
         if (data.action == "peng" || data.action == "chi") {
           /**
                      *
@@ -1169,19 +1235,117 @@ cc.Class({
              */
       context.exchange_state("action", context);
     } else {
+      console.error("-------有其他玩家碰杠吃胡-------");
       //以下代码是用于找到 杠/碰/吃/胡牌的 目标牌  ， 然后将此牌 从 桌面牌中移除
-      let temp = context.player(data.target, context),
-        deskcardpanel;
-      if (temp.tablepos == "right") {
-        deskcardpanel = context.deskcards_right_panel;
-      } else if (temp.tablepos == "left") {
-        deskcardpanel = context.deskcards_left_panel;
-      } else if (temp.tablepos == "top") {
-        deskcardpanel = context.deskcards_top_panel;
+      if (data.target!='all') {  //暗杠
+        let temp = context.player(data.target, context),
+          deskcardpanel;
+        if (temp.tablepos == "right") {
+          deskcardpanel = context.deskcards_right_panel;
+        } else if (temp.tablepos == "left") {
+          deskcardpanel = context.deskcards_left_panel;
+        } else if (temp.tablepos == "top") {
+          deskcardpanel = context.deskcards_top_panel;
+        }else {
+          deskcardpanel = context.deskcards_current_panel;
+        }
+        if (deskcardpanel && deskcardpanel.children.length > 0) {
+          deskcardpanel.children[deskcardpanel.children.length - 1].destroy();
+        }
+
       }
-      if (deskcardpanel.children.length > 0) {
-        deskcardpanel.children[deskcardpanel.children.length - 1].destroy();
+
+      //提示当前玩家有人杠/碰/吃/胡牌
+      let actionPlayer = context.player(data.userid, context);
+      context.exchange_searchlight(actionPlayer.tablepos,context);
+      console.error("点击了碰杠吃的玩家---》",actionPlayer);
+      let cards_gang;
+      if (actionPlayer.tablepos == "right") {
+        let rightpre;
+        if (data.action=="peng") {
+          rightpre = cc.instantiate(context.action_peng_prefab);
+        }else if (data.action=="chi") {
+          rightpre = cc.instantiate(context.action_chi_prefab);
+        }else if(data.action == "gang") {
+          if (data.actype=="an") {
+          rightpre =  cc.instantiate(context.action_gang_ming_prefab);
+          }else {
+            rightpre =  cc.instantiate(context.action_gang_an_prefab);
+          }
+        }
+        rightpre.parent = context.deskcards_right_panel.parent;
+
+        if (data.actype == "an") {
+          cards_gang = cc.instantiate(context.cards_gang_an_right_prefab);
+        } else {
+          cards_gang = cc.instantiate(context.cards_gang_ming_right_prefab);
+        }
+        let temp_script = cards_gang.getComponent("GangAction");
+        if (data.action == "gang") {
+          temp_script.init(data.card, true);
+        } else {
+          temp_script.init(data.card, false);
+        }
+        cards_gang.parent = context.gang_right;
+        context.rightactioncards.push(cards_gang);
+      } else if (actionPlayer.tablepos == "left") {
+        let leftpre;
+        if (data.action=="peng") {
+          leftpre = cc.instantiate(context.action_peng_prefab);
+        }else if (data.action=="chi") {
+          leftpre = cc.instantiate(context.action_chi_prefab);
+        }else if(data.action == "gang") {
+          if (data.actype=="an") {
+          leftpre =  cc.instantiate(context.action_gang_ming_prefab);
+          }else {
+            leftpre =  cc.instantiate(context.action_gang_an_prefab);
+          }
+        }
+        leftpre.parent = context.deskcards_left_panel.parent;
+        if (data.actype == "an") {
+          cards_gang = cc.instantiate(context.cards_gang_an_left_prefab);
+        } else {
+          cards_gang = cc.instantiate(context.cards_gang_ming_left_prefab);
+        }
+        let temp_script = cards_gang.getComponent("GangAction");
+        if (data.action == "gang") {
+          temp_script.init(data.card, true);
+        } else {
+          temp_script.init(data.card, false);
+        }
+        cards_gang.parent = context.gang_left;
+        context.leftactioncards.push(cards_gang);
+      } else if (actionPlayer.tablepos == "top") {
+        let toppre;
+        if (data.action=="peng") {
+          toppre = cc.instantiate(context.action_peng_prefab);
+        }else if (data.action=="chi") {
+          toppre = cc.instantiate(context.action_chi_prefab);
+        }else if(data.action == "gang") {
+          if (data.actype=="an") {
+          toppre =  cc.instantiate(context.action_gang_ming_prefab);
+          }else {
+            toppre =  cc.instantiate(context.action_gang_an_prefab);
+          }
+        }
+        toppre.parent = context.deskcards_top_panel.parent;
+
+
+        if (data.actype == "an") {
+          cards_gang = cc.instantiate(context.cards_gang_an_top_prefab);
+        } else {
+          cards_gang = cc.instantiate(context.cards_gang_ming_top_prefab);
+        }
+        let temp_script = cards_gang.getComponent("GangAction");
+        if (data.action == "gang") {
+          temp_script.init(data.card, true);
+        } else {
+          temp_script.init(data.card, false);
+        }
+        cards_gang.parent = context.gang_top;
+        context.topactioncards.push(cards_gang);
       }
+
     }
   },
   /**
@@ -1195,20 +1359,23 @@ cc.Class({
     context.exchange_state("begin", context);
     cc.beimi.audio.beginGame();
     var temp_player = data.player;
-    console.log("服务器开始发牌编码cards之前===》", temp_player.cards);
     var cards = context.decode(temp_player.cards);
-    console.error("服务器开始发牌编码cards之后===》", cards);
+    var laizis = [];
+    if (temp_player.powerfull != null) {
+      laizis = context.decode(temp_player.powerfull);
+    }
+    context.laiziValues = laizis;
     //显示剩余牌数
     setTimeout(function() {
       context.calcdesc_cards(context, 136, data.deskcards);
+      context.ju.string = data.currentnum + "/" + data.numofgames + "局"
     }, 0);
 
     var groupNums = 0;
     for (var times = 0; times < 4; times++) {
       //初始化当前玩家数据
-      context.initMjCards(groupNums, context, cards, temp_player.banker); //庄家banker
-     //初始化其他玩家数据》》
-      console.error("初始化其他玩家数据》》");
+      context.initMjCards(groupNums, context, cards, temp_player.banker, laizis); //庄家banker
+      //初始化其他玩家数据》》
       var inx = 0;
       for (var i = 0; i < data.players.length; i++) {
         if (data.players[i].playuser != cc.beimi.user.id) {
@@ -1221,7 +1388,7 @@ cc.Class({
     let ani = context.cards_panel.getComponent(cc.Animation);
     ani.play("majiang_reorder");
 
-    var maxvalue = -100;
+    var maxvalue = -2000;
     var maxvalluecard;
     for (var i = 0; i < context.playercards.length; i++) {
       let temp_script = context.playercards[i].getComponent("HandCards");
@@ -1229,6 +1396,9 @@ cc.Class({
         context.playercards[i].zIndex = temp_script.value;
       } else {
         context.playercards[i].zIndex = 200 + temp_script.value;
+      }
+      if (temp_script.laizi.active) {
+        context.playercards[i].zIndex = temp_script.value - 1000;
       }
       if (context.playercards[i].zIndex > maxvalue) {
         maxvalue = context.playercards[i].zIndex;
@@ -1258,9 +1428,6 @@ cc.Class({
          * 初始化状态，首个玩家加入，然后开始等待其他玩家 ， 如果是 恢复数据， 则不会进入
          */
     //this.statusbtn.active = true ;
-    console.log("服务器发赖子===》", temp_player.cards);
-    var laizis = context.decode(temp_player.powerfull);
-    console.error("服务器发赖子===编码cards之后===》", laizis);
 
     context.showLaizi(context, laizis);
   },
@@ -1270,9 +1437,6 @@ cc.Class({
      * @param context
      */
   selectcolor_event: function(data, context) {
-    /**
-         *
-         */
     for (var inx = 0; inx < context.playersarray.length; inx++) {
       let temp = context.playersarray[inx].getComponent("MaJiangPlayer");
       if (temp.data.id == cc.beimi.user.id) {
@@ -1288,9 +1452,6 @@ cc.Class({
      * @param context
      */
   selectresult_event: function(data, context) {
-    /**
-         *
-         */
     for (var inx = 0; inx < context.playersarray.length; inx++) {
       let temp = context.playersarray[inx].getComponent("MaJiangPlayer");
       if (temp.data.id == data.userid) {
@@ -1330,6 +1491,10 @@ cc.Class({
     let lastcard;
     for (var inx = 0; inx < context.playercards.length; inx++) {
       let temp = context.playercards[inx].getComponent("HandCards");
+      if (temp.laizi.active) {
+        console.log("----是赖子选色不参与排序----");
+        return;
+      }
       temp.relastone();
       if (parseInt(temp.value / 36) == data.color && temp.value >= 0) {
         temp.selected();
@@ -1345,11 +1510,13 @@ cc.Class({
     context.layout(context.cards_panel, function(fir, sec) {
       return fir.zIndex - sec.zIndex;
     });
+
     if (data.banker == cc.beimi.user.id && lastcard != null) {
       let temp = lastcard.getComponent("HandCards");
       temp.lastone();
     }
   },
+
   /**
      * 显示 剩余牌
      * @param start
@@ -1364,18 +1531,19 @@ cc.Class({
       }, 15);
     }
   },
+
   initDealHandCards: function(context, data) {
     let temp = context.cardpool.get();
     let temp_script = temp.getComponent("HandCards");
-
     context.playercards.push(temp);
-
-    temp_script.init(data.card);
-
+    temp_script.init(data.card, context.laiziValues);
     temp_script.lastone();
-    if (parseInt(data.card / 36) == data.color && data.card >= 0) {
-      temp_script.selected();
-    }
+
+    //这里修改了 去掉选色功能了
+    // if (parseInt(data.card / 36) == data.color && data.card >= 0) {
+    //   temp_script.selected();
+    // }
+
     temp.zIndex = 2000; //直接放到最后了，出牌后，恢复 zIndex
     temp.parent = context.cards_panel; //庄家的最后一张牌
   },
@@ -1417,14 +1585,12 @@ cc.Class({
     }
   },
 
-  initMjCards: function(group, context, cards, banker) {
-    console.error("当前玩家数据信息----》",group, context, cards, banker);
+  initMjCards: function(group, context, cards, banker, laizis) {
     for (var i = group * 4; i < cards.length && i < (group + 1) * 4; i++) {
-      console.error("循环显示牌----》",i);
       let temp = context.cardpool.get();
       let temp_script = temp.getComponent("HandCards");
       context.playercards.push(temp);
-      temp_script.init(cards[i]);
+      temp_script.init(cards[i], laizis);
       if (banker == true && i == (cards.length - 1)) {
         temp.parent = context.one_card_panel; //庄家的最后一张牌
       } else {
@@ -1437,16 +1603,18 @@ cc.Class({
     }
   },
 
-  showLaizi:function(context, cards) {
-    for (var i =0; i < cards.length; i++) {
+  showLaizi: function(context, cards) {
+    context.laiziNode.active = true;
+    for (var i = 0; i < cards.length; i++) {
       var temp;
       if (context.laizicardpool.size() > 0) { // 通过 size 接口判断对象池中是否有空闲的对象
-      temp = context.laizicardpool.get();
+        temp = context.laizicardpool.get();
       } else { // 如果没有空闲对象，也就是对象池中备用对象不够时，我们就用 cc.instantiate 重新创建
         temp = cc.instantiate(this.enemyPrefab);
       }
       let temp_script = temp.getComponent("HandCards");
       temp_script.init(cards[i]);
+      context.laizicards.push(temp);
       temp.parent = context.laiziNode;
     }
     let ani = context.laiziNode.getComponent(cc.Animation);
@@ -1494,12 +1662,14 @@ cc.Class({
     let readybtn = null,
       waitting = null,
       selectbtn = null,
-      banker = null;
+      banker = null,
+      invitefriendsbtn = null;
     for (var i = 0; i < object.statebtn.children.length; i++) {
       let target = object.statebtn.children[i];
-
       if (target.name == "readybtn") {
         readybtn = target;
+      } else if (target.name == "invitefriends") {
+        invitefriendsbtn = target;
       } else if (target.name == "waitting") {
         waitting = target;
       } else if (target.name == "select") {
@@ -1514,9 +1684,15 @@ cc.Class({
     switch (state) {
       case "init":
         object.desk_tip.active = false;
-        readybtn.active = true;
+        object.laiziNode.active = false;
+        if (object.playersarray.length < 4) {
+          invitefriendsbtn.active = true;
+          readybtn.active = false;
+        } else {
+          readybtn.active = true;
+          invitefriendsbtn.active = false;
+        }
         object.actionnode_deal.active = false;
-
         /**
                  * 探照灯 熄灭
                  */
@@ -1524,6 +1700,7 @@ cc.Class({
 
         break;
       case "ready":
+        object.laiziNode.active = false;
         waitting.active = true;
         console.log("-----ready---------");
         if (cc.beimi.data != null && cc.beimi.data.enableai == true) {
@@ -1534,6 +1711,7 @@ cc.Class({
         break;
       case "begin":
         waitting.active = false;
+        object.laiziNode.active = false;
         /**
                  * 显示 当前还有多少张底牌
                  * @type {boolean}
@@ -1683,6 +1861,14 @@ cc.Class({
       this.playercards[i].destroy();
     }
     this.playercards.splice(0, this.playercards.length);
+
+    //销毁赖子牌
+    for (var i = 0; i < this.laizicards.length; i++) {
+      this.laizicards[i].destroy();
+    }
+
+    this.laizicards.splice(0, this.laizicards.length);
+
     /**
          * 销毁桌面上已打出的牌
          */
@@ -1712,15 +1898,36 @@ cc.Class({
     }
     this.topcards.splice(0, this.topcards.length);
 
+    //销毁碰杠吃的牌
     for (var i = 0; i < this.actioncards.length; i++) {
       this.actioncards[i].destroy();
     }
     this.actioncards.splice(0, this.actioncards.length);
+
+    //销毁左边玩家碰杠吃的牌
+    for (var i = 0; i < this.leftactioncards.length; i++) {
+      this.leftactioncards[i].destroy();
+    }
+    this.leftactioncards.splice(0, this.leftactioncards.length);
+
+    //销毁右边玩家碰杠吃的牌
+    for (var i = 0; i < this.rightactioncards.length; i++) {
+      this.rightactioncards[i].destroy();
+    }
+    this.rightactioncards.splice(0, this.rightactioncards.length);
+
+    //销毁上边玩家碰杠吃的牌
+    for (var i = 0; i < this.topactioncards.length; i++) {
+      this.topactioncards[i].destroy();
+    }
+    this.topactioncards.splice(0, this.topactioncards.length);
+
     /**
          * 玩家数据销毁条件（房间解散，或者有玩家退出房价的时候，所有玩家数据销毁后冲洗排序）
          */
     this.mask.active = false;
   },
+
   restart: function() {
     /**
          * 清理桌面

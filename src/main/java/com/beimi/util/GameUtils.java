@@ -5,10 +5,9 @@ import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.beimi.util.cache.hazelcast.impl.PlayerCach;
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.elasticsearch.common.util.CollectionUtils;
 import org.springframework.data.domain.Sort;
 
 import com.beimi.config.web.model.Game;
@@ -60,6 +59,8 @@ public class GameUtils {
 				game = (Game) BMDataContext.getContext().getBean("majiangGame") ;
 			}
 		}
+
+
 		return game;
 	}
 	
@@ -386,20 +387,22 @@ public class GameUtils {
 	
 
 
-	public static MJCardMessage processLaiyuanMJCard(Player player,byte[] cards , byte takecard , boolean deal) {
+	public static MJCardMessage processLaiyuanMJCard(Player player ,byte[] cards , byte takecard , boolean deal,List<Byte> resultCards) {
+
 		MJCardMessage mjCard = new MJCardMessage();
 		mjCard.setCommand("action");
 		mjCard.setUserid(player.getPlayuser());
 		Map<Integer, Byte> data = new HashMap<Integer, Byte>();
 		Map<Integer,Integer> que = new HashMap<Integer,Integer>();
+
+		Map<Integer, Byte> hunMap = new HashMap<Integer, Byte>();
+		for (byte b : player.getPowerfullArray()) {
+			hunMap.put(b / 4, b);
+		}
+
 		if (cards.length > 0) {
 			for (byte temp : cards) {
-				Integer se = temp / 36;  //花色
-				if(que.get(se) == null){
-					que.put(se,1);
-				}else{
-					que.put(se,que.get(se) + 1);
-				}
+
 				int key = temp / 4;
 				if (data.get(key) == null) {
 					data.put(key, (byte) 1);
@@ -411,7 +414,33 @@ public class GameUtils {
 					mjCard.setGang(true);
 					mjCard.setCard(temp);
 				}
+
+				if(temp < 0){
+					continue;
+				}
+				if(hunMap.containsKey(temp/4)){
+					continue;
+				}
+				Integer se = temp / 36;  //花色
+
+				if(que.get(se) == null){
+					que.put(se,1);
+				}else{
+					que.put(se,que.get(se) + 1);
+				}
 			}
+
+			// 手牌算缺
+			//处理手牌
+			if(!hunMap.containsKey(takecard/4)) {
+				Integer se = takecard / 36;  //花色
+				if (que.get(se) == null) {
+					que.put(se, 1);
+				} else {
+					que.put(se, que.get(se) + 1);
+				}
+			}
+
 			/**
 			 * 检查是否有 杠碰  deal == false 表示是别人打的牌
 			 */
@@ -439,13 +468,21 @@ public class GameUtils {
 			}
 		}
 
+		int hunNum = 0;
+		for (Map.Entry<Integer, Byte> entry : data.entrySet()) {
+			if (hunMap.containsKey(entry.getKey())) {
+				hunNum = hunNum + entry.getValue();
+			}
+		}
+
 		boolean isQue = false;
 		boolean isHaveEight = false;
 
 		for (Map.Entry<Integer,Integer> entry : que.entrySet()) {
-			if (entry.getKey() < 0 && que.size() == 3) {
+			if (que.size() < 3) {
 				isQue = true;
-			}else if(entry.getKey() >= 0 && entry.getValue() >= 8){
+			}
+			if(entry.getValue() + hunNum >= 8){
 				isHaveEight = true;
 			}
 		}
@@ -477,14 +514,14 @@ public class GameUtils {
 			/**
 			 * 是否有胡
 			 */
-			processOther(others);
-			commonValidate(mjCard, pairs, others, kezi);
+			processOther(others,resultCards);
+			commonValidate(mjCard, pairs, others, kezi,resultCards);
 
 			/**
 			 * 校验混子糊法
 			 */
 			if(!mjCard.isHu()) {
-				checkHunHu(data,player,cards,mjCard,takecard);
+				checkHunHu(data,cards,mjCard,takecard,hunMap,hunNum,resultCards);
 			}
 
 		}
@@ -501,8 +538,8 @@ public class GameUtils {
 
 	public static void main(String[] args) {
 		long start = System.nanoTime();
-		byte[] cards = new byte[]{ 1, 2, 16, 17, 19, 20, 24, 28, 32,36,68,44,60};
-		byte takecard = 52;
+		byte[] cards = new byte[]{100,104,105,52,52,56,64,65,80,84,88,104,105};
+		byte takecard = 72;
 		List<Byte> test = new ArrayList<Byte>();
 		for (byte temp : cards) {
 			test.add(temp);
@@ -524,34 +561,23 @@ public class GameUtils {
 		Player player = new Player("USER1");
 		player.setColor(2);
 		byte[] powerfull = new byte[3];
-		powerfull[0] = 52;
-		powerfull[1] = 68;
-		powerfull[2] = 1;
+		powerfull[0] = 100;
+		powerfull[1] = 104;
+		powerfull[2] = 105;
 		player.setPowerfull(powerfull);
 		player.setActions(new ArrayList<Action>());
 
-		GameUtils.processLaiyuanMJCard(player, cards, takecard, true);
+		GameUtils.processLaiyuanMJCard(player, cards, takecard, true,null);
 	}
 
 
-	private static void checkHunHu(Map<Integer, Byte> data,Player player,byte[] cards,MJCardMessage mjCard,byte takecard) {
+	private static void checkHunHu(Map<Integer, Byte> data,byte[] cards,MJCardMessage mjCard,byte takecard,Map<Integer, Byte> hunMap,int hunNum,List<Byte>resultCards) {
 
 		ArrayList<Byte> others = new ArrayList<Byte>();
 		ArrayList<Byte> pairs = new ArrayList<Byte>();
 		ArrayList<Byte> kezi = new ArrayList<Byte>();
 		ArrayList<Byte> huns = new ArrayList<Byte>();
 
-
-		Map<Integer, Byte> hunMap = new HashMap<Integer, Byte>();
-		for (byte b : player.getPowerfullArray()) {
-			hunMap.put(b / 4, b);
-		}
-		int hunNum = 0;
-		for (Map.Entry<Integer, Byte> entry : data.entrySet()) {
-			if (hunMap.containsKey(entry.getKey())) {
-				hunNum = hunNum + entry.getValue();
-			}
-		}
 
 		if (hunNum == 0) {
 			return;
@@ -560,24 +586,43 @@ public class GameUtils {
 		for (byte temp : cards) {
 			int key = temp / 4;            //字典编码 乘以9是因为一门9张
 			if (hunMap.containsKey(key)) {
-				huns.add(temp);
+				huns.add(temp); //把混子取出来 单独存放
 				continue;
 			}
 			generateData(data, key, pairs, others, kezi, temp);
 		}
 
 		//处理手牌
-		if(hunMap.containsKey((takecard/4))){
-			huns.add(takecard);
+		int keyTemp = takecard / 4;            //字典编码 乘以9是因为一门9张
+		if (hunMap.containsKey(keyTemp)) {
+			huns.add(takecard); //把混子取出来 单独存放
+		} else {
+			generateData(data, keyTemp, pairs, others, kezi, takecard);
 		}
 
 
 		if (others.size() == 0) {
 			if ((pairs.size() / 2 - 1) <= hunNum) {
 				mjCard.setHu(true);
+				if(CollectionUtils.isEmpty(resultCards)){
+					return;
+				}
+				if(CollectionUtils.isNotEmpty(kezi)) {
+					for (Byte kz : kezi) {
+						resultCards.add(kz);
+					}
+				}
+				if(CollectionUtils.isNotEmpty(pairs)){
+					for (Byte pair : pairs) {
+						resultCards.add(pair);
+					}
+				}
 				return;
 			} else {
 				// TODO: 2018/3/24 其他情况待定
+				if(CollectionUtils.isNotEmpty(resultCards)){
+					resultCards.clear();
+				}
 			}
 		} else if (pairs.size() > 2) {    //对子的牌大于>2张，否则肯定是不能胡的
 			//检查对子里 是否有额外多出来的 牌，如果有，则进行移除
@@ -588,16 +633,17 @@ public class GameUtils {
 					temp.add(pairs.get(i));
 				}
 			}
-
-			processOther(temp);
+			//print(temp);
+			processOther(temp,resultCards);
+			//print(temp);
 			for (int i = 0; i < pairs.size(); i++) {
 				if (i % 2 == 1) {
 					temp.add(pairs.get(i));
 				}
 			}
-
-			processOther(temp);
-
+			//print(temp);
+			processOther(temp,resultCards);
+			//print(temp);
 			/**
 			 * 检查 temp
 			 */
@@ -606,30 +652,87 @@ public class GameUtils {
 			 */
 			if (temp.size() == 2 && getKey(temp.get(0)) == getKey(temp.get(1))) {
 				mjCard.setHu(true);
+				if(CollectionUtils.isEmpty(resultCards)){
+					return ;
+				}
+				resultCards.add(others.get(0));
+				resultCards.add(others.get(1));
+				if(CollectionUtils.isEmpty(kezi)){
+					return;
+				}
+				if(CollectionUtils.isNotEmpty(kezi)) {
+					for (Byte kz : kezi) {
+						resultCards.add(kz);
+					}
+				}
 				return;
 			} else {    //还不能胡？
-				if (hunProcessOthers(others, huns)) {
+				if (hunProcessOthers((ArrayList)temp, huns,resultCards)) {
 					mjCard.setHu(true);
 					return;
+				}else{
+					if(CollectionUtils.isNotEmpty(resultCards)){
+						resultCards.clear();
+					}
 				}
 			}
 		} else if (pairs.size() == 0) {
 			// 三个里边找对子
-			for (Byte temp : kezi) {
-				others.add(temp);
-				processOther(others);
+			for (int i= 0 ; i< kezi.size() ; i++) {
+				others.add(kezi.get(i));
+				processOther(others,resultCards);
 				if (others.size() == 0) {
 					mjCard.setHu(true);
+					if(CollectionUtils.isNotEmpty(resultCards)) {
+						for (int j = i + 1; j < kezi.size(); j++) {
+							resultCards.add(kezi.get(j));
+						}
+					}
 					return;
 				} else {
 					// 匹配不到就移除，直到匹配上了
-					others.remove(temp);
+					others.remove(kezi.get(i));
+					if(CollectionUtils.isNotEmpty(resultCards)){
+						resultCards.add(kezi.get(i));
+					}
 				}
 			}
-			if (hunProcessOthers(others, huns)) {
+			if (hunProcessOthers(others, huns,resultCards)) {
 				mjCard.setHu(true);
+			}else{
+				if(CollectionUtils.isNotEmpty(resultCards)){
+					resultCards.clear();
+				}
 			}
 		}
+
+	}
+
+	private static void print(byte[] b){
+		System.out.println("===================");
+		for(byte _b : b){
+			System.out.print(_b/4);
+		}
+		for(byte _b : b){
+			System.out.print(_b);
+		}
+		System.out.println("===================");
+	}
+
+	private static void print(List<Byte> b){
+		Collections.sort(b);
+		System.out.println();
+		System.out.println("===================");
+		for(byte _b : b){
+			System.out.print(_b/4+",");
+		}
+		System.out.println();
+		for(byte _b : b){
+			System.out.print(_b+",");
+		}
+		System.out.println();
+		System.out.println("===================");
+
 
 	}
 
@@ -646,43 +749,113 @@ public class GameUtils {
 		return des;
 	}
 
-	private static boolean hunProcessOthers(ArrayList<Byte> others,ArrayList<Byte> huns){
 
-		processOther(others);
+	/**
+	 *
+	 * @param others
+	 * @param huns
+	 * @param resultCards
+     * @return
+     */
+	private static boolean hunProcessOthers(ArrayList<Byte> others,ArrayList<Byte> huns,List<Byte>resultCards){
+
+		processOther(others,resultCards);
 		if(others.size() == 1 && huns.size() >= 1){
+			if(CollectionUtils.isNotEmpty(resultCards)){
+				resultCards.addAll(others);
+				resultCards.addAll(huns);
+			}
 			return true;
 		}
 		Collections.sort(others);
 		int hunsize = huns.size();
 		List<Byte> temp = new ArrayList<Byte>();
-		for(int i = 0 ; i< others.size() && others.size() >= i+2;i++){
-			if((others.get(i) / 36) == (others.get(i+1) / 36)&&Math.abs((others.get(i)/4 ) - (others.get(i+1)/4))==2){
+		for(int i = 0 ; i< others.size() && others.size() >= (i+2) && hunsize > 0;i++){
+			if((others.get(i) / 36) == (others.get(i+1) / 36)&&Math.abs((others.get(i)/4 ) - (others.get(i+1)/4))<=2&&Math.abs((others.get(i)/4 ) - (others.get(i+1)/4))>0){
 				temp.add(others.get(i));
 				temp.add(others.get(i+1));
-				i = i + 2;
-				hunsize --;
+				if(CollectionUtils.isNotEmpty(resultCards)){
+					resultCards.addAll(temp);
+					resultCards.add(huns.remove(--hunsize));
+				}
+				i = i + 1;
+			}else if((others.get(i) / 36) == (others.get(i+1) / 36)&&Math.abs((others.get(i)/4 ) - (others.get(i+1)/4))==0){
+				i = i + 1;
 			}
 		}
-
+		others.removeAll(temp);
+		temp.clear();
+	/*	if(hunsize == 0) {
+			if (others.size() == 0 || others.size() == 2 && getKey(others.get(0)) == getKey(others.get(1))) {
+				if(CollectionUtils.isNotEmpty(resultCards)){
+					resultCards.addAll(others);
+				}
+				return true;
+			} else {
+				return false;
+			}
+		}*/
+		for(int i = 0 ; i< others.size() && others.size() >= (i+2) && hunsize > 0;i++){
+			if((others.get(i) / 36) == (others.get(i+1) / 36)&&Math.abs((others.get(i)/4 ) - (others.get(i+1)/4)) == 0){
+				temp.add(others.get(i));
+				temp.add(others.get(i+1));
+				if(CollectionUtils.isNotEmpty(resultCards)){
+					resultCards.addAll(temp);
+					resultCards.add(huns.remove(--hunsize));
+				}
+				i = i + 1;
+			}
+		}
 		others.removeAll(temp);
 		if(others.size() == 0){
+			if(hunsize > 0){
+				resultCards.addAll(huns);
+			}
 			return true;
 		}else if(others.size() <= hunsize){
+			if(CollectionUtils.isNotEmpty(resultCards)){
+				resultCards.addAll(others);
+			}
+			if(hunsize > 0){
+				resultCards.addAll(huns);
+			}
+			return true;
+		}else if(others.size() == 2 && getKey(others.get(0)) == getKey(others.get(1))){
+			if(CollectionUtils.isNotEmpty(resultCards)){
+				resultCards.addAll(others);
+			}
+			if(hunsize > 0){
+				resultCards.addAll(huns);
+			}
 			return true;
 		}
 
 		return false;
-
 	}
 
 
-	private static void commonValidate(MJCardMessage mjCard ,List<Byte> pairs,List<Byte> others,List<Byte> kezi){
+	private static void commonValidate(MJCardMessage mjCard ,List<Byte> pairs,List<Byte> others,List<Byte> kezi,List<Byte> resultCards){
 
 		if(others.size() == 0){
 			if(pairs.size() == 2 || pairs.size() == 14){//有一对，胡
 				mjCard.setHu(true);
+				if(CollectionUtils.isEmpty(resultCards)){
+					return;
+				}
+				if(CollectionUtils.isNotEmpty(kezi)) {
+					for (Byte kz : kezi) {
+						resultCards.add(kz);
+					}
+				}
+				if(CollectionUtils.isNotEmpty(pairs)){
+					for (Byte pair : pairs) {
+						resultCards.add(pair);
+					}
+				}
 			}else{	//然后分别验证 ，只有一种特殊情况，的 3连对，可以组两个顺子，也可以胡 ， 其他情况就呵呵了
-
+				if(CollectionUtils.isNotEmpty(resultCards)){
+					resultCards.clear();
+				}
 			}
 		}else if(pairs.size() > 2){	//对子的牌大于>2张，否则肯定是不能胡的
 			//检查对子里 是否有额外多出来的 牌，如果有，则进行移除
@@ -692,14 +865,13 @@ public class GameUtils {
 					others.add(pairs.get(i)) ;
 				}
 			}
-			processOther(others);
+			processOther(others,resultCards);
 			for(int i=0 ; i<pairs.size() ; i++){
 				if(i%2==1){
 					others.add(pairs.get(i)) ;
 				}
 			}
-
-			processOther(others);
+			processOther(others,resultCards);
 
 			/**
 			 * 检查 others
@@ -709,21 +881,47 @@ public class GameUtils {
 			 */
 			if(others.size() == 2 && getKey(others.get(0)) == getKey(others.get(1))){
 				mjCard.setHu(true);
+				if(CollectionUtils.isEmpty(resultCards)){
+					return ;
+				}
+				resultCards.add(others.get(0));
+				resultCards.add(others.get(1));
+				if(CollectionUtils.isEmpty(kezi)){
+					return;
+				}
+				if(CollectionUtils.isNotEmpty(kezi)) {
+					for (Byte kz : kezi) {
+						resultCards.add(kz);
+					}
+				}
 			}else{	//还不能胡？
-
+				if(CollectionUtils.isNotEmpty(resultCards)){
+					resultCards.clear();
+				}
 			}
 		}else if(pairs.size() == 0){
 			// 三个里边找对子
-			for(Byte temp : kezi){
-				others.add(temp) ;
-				processOther(others);
+			for(int i = 0 ; i < kezi.size() ; i++){
+				others.add(kezi.get(i)) ;
+				processOther(others,resultCards);
+				// 用刻子消除单个张牌，如果全部消除，标示胡牌，如果没有消息走else 标示没有胡牌
 				if(others.size() == 0){
 					mjCard.setHu(true);
+					if(CollectionUtils.isNotEmpty(resultCards)) {
+					     for(int j = i+1;j<kezi.size();j++){
+							 resultCards.add(kezi.get(j));
+						 }
+					}
 					break ;
 				}else{
 					// 匹配不到就移除，直到匹配上了
-					others.remove(temp) ;
+					if(others.remove(kezi.get(i)) && CollectionUtils.isNotEmpty(resultCards)){
+						resultCards.add(kezi.get(i));
+					}
 				}
+			}
+			if(!mjCard.isHu() && CollectionUtils.isNotEmpty(resultCards)){
+				resultCards.clear();
 			}
 		}
 	}
@@ -746,7 +944,7 @@ public class GameUtils {
 	 * @param deal	是否抓牌
 	 * @return
 	 */
-	public static MJCardMessage processMJCard(Player player,byte[] cards , byte takecard , boolean deal) {
+	public static MJCardMessage processMJCard(Player player,byte[] cards , byte takecard , boolean deal,List<Byte> resultCards) {
 		MJCardMessage mjCard = new MJCardMessage();
 		mjCard.setCommand("action");
 		mjCard.setUserid(player.getPlayuser());
@@ -834,8 +1032,8 @@ public class GameUtils {
 			/**
 			 * 是否有胡
 			 */
-			processOther(others);
-			commonValidate(mjCard, pairs, others, kezi);
+			processOther(others,resultCards);
+			commonValidate(mjCard, pairs, others, kezi,resultCards);
 		}
 		if (mjCard.isHu()) {
 			mjCard.setCard(takecard);
@@ -847,7 +1045,7 @@ public class GameUtils {
 		return mjCard;
 	}
 
-	private static void processOther(List<Byte> others){ // 处理单张牌的逻辑
+	private static void processOther(List<Byte> others,List<Byte> resultCards){ // 处理单张牌的逻辑
 		Collections.sort(others);
 		for(int i=0 ; i<others.size() && others.size() >(i+2) ; ){
 			byte color = (byte) (others.get(i) / 36) ;							//花色
@@ -858,9 +1056,15 @@ public class GameUtils {
 				nextcolor = (byte) (others.get(i+2) / 36) ;							//花色
 				nextkey = getKey(others.get(i+2));
 				if(color == nextcolor && nextkey == key+2){		//数字，移除掉
-					others.remove(i+2) ;
-					others.remove(i+1) ;
-					others.remove(i) ;
+					if(CollectionUtils.isEmpty(resultCards)){
+						others.remove(i + 2);
+						others.remove(i + 1);
+						others.remove(i);
+					}else {
+						resultCards.add(others.remove(i + 2));
+						resultCards.add(others.remove(i + 1));
+						resultCards.add(others.remove(i));
+					}
 				}else{
 					i = i+2 ;
 				}

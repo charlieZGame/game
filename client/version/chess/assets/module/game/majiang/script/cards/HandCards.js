@@ -29,7 +29,8 @@ cc.Class({
     onLoad: function () {
         this.lastonecard = false ;
         this.take = false ;
-        this.laizi.active = false;
+
+        this.isLaizi = false;
         this.node.on('mousedown', function ( event ) {
             console.log('Hello!');
         });
@@ -38,8 +39,9 @@ cc.Class({
         });
     },
 
-    init:function(cvalue){
+    init:function(cvalue,laiziValues){
         this.value = cvalue ;
+        this.laizi.active= false;
         let cardframe ;
         let cardcolors = parseInt(this.value/4 ) ;
         let cardtype  = parseInt(cardcolors / 9);
@@ -66,6 +68,16 @@ cc.Class({
             cardframe = this.atlas.getSpriteFrame('牌面-'+deskcard);
         }
         this.cardvalue.getComponent(cc.Sprite).spriteFrame = cardframe;
+
+        if (laiziValues&&laiziValues.length>0) {
+          for (var i = 0; i < laiziValues.length; i++) {
+            const laiziValue = parseInt(laiziValues[i]/4) ;
+           if (laiziValue==cardcolors) {
+             this.laizi.active = true;
+             return;
+           }
+          }
+        }
 
         // var anim = this.getComponent(cc.Animation);
         // anim.play("majiang_current");
@@ -102,11 +114,6 @@ cc.Class({
             this.target.y = this.target.y - 30 ;
             this.take = false ;
         }
-    },
-
-    setLaizi:function(){
-      this.laizicard = true;
-      this.laizi.active = true;
     },
 
     koucard:function(){

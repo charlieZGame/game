@@ -58,6 +58,13 @@ public class SummaryPlayer implements java.io.Serializable{
 	public void setCards(byte[] cards) {
 		this.cards = cards;
 	}
+	public void setCards(Byte[] cards) {
+		if(cards == null || cards.length == 0){
+			return;
+		}
+		this.cards = new byte[cards.length];
+		System.arraycopy(cards,0,this.cards,0,cards.length);
+	}
 	public boolean isGameover() {
 		return gameover;
 	}

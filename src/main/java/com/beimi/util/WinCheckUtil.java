@@ -38,7 +38,7 @@ public class WinCheckUtil {
                     System.arraycopy(player.getCardsArray(), 0, b, 0, 13);
                     player.setCards(b);
                 }
-                MJCardMessage mjCard = GameUtils.processMJCard(player, player.getCardsArray(), temp, false);
+                MJCardMessage mjCard = GameUtils.processMJCard(player, player.getCardsArray(), temp, false,null);
                 mjCard.setDeal(false);
                 mjCard.setTakeuser(player.getPlayuser());
                 return mjCard;

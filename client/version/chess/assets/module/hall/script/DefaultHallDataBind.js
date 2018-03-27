@@ -36,6 +36,12 @@ cc.Class({
   // use this for initialization
   onLoad: function() {
     let self = this;
+
+    this.node.on('mousedown', function(event) {
+      console.log("场景中的鼠标点击事件--mousedown---------");
+
+    }, self);
+
     // self.girl.active = false;
     if (this.ready()) {
       this.username.string = cc.beimi.user.username;
@@ -55,7 +61,17 @@ cc.Class({
       this.refreshNotice();
     }
     cc.beimi.audio.playBGM("bgMain.mp3");
+
+    cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
   },
+
+  onKeyDown: function(event) {
+        switch(event.keyCode) {
+            case cc.KEY.back:
+                this.showQuitApp();
+                break;
+        }
+    },
 
   update: function(dt) {
     var x = this.lblNotice.node.x;
@@ -85,6 +101,7 @@ cc.Class({
   },
 
   onDestroy: function() {
+    cc.systemEvent.off(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
     this.cleanpvalistener();
   },
 

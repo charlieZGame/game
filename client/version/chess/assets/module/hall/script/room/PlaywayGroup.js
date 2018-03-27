@@ -52,7 +52,6 @@ cc.Class({
 
     // use this for initialization
     onLoad: function () {
-
         let self = this ;
         this.node.on('checkbox', function (event) {
             if(self.checkbox!=null){
@@ -152,7 +151,7 @@ cc.Class({
         /**
          * 以下代码修正 OPTION超出宽度导致 点击错误的 问题
          */
-        if(group.style == "three"){
+        if(group.style == "four"){
             this.itemname.node.width = 160 ;
             this.itemname.node.x = 107 ;
         }else{

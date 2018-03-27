@@ -13,9 +13,9 @@ public class Test {
 
     public static void main(String[] args) throws IOException {
 
-         byte[] str = new BASE64Decoder().decodeBuffer("5O32BhoiLjdBSElTWQ==");
 
-        System.out.println(str);
+        byte[] b = new byte[1];
+        b[0] = (byte)(121*37);
 
 
     }
