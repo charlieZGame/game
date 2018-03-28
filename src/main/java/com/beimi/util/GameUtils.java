@@ -415,10 +415,12 @@ public class GameUtils {
 					mjCard.setCard(temp);
 				}
 
+				// 
+				/*
 				if(temp < 0){
 					continue;
-				}
-				if(hunMap.containsKey(temp/4)){
+				}*/
+				/*if(hunMap.containsKey(temp/4)){
 					continue;
 				}
 				Integer se = temp / 36;  //花色
@@ -427,7 +429,7 @@ public class GameUtils {
 					que.put(se,1);
 				}else{
 					que.put(se,que.get(se) + 1);
-				}
+				}*/
 			}
 
 			// 手牌算缺
@@ -521,7 +523,7 @@ public class GameUtils {
 			 * 校验混子糊法
 			 */
 			if(!mjCard.isHu()) {
-				checkHunHu(data,cards,mjCard,takecard,hunMap,hunNum,resultCards);
+				checkHunHu(data,cards,mjCard,takecard,hunMap,hunNum,resultCards,que );
 			}
 
 		}
@@ -571,7 +573,8 @@ public class GameUtils {
 	}
 
 
-	private static void checkHunHu(Map<Integer, Byte> data,byte[] cards,MJCardMessage mjCard,byte takecard,Map<Integer, Byte> hunMap,int hunNum,List<Byte>resultCards) {
+	private static void checkHunHu(Map<Integer, Byte> data,byte[] cards,MJCardMessage mjCard,byte takecard,Map<Integer, Byte> hunMap,
+								   int hunNum,List<Byte>resultCards,Map<Integer,Integer> que) {
 
 		ArrayList<Byte> others = new ArrayList<Byte>();
 		ArrayList<Byte> pairs = new ArrayList<Byte>();
@@ -697,7 +700,7 @@ public class GameUtils {
 					}
 				}
 			}
-			if (hunProcessOthers(others, huns,resultCards)) {
+			if (hunProcessOthers(others, huns,resultCards,que )) {
 				mjCard.setHu(true);
 			}else{
 				if(CollectionUtils.isNotEmpty(resultCards)){
@@ -757,7 +760,7 @@ public class GameUtils {
 	 * @param resultCards
      * @return
      */
-	private static boolean hunProcessOthers(ArrayList<Byte> others,ArrayList<Byte> huns,List<Byte>resultCards){
+	private static boolean hunProcessOthers(ArrayList<Byte> others,ArrayList<Byte> huns,List<Byte>resultCards,Map<Integer,Integer> que){
 
 		processOther(others,resultCards);
 		if(others.size() == 1 && huns.size() >= 1){
@@ -774,9 +777,11 @@ public class GameUtils {
 			if((others.get(i) / 36) == (others.get(i+1) / 36)&&Math.abs((others.get(i)/4 ) - (others.get(i+1)/4))<=2&&Math.abs((others.get(i)/4 ) - (others.get(i+1)/4))>0){
 				temp.add(others.get(i));
 				temp.add(others.get(i+1));
+				byte _b = huns.remove(--hunsize);
+				que.put(others.get(i) / 36,que.get(others.get(i)/36)+1);
 				if(CollectionUtils.isNotEmpty(resultCards)){
 					resultCards.addAll(temp);
-					resultCards.add(huns.remove(--hunsize));
+					resultCards.add(_b);
 				}
 				i = i + 1;
 			}else if((others.get(i) / 36) == (others.get(i+1) / 36)&&Math.abs((others.get(i)/4 ) - (others.get(i+1)/4))==0){
@@ -785,23 +790,16 @@ public class GameUtils {
 		}
 		others.removeAll(temp);
 		temp.clear();
-	/*	if(hunsize == 0) {
-			if (others.size() == 0 || others.size() == 2 && getKey(others.get(0)) == getKey(others.get(1))) {
-				if(CollectionUtils.isNotEmpty(resultCards)){
-					resultCards.addAll(others);
-				}
-				return true;
-			} else {
-				return false;
-			}
-		}*/
+
 		for(int i = 0 ; i< others.size() && others.size() >= (i+2) && hunsize > 0;i++){
 			if((others.get(i) / 36) == (others.get(i+1) / 36)&&Math.abs((others.get(i)/4 ) - (others.get(i+1)/4)) == 0){
 				temp.add(others.get(i));
 				temp.add(others.get(i+1));
+				byte _b = huns.remove(--hunsize);
+				que.put(others.get(i) / 36,que.get(others.get(i)/36)+1);
 				if(CollectionUtils.isNotEmpty(resultCards)){
 					resultCards.addAll(temp);
-					resultCards.add(huns.remove(--hunsize));
+					resultCards.add(_b);
 				}
 				i = i + 1;
 			}
@@ -811,7 +809,15 @@ public class GameUtils {
 			if(hunsize > 0){
 				resultCards.addAll(huns);
 			}
-			return true;
+			for(Map.Entry<Integer,Integer> entry : que.entrySet()){
+				if(entry.getValue() + hunsize >=8 ){
+					return true;
+				}
+			}
+			return false;
+		}else if(others.size() == 1 && hunsize >= 1){
+
+			//通过距离计算
 		}else if(others.size() <= hunsize){
 			if(CollectionUtils.isNotEmpty(resultCards)){
 				resultCards.addAll(others);
