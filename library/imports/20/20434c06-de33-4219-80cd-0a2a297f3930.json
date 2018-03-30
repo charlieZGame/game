@@ -1,0 +1,23 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "牌面-wan2",
+    "texture": "f02856a1-ba12-4925-a2c4-a2a6f14664bb",
+    "atlas": "9917343c-0dbb-427b-929c-0e01f0eb67fa",
+    "rect": [
+      1071,
+      652,
+      79,
+      111
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      79,
+      111
+    ],
+    "rotated": 1
+  }
+}

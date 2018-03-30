@@ -1,0 +1,23 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "反馈-玩家反馈框",
+    "texture": "04fcfdb2-cf9b-44d0-a8bd-2f26658c5792",
+    "atlas": "43b45bf1-27e9-42d1-9c58-62bcad9c0f9f",
+    "rect": [
+      1874,
+      478,
+      677,
+      143
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      677,
+      143
+    ],
+    "rotated": 1
+  }
+}

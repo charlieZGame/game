@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "effect_b12",
+    "texture": "d94ed3d6-9bfd-4843-81c1-2789b651146b",
+    "atlas": "83572ea9-d433-461a-88bc-44ff4e357302",
+    "rect": [
+      652,
+      1442,
+      275,
+      147
+    ],
+    "offset": [
+      -6,
+      -42
+    ],
+    "originalSize": [
+      287,
+      259
+    ]
+  }
+}

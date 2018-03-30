@@ -1,0 +1,23 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "聊天-base",
+    "texture": "04fcfdb2-cf9b-44d0-a8bd-2f26658c5792",
+    "atlas": "43b45bf1-27e9-42d1-9c58-62bcad9c0f9f",
+    "rect": [
+      1449,
+      1,
+      475,
+      514
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      475,
+      514
+    ],
+    "rotated": 1
+  }
+}

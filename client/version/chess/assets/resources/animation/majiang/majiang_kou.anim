@@ -1,0 +1,77 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "majiang_kou",
+  "_objFlags": 0,
+  "_rawFiles": null,
+  "_duration": 0.38,
+  "sample": 60,
+  "speed": 1,
+  "wrapMode": 1,
+  "curveData": {
+    "paths": {
+      "麻将牌-自己手牌": {
+        "props": {
+          "scaleY": [
+            {
+              "frame": 0,
+              "value": 1
+            },
+            {
+              "frame": 0.3333333333333333,
+              "value": 0.1
+            },
+            {
+              "frame": 0.36666666666666664,
+              "value": 1
+            }
+          ]
+        },
+        "comps": {
+          "cc.Sprite": {
+            "spriteFrame": [
+              {
+                "frame": 0,
+                "value": {
+                  "__uuid__": "89ee355f-1b6d-46a9-b061-9cefa94df2a9"
+                }
+              },
+              {
+                "frame": 0.3333333333333333,
+                "value": {
+                  "__uuid__": "369e623c-d7fd-4b75-a6a9-22c4654a1048"
+                }
+              },
+              {
+                "frame": 0.36666666666666664,
+                "value": {
+                  "__uuid__": "369e623c-d7fd-4b75-a6a9-22c4654a1048"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "麻将牌-自己手牌/麻将牌-牌面-wan2": {
+        "comps": {
+          "cc.Sprite": {
+            "spriteFrame": [
+              {
+                "frame": 0,
+                "value": {
+                  "__uuid__": "20434c06-de33-4219-80cd-0a2a297f3930"
+                }
+              },
+              {
+                "frame": 0.3333333333333333,
+                "value": {
+                  "__uuid__": "ad7a9e31-fc18-49c1-85a2-47bfbe818605"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "events": []
+}

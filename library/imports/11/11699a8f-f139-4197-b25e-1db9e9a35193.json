@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "summary-自己灰色底框",
+    "texture": "fa7309d4-59fd-4157-9be0-a516ddb2b162",
+    "atlas": "a273b2af-cfaf-4915-94dc-538be1abf176",
+    "rect": [
+      1165,
+      440,
+      615,
+      132
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      615,
+      132
+    ]
+  }
+}

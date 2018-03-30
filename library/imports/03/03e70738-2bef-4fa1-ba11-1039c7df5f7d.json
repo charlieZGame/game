@@ -1,0 +1,22 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "胡特效3",
+    "texture": "d94ed3d6-9bfd-4843-81c1-2789b651146b",
+    "atlas": "83572ea9-d433-461a-88bc-44ff4e357302",
+    "rect": [
+      1796,
+      1140,
+      202,
+      176
+    ],
+    "offset": [
+      -5,
+      -3
+    ],
+    "originalSize": [
+      212,
+      196
+    ]
+  }
+}

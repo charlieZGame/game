@@ -1,0 +1,63 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "laizi_to_top",
+  "_objFlags": 0,
+  "_rawFiles": null,
+  "_duration": 0.51,
+  "sample": 20,
+  "speed": 1,
+  "wrapMode": 1,
+  "curveData": {
+    "props": {
+      "scaleY": [
+        {
+          "frame": 0,
+          "value": 0
+        },
+        {
+          "frame": 0.2,
+          "value": 1.5
+        },
+        {
+          "frame": 0.25,
+          "value": 1
+        }
+      ],
+      "x": [
+        {
+          "frame": 0.25,
+          "value": 0
+        },
+        {
+          "frame": 0.5,
+          "value": -520
+        }
+      ],
+      "y": [
+        {
+          "frame": 0.25,
+          "value": 0
+        },
+        {
+          "frame": 0.5,
+          "value": 220
+        }
+      ],
+      "scaleX": [
+        {
+          "frame": 0,
+          "value": 1
+        },
+        {
+          "frame": 0.2,
+          "value": 1.5
+        },
+        {
+          "frame": 0.25,
+          "value": 1
+        }
+      ]
+    }
+  },
+  "events": []
+}

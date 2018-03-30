@@ -1,0 +1,23 @@
+{
+  "__type__": "cc.SpriteFrame",
+  "content": {
+    "name": "底分字-蓝色-b7",
+    "texture": "5031c671-62d0-4645-a22f-9157d80bbd20",
+    "atlas": "1ea3f79b-d0a6-4d37-9856-87a53d9ffe0c",
+    "rect": [
+      2024,
+      1851,
+      16,
+      22
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "originalSize": [
+      16,
+      22
+    ],
+    "rotated": 1
+  }
+}
