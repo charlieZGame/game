@@ -1,6 +1,7 @@
 package com.beimi.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 /**
  * Created by zhengchenglei on 2018/3/28.
@@ -64,7 +65,10 @@ public class GameResultCheck implements Serializable {
         this.huns = huns;
     }
 
-    public List<Byte> getPengs() {
+    public synchronized List<Byte> getPengs() {
+        if(this.pengs == null){
+            pengs = new ArrayList<Byte>();
+        }
         return pengs;
     }
 

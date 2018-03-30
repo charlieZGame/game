@@ -415,7 +415,7 @@ public class GameUtils {
 					mjCard.setCard(temp);
 				}
 
-				// 
+				// 花色校验放到 结果校验器里
 				/*
 				if(temp < 0){
 					continue;
@@ -670,7 +670,7 @@ public class GameUtils {
 				}
 				return;
 			} else {    //还不能胡？
-				if (hunProcessOthers((ArrayList)temp, huns,resultCards)) {
+				if (hunProcessOthers((ArrayList)temp, huns,resultCards,null)) {
 					mjCard.setHu(true);
 					return;
 				}else{
