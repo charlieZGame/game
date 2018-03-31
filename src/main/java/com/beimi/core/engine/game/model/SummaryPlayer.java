@@ -1,6 +1,10 @@
 package com.beimi.core.engine.game.model;
 
 
+import com.beimi.model.GameResultSummary;
+
+import java.util.List;
+
 public class SummaryPlayer implements java.io.Serializable{
 	
 	/**
@@ -15,6 +19,7 @@ public class SummaryPlayer implements java.io.Serializable{
 	private int balance ;	  //玩家账户余额
 	private boolean win ;
 	private byte[] cards ;
+	private List<GameResultSummary> gameResultChecks;
 	
 	private boolean dizhu ;
 	
@@ -88,5 +93,13 @@ public class SummaryPlayer implements java.io.Serializable{
 	}
 	public void setBalance(int balance) {
 		this.balance = balance;
+	}
+
+	public List<GameResultSummary> getGameResultChecks() {
+		return gameResultChecks;
+	}
+
+	public void setGameResultChecks(List<GameResultSummary> gameResultChecks) {
+		this.gameResultChecks = gameResultChecks;
 	}
 }

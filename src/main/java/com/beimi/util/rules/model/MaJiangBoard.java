@@ -3,7 +3,8 @@ package com.beimi.util.rules.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.collections4.CollectionUtils;
+import com.beimi.model.GameResultSummary;
+import com.beimi.util.GameWinCheck;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -267,7 +268,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 	public MJCardMessage checkMJCard(Player player, byte card, boolean deal) {
 		//MJCardMessage mjCard = GameUtils.processMJCard(player, player.getCardsArray(), card, deal);
 		//暂时使用带混糊发
-		MJCardMessage mjCard = GameUtils.processLaiyuanMJCard(player, player.getCardsArray(), card, deal,null);
+		MJCardMessage mjCard = GameUtils.processLaiyuanMJCard(player, player.getCardsArray(),card,true,null);
 		mjCard.setDeal(deal);
 		mjCard.setTakeuser(player.getPlayuser());
 		return mjCard;
@@ -353,11 +354,15 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 		List<PlayUserClient> players = CacheHelper.getGamePlayerCacheBean().getCacheObject(gameRoom.getId(), gameRoom.getOrgi());
 		boolean gameRoomOver = false;    //解散房间
 		if("1".equals(playway.getCode())){
+			logger.info("走涞源混");
 			laiYuanHunSummary(board,players,summary,playway,gameRoomOver);
 		}else if("2".equals(playway.getCode())){
+			logger.info("走扣大将");
 			laiYuanKouSummary(board,players,summary,playway);
 		}else{
-			defaultSummary(board,players,summary,playway,gameRoomOver);
+			logger.info("走默认路径判断糊");
+			laiYuanHunSummary(board,players,summary,playway,gameRoomOver);
+			//defaultSummary(board,players,summary,playway,gameRoomOver);
 		}
 
 		return summary;
@@ -377,15 +382,15 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 			logger.info("汇总结果");
 			byte[] b = new byte[player.getCardsArray().length];
 			byte card = cardConvert(player, b);
-			List<Byte> resultCards = new ArrayList<Byte>();
-			MJCardMessage mjCard = GameUtils.processLaiyuanMJCard(player, b, card, false, resultCards);
-			if(CollectionUtils.isEmpty(resultCards)){
-				logger.info("roomId:{} 整理棋牌为空",board.getRoom());
+			MJCardMessage mjCard = GameUtils.processLaiyuanMJCard(player, b, card, false,null);
+			if(!mjCard.isHu()){
+				logger.info("roomId:{} 整理棋牌为没赢",board.getRoom());
 				summaryPlayer.setCards(player.getCardsArray()); //未出完的牌
 			}else {
-				Byte[] temp = new Byte[resultCards.size()];
-				resultCards.toArray(temp);
-				summaryPlayer.setCards(temp); //未出完的牌
+				logger.info("roomId:{} 整理棋牌为赢",board.getRoom());
+				List<List<Byte>> collections = new ArrayList<List<Byte>>();
+				List<GameResultSummary> gameResultChecks = GameWinCheck.playerSunmary(player,collections);
+				summaryPlayer.setGameResultChecks(gameResultChecks);
 			}
 			summaryPlayer.setWin(mjCard.isHu());
 			summary.getPlayers().add(summaryPlayer);

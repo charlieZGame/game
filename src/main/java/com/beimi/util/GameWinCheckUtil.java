@@ -28,7 +28,7 @@ public class GameWinCheckUtil {
             rabbishCards.add(cards.get(offset+1));
         }else if(hunSize >= 2 && collectionSize == 2) {
             collectionCards.add(hunTemp.remove(0));
-            collectionCards.add(hunTemp.remove(1));
+            collectionCards.add(hunTemp.remove(0));
             collectionCards.add(cards.get(offset));
             rabbishCards.add(cards.get(offset));
         }else if(hunSize >= 0 && collectionSize == 0){
@@ -40,9 +40,9 @@ public class GameWinCheckUtil {
             rabbishCards.add(cards.get(offset+2));
         }else if(hunSize >= 4 && collectionSize == 4){
             collectionCards.add(hunTemp.remove(0));
-            collectionCards.add(hunTemp.remove(1));
-            collectionCards.add(hunTemp.remove(2));
-            collectionCards.add(hunTemp.remove(3));
+            collectionCards.add(hunTemp.remove(0));
+            collectionCards.add(hunTemp.remove(0));
+            collectionCards.add(hunTemp.remove(0));
             collectionCards.add(cards.get(offset));
             collectionCards.add(cards.get(offset+1));
             rabbishCards.add(cards.get(offset));
