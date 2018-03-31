@@ -42,6 +42,10 @@ public class Player implements Message,java.io.Serializable , Cloneable{
 
 	private byte[] powerfull; //混子
 
+	private boolean isWin;
+
+	private List<List<Byte>>collections;
+
 	private List<Action> actions = new ArrayList<Action>();
 
 	public byte[] getCardsArray() {
@@ -218,5 +222,21 @@ public class Player implements Message,java.io.Serializable , Cloneable{
 
 	public void setPowerfull(byte[] powerfull) {
 		this.powerfull = powerfull;
+	}
+
+	public List<List<Byte>> getCollections() {
+		return collections;
+	}
+
+	public void setCollections(List<List<Byte>> collections) {
+		this.collections = collections;
+	}
+
+	public boolean isWin() {
+		return isWin;
+	}
+
+	public void setWin(boolean win) {
+		isWin = win;
 	}
 }

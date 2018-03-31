@@ -230,7 +230,7 @@
     "_position": {
       "__type__": "cc.Vec2",
       "x": 0,
-      "y": 11
+      "y": 0
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -478,14 +478,14 @@
       "width": 79,
       "height": 111
     },
-    "_rotationX": 0,
-    "_rotationY": 0,
+    "_rotationX": 180,
+    "_rotationY": 180,
     "_scaleX": 0.5,
     "_scaleY": 0.5,
     "_position": {
       "__type__": "cc.Vec2",
       "x": 0,
-      "y": 11
+      "y": 0
     },
     "_skewX": 0,
     "_skewY": 0,

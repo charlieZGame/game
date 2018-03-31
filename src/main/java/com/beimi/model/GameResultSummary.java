@@ -1,7 +1,10 @@
 package com.beimi.model;
 
+import org.springframework.util.CollectionUtils;
+
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 /**
  * Created by zhengchenglei on 2018/3/28.
@@ -18,44 +21,62 @@ public class GameResultSummary implements Serializable {
     private List<Byte> pengs;
 
 
-    public List<Byte> getPairs() {
-        if(this.pairs == null){
-            this.pairs = new ArrayList<Byte>();
+    public String getPairs() {
+        if(CollectionUtils.isEmpty(this.pairs)){
+            return null;
         }
-        return pairs;
+        StringBuilder sb = new StringBuilder();
+        for(Byte b : this.pairs) {
+            sb.append(",").append(b);
+        }
+        return sb.substring(1);
     }
+
 
     public void setPairs(List<Byte> pairs) {
         this.pairs = pairs;
     }
 
-    public List<Byte> getThree() {
-        if(this.three == null){
-            this.three = new ArrayList<Byte>();
+    public String getThree() {
+        if(CollectionUtils.isEmpty(this.three)){
+            return null;
         }
-        return three;
+        StringBuilder sb = new StringBuilder();
+        for(Byte b : this.three) {
+            sb.append(",").append(b);
+        }
+        return sb.substring(1);
     }
 
     public void setThree(List<Byte> three) {
         this.three = three;
     }
 
-    public List<Byte> getGangs() {
-        if(this.gangs == null){
-            this.gangs = new ArrayList<Byte>();
+    public String getGangs() {
+        if(CollectionUtils.isEmpty(this.gangs)){
+            return null;
         }
-        return gangs;
+        StringBuilder sb = new StringBuilder();
+        for(Byte b : this.gangs) {
+            sb.append(",").append(b);
+        }
+        return sb.substring(1);
     }
+
 
     public void setGangs(List<Byte> gangs) {
         this.gangs = gangs;
     }
 
-    public List<Byte> getPengs() {
-        if(this.pengs == null){
-            this.pengs = new ArrayList<Byte>();
+    public String getPengs() {
+        if(CollectionUtils.isEmpty(this.pengs)){
+            return null;
         }
-        return pengs;
+        StringBuilder sb = new StringBuilder();
+        for(Byte b : this.pengs) {
+            sb.append(",").append(b);
+        }
+        return sb.substring(1);
     }
 
     public void setPengs(List<Byte> pengs) {

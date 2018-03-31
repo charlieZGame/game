@@ -1,7 +1,7 @@
 package com.beimi.core.engine.game.model;
 
 import com.beimi.core.engine.game.Message;
-
+import java.util.List;
 /**
  * 存储牌型
  * @author iceworld
@@ -22,6 +22,8 @@ public class MJCardMessage implements Message,java.io.Serializable{
 	private boolean deal ;	//是否发牌动作
 	
 	private byte card ;
+
+	private List<Byte> recommendCards;
 	
 	private String command;
 	private String userid ;
@@ -93,6 +95,21 @@ public class MJCardMessage implements Message,java.io.Serializable{
 	}
 	public void setDeal(boolean deal) {
 		this.deal = deal;
+	}
+
+	public String getRecommendCards() {
+		if(recommendCards == null || recommendCards.size() == 0){
+			return null;
+		}
+		StringBuilder sb = new StringBuilder();
+		for(Byte b : recommendCards){
+			sb.append(",").append(b);
+		}
+		return sb.substring(1);
+	}
+
+	public void setRecommendCards(List<Byte> recommendCards) {
+		this.recommendCards = recommendCards;
 	}
 
 

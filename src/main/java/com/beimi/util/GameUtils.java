@@ -5,6 +5,7 @@ import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.beimi.util.rules.model.MaJiangBoard;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -392,6 +393,20 @@ public class GameUtils {
 	}
 
 
+	public static List<Byte> recommandCards(Player player ,byte[] cards){
+
+		List<Byte> recommendCard = new ArrayList<Byte>();
+		for(int i = -7 ; i < 27;i++){
+			MJCardMessage message = processLaiyuanMJCard(player,cards,(byte)(i*4),true,null);
+			if(message.isHu()){
+				recommendCard.add((byte)(i*4));
+			}
+		}
+		return recommendCard;
+
+	}
+
+
 	/**
 	 *
 	 * @param player
@@ -401,15 +416,16 @@ public class GameUtils {
 	 * @param deal 处理自己抓牌逻辑
      * @return
      */
-	public static MJCardMessage processLaiyuanMJCard(Player player ,byte[] cards , byte takecard ,boolean deal, List<List<Byte>> collections) {
+	public static MJCardMessage processLaiyuanMJCard(Player player ,byte[] cards , byte takecard ,boolean deal,
+													 List<List<Byte>> collections) {
 
 		MJCardMessage mjCard = new MJCardMessage();
 		mjCard.setCommand("action");
 		mjCard.setUserid(player.getPlayuser());
 
-		if(cards == null && (cards.length+takecard)<14){
+		/*if(cards == null && (cards.length+takecard)<14){
 			return mjCard;
-		}
+		}*/
 
 		Map<Integer, Integer> data = new HashMap<Integer, Integer>();
 		List<Byte> huns = new ArrayList<Byte>();
@@ -435,9 +451,9 @@ public class GameUtils {
 		//碰杠
 		for(Map.Entry<Integer,Integer> entry : data.entrySet()){
 			if(entry.getKey() == takecard/4){
-				if(entry.getValue() == 2 && deal){
+				if(entry.getValue() == 2 && !deal){
 					mjCard.setPeng(true);
-				}else if(entry.getValue() == 3 && deal){
+				}else if(entry.getValue() == 3 && !deal){
 					mjCard.setGang(true);
 				}
 			}
@@ -465,13 +481,30 @@ public class GameUtils {
 		GameWinCheck.pairWinAlgorithm(mapCards, huns, collections);
 		if(!GameWinCheck.haveEightAndQueEnd(player,hunMap,null,collections,true)){
 			mjCard.setHu(false);
+			player.setWin(false);
 			logger.info("牌面后校验不通过 playerId:{}",player.getPlayuser());
-		}else{
+		}else {
+			logger.info("=========进行加牌操作==================");
+			player.setCollections(collections);
+			player.setWin(true);
+			System.out.println("========================");
 			mjCard.setHu(true);
-			logger.info("牌面后校验通过 playerId:{}",player.getPlayuser());
+			logger.info("牌面后校验通过 playerId:{}", player.getPlayuser());
 		}
 		return mjCard;
 	}
+
+
+
+/*	private static void addCards(Player player,byte card){
+		if(player == null || player.getCardsArray() == null){
+			return ;
+		}
+		byte[] b = new byte[player.getCardsArray().length+1];
+		System.arraycopy(player.getCardsArray(),0,b,0,player.getCardsArray().length);
+		b[player.getCardsArray().length] = card;
+
+	}*/
 
 
 
@@ -479,8 +512,8 @@ public class GameUtils {
 	public static void main(String[] args) {
 		long start = System.nanoTime();
 		//-24,-25,-26
-		byte[] cards = new byte[]{13,14,20,24,32,101,102,4,8,9};
-		byte takecard = 12;
+		byte[] cards = new byte[]{-17,34,39,40,47,66,70,73,75,93,79,81,-23,37};
+		byte takecard = 41;
 		List<Byte> test = new ArrayList<Byte>();
 		for (byte temp : cards) {
 			test.add(temp);
@@ -501,15 +534,15 @@ public class GameUtils {
 		}
 		Player player = new Player("USER1");
 		player.setColor(2);
-		byte[] powerfull = new byte[3];
-		powerfull[0] = 4;
-		powerfull[1] = 8;
-		powerfull[2] = 9;
+		byte[] powerfull = new byte[2];
+		powerfull[0] = 22;
+		powerfull[1] = 23;
 		player.setPowerfull(powerfull);
 		List<Action> actions = new ArrayList<Action>();
 		Action playerAction = new Action("adfaf" , BMDataContext.PlayerAction.PENG.toString() , (byte)-25);
 		actions.add(playerAction);
 		player.setActions(actions);
+		player.setCards(cards);
 
 		List<List<Byte>> collections = new ArrayList<List<Byte>>();
 		MJCardMessage mjCardMessage = GameUtils.processLaiyuanMJCard(player, cards, takecard,false,collections);
@@ -522,6 +555,11 @@ public class GameUtils {
 				}
 				System.out.println("=============================");
 			}
+			System.out.println("+++++++++++++++++++++++++");
+			for(Byte card : player.getCardsArray()){
+				System.out.print(card+",");
+			}
+			System.out.println("++++++++++++++++++++");
 		}else{
 			logger.info("没有胡牌");
 		}

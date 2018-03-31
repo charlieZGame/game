@@ -2,6 +2,7 @@ package com.beimi.core.engine.game.model;
 
 
 import com.beimi.model.GameResultSummary;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.List;
 
@@ -57,8 +58,15 @@ public class SummaryPlayer implements java.io.Serializable{
 	public void setWin(boolean win) {
 		this.win = win;
 	}
-	public byte[] getCards() {
-		return cards;
+	public String getCards() {
+		if(this.cards == null || this.cards.length == 0){
+			return null;
+		}
+		StringBuilder sb = new StringBuilder();
+		for(byte b : this.cards){
+			sb.append(",").append(b);
+		}
+		return sb.substring(1);
 	}
 	public void setCards(byte[] cards) {
 		this.cards = cards;

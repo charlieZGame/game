@@ -290,8 +290,32 @@ cc.Class({
       }
     }, self);
 
+    // let testNum=0;
     this.chatScrollView.on('mousedown', function(event) {
       console.log("场景中的鼠标点击事件--聊天框---------");
+     //  testNum++;
+     //  const data={
+     //    actype:'',
+     //    action:testNum%2==0?'gang':'',
+     //    card:5,
+     //  };
+     //  let cards_gang;
+     //  if (data.actype == "an") {
+     //    cards_gang = cc.instantiate(self.cards_gang_an_right_prefab);
+     //  } else {
+     //    cards_gang = cc.instantiate(self.cards_gang_ming_right_prefab);
+     //  }
+     //  let temp_script = cards_gang.getComponent("GangAction");
+     //  if (data.action == "gang") {
+     //    temp_script.init(data.card, true);
+     //  } else {
+     //    temp_script.init(data.card, false);
+     //  }
+     //  // cards_gang.parent = self.gang_left;
+     // //  cards_gang.parent = self.gang_top;
+     //   cards_gang.parent = self.gang_right;
+     //  self.leftactioncards.push(cards_gang);
+
       event.stopPropagation();
     }, self);
 
@@ -955,9 +979,7 @@ cc.Class({
      * @param context
      */
   banker_event: function(data, context) {
-    /**
-         *
-         */
+
     for (var inx = 0; inx < context.playersarray.length; inx++) {
       let temp = context.playersarray[inx].getComponent("MaJiangPlayer");
       if (temp.data.id == data.userid) {

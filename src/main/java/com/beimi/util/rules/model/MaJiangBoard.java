@@ -3,6 +3,7 @@ package com.beimi.util.rules.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.alibaba.fastjson.JSONObject;
 import com.beimi.model.GameResultSummary;
 import com.beimi.util.GameWinCheck;
 import org.apache.commons.lang.ArrayUtils;
@@ -229,7 +230,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 					if (!temp.getPlayuser().equals(player.getPlayuser())) {
 
 						logger.info("参与校验的牌为 card:{}",takeCards.getCard());
-						MJCardMessage mjCard = checkMJCard(temp, takeCards.getCard(), false);
+						MJCardMessage mjCard = checkMJCard(temp, takeCards.getCard(),false);
 						logger.info("whether having gang chi hu mjCard:{}",mjCard);
 						if (mjCard.isGang() || mjCard.isPeng() || mjCard.isChi() || mjCard.isHu()) {
 							/**
@@ -241,6 +242,9 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 						}
 					}
 				}
+
+
+
 				/**
 				 * 无杠碰吃
 				 */
@@ -268,7 +272,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 	public MJCardMessage checkMJCard(Player player, byte card, boolean deal) {
 		//MJCardMessage mjCard = GameUtils.processMJCard(player, player.getCardsArray(), card, deal);
 		//暂时使用带混糊发
-		MJCardMessage mjCard = GameUtils.processLaiyuanMJCard(player, player.getCardsArray(),card,true,null);
+		MJCardMessage mjCard = GameUtils.processLaiyuanMJCard(player, player.getCardsArray(),card,deal,null);
 		mjCard.setDeal(deal);
 		mjCard.setTakeuser(player.getPlayuser());
 		return mjCard;
@@ -279,6 +283,9 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 	 */
 	public void dealRequest(GameRoom gameRoom, Board board, String orgi, boolean reverse, String nextplayer) {
 		Player next = board.nextPlayer(board.index(board.getNextplayer().getNextplayer()));
+		//过胡情况
+		next.setWin(false);
+		next.setCollections(null);
 		if (!StringUtils.isBlank(nextplayer)) {
 			next = board.player(nextplayer);
 		}
@@ -298,6 +305,9 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 				 * 通知客户端 有杠碰吃胡了
 				 */
 				hasAction = true;
+				ActionTaskUtils.sendEvent(next.getPlayuser(), mjCard);
+			}else{
+				mjCard.setRecommendCards(GameUtils.recommandCards(next, next.getCardsArray()));
 				ActionTaskUtils.sendEvent(next.getPlayuser(), mjCard);
 			}
 
@@ -368,11 +378,11 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 		return summary;
 	}
 
-	private byte cardConvert(Player player,byte[] b){
-		for(int i = 0 ;i<player.getCardsArray().length-1 ; i++){
-			b[i] = player.getCardsArray()[i];
+	private byte cardConvert(byte[]src,byte[] b){
+		for(int i = 0 ;i<src.length-1 ; i++){
+			b[i] = src[i];
 		}
-		return player.getCardsArray()[player.getCardsArray().length - 1];
+		return src[src.length - 1];
 	}
 
 	private void laiYuanHunSummary(Board board, List<PlayUserClient> players,Summary summary,GamePlayway playway,boolean gameRoomOver){
@@ -380,25 +390,29 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 			PlayUserClient playUser = getPlayerClient(players, player.getPlayuser());
 			SummaryPlayer summaryPlayer = new SummaryPlayer(player.getPlayuser(), playUser.getUsername(), board.getRatio(), board.getRatio() * playway.getScore(), false, player.getPlayuser().equals(board.getBanker()));
 			logger.info("汇总结果");
-			byte[] b = new byte[player.getCardsArray().length];
-			byte card = cardConvert(player, b);
-			MJCardMessage mjCard = GameUtils.processLaiyuanMJCard(player, b, card, false,null);
-			if(!mjCard.isHu()){
-				logger.info("roomId:{} 整理棋牌为没赢",board.getRoom());
+			logger.info("player:{} 牌数 size:{}", player.getPlayuser(), player.getCardsArray().length);
+
+			//	MJCardMessage mjCard = GameUtils.processLaiyuanMJCard(player, b, card, false,null);
+			if (!player.isWin()) {
+				logger.info("roomId:{} 整理棋牌为没赢", board.getRoom());
 				summaryPlayer.setCards(player.getCardsArray()); //未出完的牌
-			}else {
-				logger.info("roomId:{} 整理棋牌为赢",board.getRoom());
-				List<List<Byte>> collections = new ArrayList<List<Byte>>();
-				List<GameResultSummary> gameResultChecks = GameWinCheck.playerSunmary(player,collections);
+			} else {
+				logger.info("roomId:{} 整理棋牌为赢", board.getRoom());
+				List<GameResultSummary> gameResultChecks = GameWinCheck.playerSunmary(player, player.getCollections());
 				summaryPlayer.setGameResultChecks(gameResultChecks);
 			}
-			summaryPlayer.setWin(mjCard.isHu());
+
+			summaryPlayer.setWin(player.isWin());
 			summary.getPlayers().add(summaryPlayer);
+			player.setWin(false);
+			player.setCollections(null);
 		}
 		summary.setGameRoomOver(gameRoomOver);    //有玩家破产，房间解散
+		logger.info("发送总结信息为 summary:{}", JSONObject.toJSONString(summary));
 		/**
 		 * 上面的 Player的 金币变更需要保持 数据库的日志记录 , 机器人的 金币扣完了就出局了
 		 */
+
 	}
 
 	private void laiYuanKouSummary(Board board,List<PlayUserClient> players,Summary summary,GamePlayway playway){

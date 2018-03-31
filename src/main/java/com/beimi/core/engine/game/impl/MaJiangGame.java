@@ -139,99 +139,87 @@ public class MaJiangGame implements ChessGame{
 
 	private void generatePowerful(Board board ,byte[] cards,GamePlayway playway,Player[] players,Integer size) {
 
-		/*if (playway == null || playway.getPowerfulNum() == 0) {
+		if (size <= 0 || size > 3) {
 			return;
-		}*/
-
-		if(size <= 0 || size > 3){
-			return ;
 		}
 
-		//for (int i = 0; i < playway.getPowerfulNum(); i++) { 8
-		for (int i = 0; i < 1; i++) {
-			byte[] powerful = new byte[1];
-			if (cards[cards.length - 2] >= 0) {
-				if (cards[cards.length - 2] / 4 % 9 == 8) { // 癞子是一门循环填充
-					powerful[0] = (byte) (cards[cards.length - 2] / 4 - 8); //癞子牌， 万筒条牌面 ， +1
-				} else {
-					powerful[0] = (byte) (cards[cards.length - 2] / 4 + 1); //癞子牌， 万筒条牌面 ， +1
-				}
-			} else {//东南西北风， 中发白 ， 是中的 跳过  //// TODO: 2018/3/24 ZCL 风的逻辑先屏蔽
-			/*	if (cards[cards.length - 2] / 4 == -3) {
-					powerful[0] = -2;
-				} else if (cards[cards.length - 2] / 4 == -1) {
-					powerful[0] = -7;
-				} else {
-					powerful[0] = (byte) (cards[cards.length - 2] / 4 + 1);
-				}*/
-
-				powerful[0] = (byte)(cards[cards.length - 2]/4);
-				//powerful[0] = cards[cards.length - 2];
+		byte[] powerful = new byte[1];
+		if (cards[cards.length - 2] >= 0) {
+			if (cards[cards.length - 2] / 4 % 9 == 8) { // 癞子是一门循环填充
+				powerful[0] = (byte) (cards[cards.length - 2] / 4 - 8); //癞子牌， 万筒条牌面 ， +1
+			} else {
+				powerful[0] = (byte) (cards[cards.length - 2] / 4 + 1); //癞子牌， 万筒条牌面 ， +1
 			}
-
-			byte[] b = new byte[size];
-			b[0] = (byte) (powerful[0] * 4);
-			if(cards[cards.length - 2] >= 0) {
-				switch (size) {
-					case 2: {
-						if (powerful[0] % 9 == 8) {
-							b[1] = (byte) ((powerful[0] - 7) * 4);
-						} else if ((powerful[0] + 1) % 9 == 8) {
-							b[1] = (byte) ((powerful[0] - 8) * 4);
-						} else {
-							b[1] = (byte) ((powerful[0] + 2) * 4);
-						}
-					}break;
-					case 3: {
-						if (powerful[0] % 9 == 8) {
-							b[1] = (byte) ((powerful[0] - 8) * 4);
-							b[2] = (byte) ((powerful[0] - 7) * 4);
-						} else if ((powerful[0] + 1) % 9 == 8) {
-							b[1] = (byte) ((powerful[0] + 1) * 4);
-							b[2] = (byte) ((powerful[0] - 8) * 4);
-						} else {
-							b[1] = (byte) ((powerful[0] + 1) * 4);
-							b[2] = (byte) ((powerful[0] + 2) * 4);
-						}
-					}break;
-				}
-			}else{
-				switch (size){
-					case 2 : {
-						if(powerful[0]==-7){
-							b[1] = (byte) ((powerful[0] + 5) * 4);
-						}else if(powerful[0]==-6){
-							b[1] = (byte) ((powerful[0] + 6) * 4);
-						}else{
-							b[1] = (byte) ((powerful[0] - 2) * 4);
-						}
-					}break;
-					case  3 : {
-						if(powerful[0]==-7){
-							b[1] = (byte) ((powerful[0] + 6) * 4);
-							b[2] = (byte) ((powerful[0] + 5) * 4);
-						}else if(powerful[0]==-6){
-							b[2] = (byte) ((powerful[0] - 1) * 4);
-							b[1] = (byte) ((powerful[0] + 6) * 4);
-						}else{
-							b[1] = (byte) ((powerful[0] - 1) * 4);
-							b[2] = (byte) ((powerful[0] - 2) * 4);
-						}
-					}break;
-				}
-			}
-
-			for (Player player : players) {
-				player.setPowerfull(b);
-			}
-
-			StringBuilder sb = new StringBuilder();
-			for(int j = 0 ; j < b.length ; j++){
-				sb.append(",").append(b);
-			}
-			logger.info("RoomId:{} 生成混子是 hun:{}",board.getId(),"["+sb.substring(1)+"]");
-			board.setPowerful(b);    //填癞子牌
+		} else {//东南西北风， 中发白 ， 是中的 跳过  //// TODO: 2018/3/24 ZCL 风的逻辑先屏蔽
+			powerful[0] = (byte) (cards[cards.length - 2] / 4);
 		}
+
+		byte[] b = new byte[size];
+		b[0] = (byte) (powerful[0] * 4);
+		if (cards[cards.length - 2] >= 0) {
+			switch (size) {
+				case 2: {
+					if (powerful[0] % 9 == 8) {
+						b[1] = (byte) ((powerful[0] - 7) * 4);
+					} else if ((powerful[0] + 1) % 9 == 8) {
+						b[1] = (byte) ((powerful[0] - 7) * 4);
+					} else {
+						b[1] = (byte) ((powerful[0] + 2) * 4);
+					}
+				}
+				break;
+				case 3: {
+					if (powerful[0] % 9 == 8) {
+						b[1] = (byte) ((powerful[0] - 8) * 4);
+						b[2] = (byte) ((powerful[0] - 7) * 4);
+					} else if ((powerful[0] + 1) % 9 == 8) {
+						b[1] = (byte) ((powerful[0] + 1) * 4);
+						b[2] = (byte) ((powerful[0] - 7) * 4);
+					} else {
+						b[1] = (byte) ((powerful[0] + 1) * 4);
+						b[2] = (byte) ((powerful[0] + 2) * 4);
+					}
+				}
+				break;
+			}
+		} else {
+			switch (size) {
+				case 2: {
+					if (powerful[0] == -7) {
+						b[1] = (byte) ((powerful[0] + 5) * 4);
+					} else if (powerful[0] == -6) {
+						b[1] = (byte) ((powerful[0] + 6) * 4);
+					} else {
+						b[1] = (byte) ((powerful[0] - 2) * 4);
+					}
+				}
+				break;
+				case 3: {
+					if (powerful[0] == -7) {
+						b[1] = (byte) ((powerful[0] + 6) * 4);
+						b[2] = (byte) ((powerful[0] + 5) * 4);
+					} else if (powerful[0] == -6) {
+						b[2] = (byte) ((powerful[0] - 1) * 4);
+						b[1] = (byte) ((powerful[0] + 6) * 4);
+					} else {
+						b[1] = (byte) ((powerful[0] - 1) * 4);
+						b[2] = (byte) ((powerful[0] - 2) * 4);
+					}
+				}
+				break;
+			}
+		}
+
+		for (Player player : players) {
+			player.setPowerfull(b);
+		}
+
+		StringBuilder sb = new StringBuilder();
+		for (int j = 0; j < b.length; j++) {
+			sb.append(",").append(b);
+		}
+		logger.info("RoomId:{} 生成混子是 hun:{}", board.getId(), "[" + sb.substring(1) + "]");
+		board.setPowerful(b);    //填癞子牌
 	}
 
 

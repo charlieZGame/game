@@ -600,27 +600,35 @@ public class GameWinCheck {
                 continue;
             }
             GameResultSummary gameResultCheck = new GameResultSummary();
-            gameResultCheck.getPairs().add(list.remove(0));
-            gameResultCheck.getPairs().add(list.remove(0));
-            for(int i = 0 ; i < list.size() - 3;i = i+3) {
-                gameResultCheck.getThree().add(list.get(i));
-                gameResultCheck.getThree().add(list.get(i+1));
-                gameResultCheck.getThree().add(list.get(i+2));
+            List<Byte> pairs = new ArrayList<Byte>();
+            gameResultCheck.setPairs(pairs);
+            pairs.add(list.remove(0));
+            pairs.add(list.remove(0));
+            List<Byte> three = new ArrayList<Byte>();
+            gameResultCheck.setThree(three);
+            for(int i = 0 ; i < list.size() - 2;i = i+3) {
+                three.add(list.get(i));
+                three.add(list.get(i+1));
+                three.add(list.get(i+2));
             }
 
             if(CollectionUtils.isEmpty(player.getActions())){
                 return gameResultChecks;
             }
+            List<Byte> pengs = new ArrayList<Byte>();
+            gameResultCheck.setPengs(pengs);
+            List<Byte> gangs = new ArrayList<Byte>();
+            gameResultCheck.setGangs(gangs);
             for(Action action : player.getActions()){
                 if(BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())){
-                    gameResultCheck.getPengs().add((byte)(action.getCard()/4 *4));
-                    gameResultCheck.getPengs().add((byte)(action.getCard()/4 *4+1));
-                    gameResultCheck.getPengs().add((byte)(action.getCard()/4 *4+2));
+                    pengs.add((byte)(action.getCard()/4 *4));
+                    pengs.add((byte)(action.getCard()/4 *4+1));
+                    pengs.add((byte)(action.getCard()/4 *4+2));
                 }else if(BMDataContext.PlayerAction.GANG.toString().equals(action.getAction())){
-                    gameResultCheck.getGangs().add((byte)(action.getCard()/4 *4));
-                    gameResultCheck.getGangs().add((byte)(action.getCard()/4 *4+1));
-                    gameResultCheck.getGangs().add((byte)(action.getCard()/4 *4+2));
-                    gameResultCheck.getGangs().add((byte)(action.getCard()/4 *4+3));
+                    gangs.add((byte)(action.getCard()/4 *4));
+                    gangs.add((byte)(action.getCard()/4 *4+1));
+                    gangs.add((byte)(action.getCard()/4 *4+2));
+                    gangs.add((byte)(action.getCard()/4 *4+3));
                 }
             }
             gameResultChecks.add(gameResultCheck);

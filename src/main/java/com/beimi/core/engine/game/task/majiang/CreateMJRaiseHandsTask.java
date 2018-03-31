@@ -76,15 +76,15 @@ public class CreateMJRaiseHandsTask extends AbstractTask implements ValueWithExp
 			/**
 			 * 判断是否有天湖的情况
 			 */
-			GamePlayway gamePlayWay = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), gameRoom.getOrgi());
+			//GamePlayway gamePlayWay = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), gameRoom.getOrgi());
 
-			MJCardMessage mjCardMessage = WinCheckUtil.checkWin(gamePlayWay,banker);
+			/*MJCardMessage mjCardMessage = WinCheckUtil.checkWin(gamePlayWay,banker);
 			if (mjCardMessage != null && mjCardMessage.isHu()) {
 				ActionTaskUtils.sendEvent(banker.getPlayuser(), mjCardMessage);
 				//GameUtils.getGame(gameRoom.getPlayway(), orgi).change(gameRoom, BeiMiGameEvent.ALLCARDS.toString(), 0);    //通知结算
 				return;
 			}
-
+*/
 
 			/**
 			 * 发送一个 开始打牌的事件 ， 判断当前出牌人是 玩家还是 AI，如果是 AI，则默认 1秒时间，如果是玩家，则超时时间是25秒
