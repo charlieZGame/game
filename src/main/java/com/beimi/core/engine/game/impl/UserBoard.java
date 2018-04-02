@@ -20,6 +20,7 @@ public class UserBoard implements Message,Serializable{
 	private String command ;
 	private int numofgames ;	//局数
 	private int currentnum ;	//已完局数
+	private String playway; //1 hun, 2: 扣大将
 	/**
 	 * 发给玩家的牌，开启特权后可以将某个其他玩家的牌 显示出来
 	 * @param board
@@ -44,18 +45,40 @@ public class UserBoard implements Message,Serializable{
 		}
 	}
 
-	public UserBoard(Board board , String curruser , String command,int numofgames,int currentnum){
+	public UserBoard(Board board , String curruser , String command,int numofgames,int currentnum,boolean isKou,byte[] cards){
 		this.numofgames = numofgames;
 		this.currentnum = currentnum;
 		players = new Player[board.getPlayers().length-1] ;
 		this.command = command ;
-		if(board.getDeskcards()!=null){
-			this.deskcards = board.getDeskcards().size() ;
+		if(!isKou) {
+			if (board.getDeskcards() != null) {
+				this.deskcards = board.getDeskcards().size();
+			}
 		}
 		int inx = 0 ;
 		for(Player temp : board.getPlayers()){
 			if(temp.getPlayuser().equals(curruser)){
-				player = temp ;
+				if(isKou) {
+					Player player = new Player(temp.getPlayuser());
+					player.setCards(cards);
+					player.setActions(temp.getActions());
+					player.setBanker(player.isBanker());
+					player.setCommand(player.getCommand());
+					player.setEnd(player.isEnd());
+					player.setInfo(player.getInfo());
+					player.setAccept(temp.isAccept());
+					player.setDeskcards(temp.getDeskcards());
+					player.setRandomcard(temp.isRandomcard());
+					player.setWin(temp.isWin());
+					player.setPlayed(temp.getPlayed());
+					player.setSelected(temp.isSelected());
+					player.setDocatch(temp.isDocatch());
+					player.setHu(temp.isHu());
+					player.setRecatch(temp.isRecatch());
+					this.player = player;
+				}else{
+					player = temp;
+				}
 			}else{
 				Player clonePlayer = temp.clone() ;
 				clonePlayer.setDeskcards(clonePlayer.getCardsArray().length);
@@ -112,5 +135,13 @@ public class UserBoard implements Message,Serializable{
 
 	public void setCurrentnum(int currentnum) {
 		this.currentnum = currentnum;
+	}
+
+	public String getPlayway() {
+		return playway;
+	}
+
+	public void setPlayway(String playway) {
+		this.playway = playway;
 	}
 }

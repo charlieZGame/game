@@ -1,5 +1,7 @@
+var beiMiCommon = require("BeiMiCommon");
+
 cc.Class({
-    extends: cc.Component,
+    extends: beiMiCommon,
     properties: {
         _lastTouchTime:null,
         _voice:null,
@@ -37,7 +39,7 @@ cc.Class({
         console.log("--------btnVoice-----------------",btnVoice);
         if(btnVoice){
             btnVoice.on('touchstart',function(){
-                console.log("cc.Node.EventType.TOUCH_START");
+                console.log("cc.Node.EventType.TOUCH_START",cc.beimi.voiceMgr);
                 cc.beimi.voiceMgr.prepare("record.amr");
                 self._lastTouchTime = Date.now();
                 self._voice.active = true;
@@ -55,7 +57,7 @@ cc.Class({
                     cc.beimi.voiceMgr.cancel();
                 }
                 else{
-                    self.onVoiceOK();
+                    self.onVoiceOK(self);
                 }
                 self._lastTouchTime = null;
             });
@@ -70,12 +72,14 @@ cc.Class({
     },
 
 
-    onVoiceOK:function(){
+    onVoiceOK:function(self){
         if(this._lastTouchTime != null){
             cc.beimi.voiceMgr.release();
             var time = Date.now() - this._lastTouchTime;
             var msg = cc.beimi.voiceMgr.getVoiceData("record.amr");
+            self.alert(msg);
             console.log("---onVoiceOK--------",msg);
+            cc.beimi.voiceMgr.play("record.amr");
             // cc.beimi.net.send("voice_msg",{msg:msg,time:time});
         }
         this._voice.active = false;

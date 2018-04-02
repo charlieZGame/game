@@ -1,352 +1,599 @@
 cc.Class({
-    extends: cc.Component,
+  extends: cc.Component,
 
-    properties: {
-        // foo: {
-        //    default: null,      // The default value will be used only when the component attaching
-        //                           to a node for the first time
-        //    url: cc.Texture2D,  // optional, default is typeof default
-        //    serializable: true, // optional, default is true
-        //    visible: true,      // optional, default is true
-        //    displayName: 'Foo', // optional
-        //    readonly: false,    // optional, default is false
-        // },
-        // ...
+  properties: {
+    // foo: {
+    //    default: null,      // The default value will be used only when the component attaching
+    //                           to a node for the first time
+    //    url: cc.Texture2D,  // optional, default is typeof default
+    //    serializable: true, // optional, default is true
+    //    visible: true,      // optional, default is true
+    //    displayName: 'Foo', // optional
+    //    readonly: false,    // optional, default is false
+    // },
+    // ...
 
-    },
+  },
 
-    // use this for initialization
-    onLoad: function () {
-        cc.beimi.room_callback = null ;  //加入房间回调函数
-    },
-    ready:function(){
-        var check = false ;
-        if(cc.beimi){
-            check = true ;
-        }else{
-            this.scene("login" , this) ;
-        }
-        return check ;
-    },
-    connect:function(){
-        let self = this ;
-        cc.beimi.isConnect = false;
-        /**
+  // use this for initialization
+  onLoad: function() {
+    cc.beimi.room_callback = null; //加入房间回调函数
+  },
+  ready: function() {
+    var check = false;
+    if (cc.beimi) {
+      check = true;
+    } else {
+      this.scene("login", this);
+    }
+    return check;
+  },
+  connect: function() {
+    let self = this;
+    cc.beimi.isConnect = false;
+    /**
          * 登录成功后，创建 Socket链接，
          */
-        if(cc.beimi.socket != null){
-            cc.beimi.socket.disconnect();
-            cc.beimi.socket = null ;
-        }
-        cc.beimi.socket = window.io.connect(cc.beimi.http.wsURL + '/bm/game',{"reconnection":true});
-        var param = {
-            token:cc.beimi.authorization,
-            orgi:cc.beimi.user.orgi
-        } ;
+    if (cc.beimi.socket != null) {
+      cc.beimi.socket.disconnect();
+      cc.beimi.socket = null;
+    }
+    cc.beimi.socket = window.io.connect(cc.beimi.http.wsURL + '/bm/game', {"reconnection": true});
+    var param = {
+      token: cc.beimi.authorization,
+      orgi: cc.beimi.user.orgi
+    };
 
-        cc.game.on(cc.game.EVENT_HIDE, function(event) {
-            console.log("游戏在后台运行");
-            //self.alert("HIDE TRUE");
-        });
-        cc.game.on(cc.game.EVENT_SHOW, function(event) {
-            console.log("游戏在前台运行");
-            //self.alert("SHOW TRUE");
-        });
+    cc.game.on(cc.game.EVENT_HIDE, function(event) {
+      console.log("游戏在后台运行");
+      //self.alert("HIDE TRUE");
+    });
+    cc.game.on(cc.game.EVENT_SHOW, function(event) {
+      console.log("游戏在前台运行");
+      //self.alert("SHOW TRUE");
+    });
 
-        cc.beimi.socket.on('connect', function (data) {
-            console.log("已经连接服务器");
-            cc.beimi.isConnect = true;
-            //self.alert("connected to server");
-        });
+    cc.beimi.socket.on('connect', function(data) {
+      console.log("已经连接服务器");
+      cc.beimi.isConnect = true;
+      //self.alert("connected to server");
+    });
 
-        cc.beimi.socket.on('disconnect', function (data) {
-            console.log("与服务器连接中断");
-            cc.beimi.isConnect = false;
-            if(cc.find("Canvas/loadding")){
-              self.alert("网络繁忙，请稍后再试");
-            }
-        });
+    cc.beimi.socket.on('disconnect', function(data) {
+      console.log("与服务器连接中断");
+      cc.beimi.isConnect = false;
+      if (cc.find("Canvas/loadding")) {
+        self.alert("网络繁忙，请稍后再试");
+      }
+    });
 
+    cc.beimi.socket.emit("gamestatus", JSON.stringify(param));
+    cc.beimi.socket.on("gamestatus", function(result) {
 
-        cc.beimi.socket.emit("gamestatus" , JSON.stringify(param));
-        cc.beimi.socket.on("gamestatus" , function(result){
-
-            if(result!=null) {
-                var data = self.parse(result) ;
-                if(cc.beimi.extparams !=null){
-                    if(data.gamestatus == "playing" && data.gametype != null){
-                        /**
+      if (result != null) {
+        var data = self.parse(result);
+        if (cc.beimi.extparams != null) {
+          if (data.gamestatus == "playing" && data.gametype != null) {
+            /**
                          * 修正重新进入房间后 玩法被覆盖的问题，从服务端发送过来的 玩法数据是 当前玩家所在房间的玩法，是准确的
                          */
-                        if(cc.beimi.extparams!=null){
-                            cc.beimi.extparams.playway = data.playway ;
-                            cc.beimi.extparams.gametype = data.gametype ;
-                            if(data.cardroom!=null && data.cardroom == true){
-                                cc.beimi.extparams.gamemodel = "room";
-                            }
-                        }
-                        self.scene(data.gametype , self) ;
-                    }else if(data.gamestatus == "timeout"){ //会话过期，退出登录 ， 会话时间由后台容器提供控制
-                        cc.beimi.sessiontimeout = true ;
-                        self.alert("登录已过期，请重新登录") ;
-                    }else{
-                        self.scene(cc.beimi.extparams.gametype , self) ;
-                    }
-                }
-                cc.beimi.gamestatus = data.gamestatus;
+            if (cc.beimi.extparams != null) {
+              cc.beimi.extparams.playway = data.playway;
+              cc.beimi.extparams.gametype = data.gametype;
+              if (data.cardroom != null && data.cardroom == true) {
+                cc.beimi.extparams.gamemodel = "room";
+              }
             }
-        });
-
-
-        /**
-         * 加入房卡模式的游戏类型 ， 需要校验是否是服务端发送的消息
-         */
-        cc.beimi.socket.on("searchroom" , function(result){
-            //result 是 GamePlayway数据，如果找到了 房间数据，则进入房间，如果未找到房间数据，则提示房间不存在
-            if(result!=null && cc.beimi.room_callback!=null) {
-                cc.beimi.room_callback(result , self);
+            if (data.gametype == "koudajiang") {
+              //我添加的
+              self.scene("majiang", self);
+            } else {
+              self.scene(data.gametype, self);
             }
-        });
 
-
-        return cc.beimi.socket ;
-    },
-    disconnect:function(){
-        if(cc.beimi.socket != null){
-            cc.beimi.socket.disconnect();
-            cc.beimi.socket = null ;
-        }
-    },
-    registercallback:function(callback){
-        cc.beimi.room_callback = callback ;
-    },
-    cleancallback:function(){
-        cc.beimi.room_callback = null ;
-    },
-    getCommon:function(common){
-        var object = cc.find("Canvas/script/"+common) ;
-        return object.getComponent(common);
-    },
-    loadding:function(){
-        if(cc.beimi.loadding.size() > 0){
-            this.loaddingDialog = cc.beimi.loadding.get();
-            this.loaddingDialog.parent = cc.find("Canvas");
-
-            this._animCtrl = this.loaddingDialog.getComponent(cc.Animation);
-            var animState = this._animCtrl.play("loadding");
-            animState.wrapMode = cc.WrapMode.Loop;
-        }
-    },
-
-
-    alert:function(message){
-        if(cc.beimi.dialog.size() > 0){
-            this.alertdialog = cc.beimi.dialog.get();
-            this.alertdialog.parent = cc.find("Canvas");
-            let node = this.alertdialog.getChildByName("message") ;
-            if(node!=null && node.getComponent(cc.Label)){
-                node.getComponent(cc.Label).string = message ;
+          } else if (data.gamestatus == "timeout") { //会话过期，退出登录 ， 会话时间由后台容器提供控制
+            cc.beimi.sessiontimeout = true;
+            self.alert("登录已过期，请重新登录");
+          } else {
+            if (cc.beimi.extparams.gametype == "koudajiang") {
+              //我添加的
+              self.scene("majiang", self);
+            } else {
+              self.scene(cc.beimi.extparams.gametype, self);
             }
-        }
-        this.closeloadding();
-    },
-
-    showQuitApp:function(){
-      if(cc.beimi.quitDialog.size() > 0){
-          this.quitDialog = cc.beimi.quitDialog.get();
-          this.quitDialog.parent = cc.find("Canvas");
-      }
-      this.closeloadding();
-    },
-
-    closeloadding:function(){
-        if(cc.find("Canvas/loadding")){
-            cc.beimi.loadding.put(cc.find("Canvas/loadding"));
-        }
-    },
-    closeOpenWin:function(){
-        if(cc.beimi.openwin != null){
-            cc.beimi.openwin.destroy();
-            cc.beimi.openwin = null ;
-        }
-    },
-    pvalistener:function(context , func){
-        cc.beimi.listener = func ;
-        cc.beimi.context = context ;
-    },
-    cleanpvalistener:function(){
-        cc.beimi.listener = null ;
-        cc.beimi.context = null ;
-    },
-    pva:function(pvatype , balance){   //客户端资产变更（仅显示，多个地方都会调用 pva方法）
-        if(pvatype != null){
-            if(pvatype == "gold"){
-                cc.beimi.user.goldcoins = balance ;
-            }else if(pvatype == "cards"){
-                cc.beimi.user.cards = balance ;
-            }else if(pvatype == "diamonds"){
-                cc.beimi.user.diamonds = balance ;
-            }
-        }
-    },
-    updatepva:function(){
-        if(cc.beimi.listener != null && cc.beimi.context != null){
-            cc.beimi.listener(cc.beimi.context);
-        }
-    },
-    resize:function(){
-        let win = cc.director.getWinSize() ;
-        cc.view.setDesignResolutionSize(win.width, win.height, cc.ResolutionPolicy.EXACT_FIT);
-    },
-
-    closealert:function(){
-        if(cc.find("Canvas/alert")){
-            cc.beimi.dialog.put(cc.find("Canvas/alert"));
-        }
-    },
-
-
-    scene:function(name , self){
-        cc.director.preloadScene(name, function () {
-            if(cc.beimi){
-                self.closeloadding(self.loaddingDialog);
-            }
-            cc.director.loadScene(name);
-        });
-    },
-
-    preload:function(extparams , self){
-
-        if(!cc.beimi.isConnect){
-          self.alert("网络繁忙，请稍后再试");
-          return
-        }
-
-        this.loadding();
-        /**
-         *切换游戏场景之前，需要先检查是否 是在游戏中，如果是在游戏中，则直接进入该游戏，如果不在游戏中，则执行 新场景游戏
-         */
-        cc.beimi.extparams = extparams ;
-        /**
-         * 发送状态查询请求，如果玩家当前在游戏中，则直接进入游戏回复状态，如果玩家不在游戏中，则创建新游戏场景
-         */
-        var param = {
-            token:cc.beimi.authorization,
-            orgi:cc.beimi.user.orgi
-        } ;
-        var req = cc.beimi.socket.emit("gamestatus" , JSON.stringify(param));
-    },
-    root:function(){
-        return cc.find("Canvas");
-    },
-
-    decode:function(data){
-        var cards = new Array();
-        if (data!=null) {
-          const tempCards = data.split(",");
-          for (var i = 0; i < tempCards.length; i++) {
-            cards.push(parseInt(tempCards[i]));
           }
         }
-
-        // if(!cc.sys.isNative) {
-        //     var dataView = new DataView(data);
-        //     for(var i= 0 ; i<data.byteLength ; i++){
-        //         cards[i] = dataView.getInt8(i);
-        //     }
-        // }else{
-        //     var Base64 = require("Base64");
-        //     var strArray = Base64.decode(data) ;
-        //     if(strArray && strArray.length > 0){
-        //         for(var i= 0 ; i<strArray.length ; i++){
-        //             cards[i] = strArray[i];
-        //         }
-        //     }
-        // }
-        return cards ;
-    },
-
-    parse:function(result){
-        var data ;
-        if(!cc.sys.isNative){
-            data = result;
-        }else{
-            data = JSON.parse(result) ;
-        }
-        return data ;
-    },
-    reset:function(data , result){
-        //放在全局变量
-        cc.beimi.authorization = data.token.id ;
-        cc.beimi.user = data.data ;
-        cc.beimi.games = data.games ;
-        cc.beimi.gametype = data.gametype;
-        cc.beimi.announcement = data.announcement;
-
-        cc.beimi.data = data ;
-        cc.beimi.playway = null ;
-        this.io.put("userinfo" ,result );
-    },
-    logout:function(){
-        this.closeOpenWin();
-        cc.beimi.authorization = null ;
-        cc.beimi.user = null ;
-        cc.beimi.games = null ;
-
-        cc.beimi.playway = null ;
-
-        this.disconnect();
-    },
-    socket:function(){
-        let socket = cc.beimi.socket ;
-        if(socket == null){
-            socket = this.connect();
-        }
-        return socket ;
-    },
-    map:function(command, callback){
-        if(cc.beimi!=null && cc.beimi.routes[command] == null){
-            cc.beimi.routes[command] = callback || function(){};
-        }
-    },
-    cleanmap:function(){
-        if(cc.beimi!=null && cc.beimi.routes != null){
-            //cc.beimi.routes.splice(0 , cc.beimi.routes.length) ;
-            for(var p in cc.beimi.routes){
-                delete cc.beimi.routes[p];
-            }
-        }
-    },
-
-    route:function(command){
-        return cc.beimi.routes[command] || function(){};
-    },
+        cc.beimi.gamestatus = data.gamestatus;
+      }
+    });
 
     /**
+         * 加入房卡模式的游戏类型 ， 需要校验是否是服务端发送的消息
+         */
+    cc.beimi.socket.on("searchroom", function(result) {
+      //result 是 GamePlayway数据，如果找到了 房间数据，则进入房间，如果未找到房间数据，则提示房间不存在
+      if (result != null && cc.beimi.room_callback != null) {
+        cc.beimi.room_callback(result, self);
+      }
+    });
+
+    return cc.beimi.socket;
+  },
+  disconnect: function() {
+    if (cc.beimi.socket != null) {
+      cc.beimi.socket.disconnect();
+      cc.beimi.socket = null;
+    }
+  },
+  registercallback: function(callback) {
+    cc.beimi.room_callback = callback;
+  },
+  cleancallback: function() {
+    cc.beimi.room_callback = null;
+  },
+  getCommon: function(common) {
+    var object = cc.find("Canvas/script/" + common);
+    return object.getComponent(common);
+  },
+  loadding: function() {
+    if (cc.beimi.loadding.size() > 0) {
+      this.loaddingDialog = cc.beimi.loadding.get();
+      this.loaddingDialog.parent = cc.find("Canvas");
+
+      this._animCtrl = this.loaddingDialog.getComponent(cc.Animation);
+      var animState = this._animCtrl.play("loadding");
+      animState.wrapMode = cc.WrapMode.Loop;
+    }
+  },
+
+  alert: function(message) {
+    if (cc.beimi.dialog.size() > 0) {
+      this.alertdialog = cc.beimi.dialog.get();
+      this.alertdialog.parent = cc.find("Canvas");
+      let node = this.alertdialog.getChildByName("message");
+      if (node != null && node.getComponent(cc.Label)) {
+        node.getComponent(cc.Label).string = message;
+      }
+    }
+    this.closeloadding();
+  },
+
+  showQuitApp: function() {
+    if (cc.beimi.quitDialog.size() > 0) {
+      this.quitDialog = cc.beimi.quitDialog.get();
+      this.quitDialog.parent = cc.find("Canvas");
+    }
+    this.closeloadding();
+  },
+
+  closeloadding: function() {
+    if (cc.find("Canvas/loadding")) {
+      cc.beimi.loadding.put(cc.find("Canvas/loadding"));
+    }
+  },
+  closeOpenWin: function() {
+    if (cc.beimi.openwin != null) {
+      cc.beimi.openwin.destroy();
+      cc.beimi.openwin = null;
+    }
+  },
+  pvalistener: function(context, func) {
+    cc.beimi.listener = func;
+    cc.beimi.context = context;
+  },
+  cleanpvalistener: function() {
+    cc.beimi.listener = null;
+    cc.beimi.context = null;
+  },
+  pva: function(pvatype, balance) { //客户端资产变更（仅显示，多个地方都会调用 pva方法）
+    if (pvatype != null) {
+      if (pvatype == "gold") {
+        cc.beimi.user.goldcoins = balance;
+      } else if (pvatype == "cards") {
+        cc.beimi.user.cards = balance;
+      } else if (pvatype == "diamonds") {
+        cc.beimi.user.diamonds = balance;
+      }
+    }
+  },
+  updatepva: function() {
+    if (cc.beimi.listener != null && cc.beimi.context != null) {
+      cc.beimi.listener(cc.beimi.context);
+    }
+  },
+  resize: function() {
+    let win = cc.director.getWinSize();
+    cc.view.setDesignResolutionSize(win.width, win.height, cc.ResolutionPolicy.EXACT_FIT);
+  },
+
+  closealert: function() {
+    if (cc.find("Canvas/alert")) {
+      cc.beimi.dialog.put(cc.find("Canvas/alert"));
+    }
+  },
+
+  scene: function(name, self) {
+    cc.director.preloadScene(name, function() {
+      if (cc.beimi) {
+        self.closeloadding(self.loaddingDialog);
+      }
+      cc.director.loadScene(name);
+    });
+  },
+
+  preload: function(extparams, self) {
+
+    if (!cc.beimi.isConnect) {
+      self.alert("网络繁忙，请稍后再试");
+      return
+    }
+
+    this.loadding();
+    /**
+         *切换游戏场景之前，需要先检查是否 是在游戏中，如果是在游戏中，则直接进入该游戏，如果不在游戏中，则执行 新场景游戏
+         */
+    cc.beimi.extparams = extparams;
+    /**
+         * 发送状态查询请求，如果玩家当前在游戏中，则直接进入游戏回复状态，如果玩家不在游戏中，则创建新游戏场景
+         */
+    var param = {
+      token: cc.beimi.authorization,
+      orgi: cc.beimi.user.orgi
+    };
+    var req = cc.beimi.socket.emit("gamestatus", JSON.stringify(param));
+  },
+  root: function() {
+    return cc.find("Canvas");
+  },
+
+  decode: function(data) {
+    var cards = new Array();
+    if (data != null) {
+      const tempCards = data.split(",");
+      for (var i = 0; i < tempCards.length; i++) {
+        cards.push(parseInt(tempCards[i]));
+      }
+    }
+
+    // if(!cc.sys.isNative) {
+    //     var dataView = new DataView(data);
+    //     for(var i= 0 ; i<data.byteLength ; i++){
+    //         cards[i] = dataView.getInt8(i);
+    //     }
+    // }else{
+    //     var Base64 = require("Base64");
+    //     var strArray = Base64.decode(data) ;
+    //     if(strArray && strArray.length > 0){
+    //         for(var i= 0 ; i<strArray.length ; i++){
+    //             cards[i] = strArray[i];
+    //         }
+    //     }
+    // }
+    return cards;
+  },
+
+  parse: function(result) {
+    var data;
+    if (!cc.sys.isNative) {
+      data = result;
+    } else {
+      data = JSON.parse(result);
+    }
+    return data;
+  },
+  reset: function(data, result) {
+    //放在全局变量
+    cc.beimi.authorization = data.token.id;
+    cc.beimi.user = data.data;
+    cc.beimi.games = data.games;
+
+    //添加的数据
+    cc.beimi.games = [
+      {
+        "id": "402888815fe3f44a015feba097ce0000",
+        "code": "createroom",
+        "name": "房卡",
+        "types": [
+          {
+            "id": "402888815fe3f44a015feba50c940001",
+            "name": "房卡模式",
+            "code": "createroom",
+            "playways": [
+              {
+                "id": "402888815fe3f44a015feba86a330003",
+                "name": "涞源麻将(混子)",
+                "code": "majiang",
+                "score": 2,
+                "mincoins": 0,
+                "maxcoins": 0,
+                "changecard": true,
+                "onlineusers": 0,
+                "shuffle": true,
+                "level": "3",
+                "skin": "1",
+                "memo": "麻将玩法简介，河北麻将河北麻将河北麻将河北麻将河北麻将河北麻",
+                "free": false,
+                "groups": [
+                  {
+                    "id": "402888816045059b016045b2d3de0006",
+                    "name": "局数",
+                    "code": "jun",
+                    "title": "局数",
+                    "parentid": null,
+                    "memo": null,
+                    "playwayid": "402888815fe3f44a015feba86a330003",
+                    "game": "402888815fe3f44a015feba097ce0000",
+                    "orgi": "beimi",
+                    "type": "radio",
+                    "sortindex": 1,
+                    "status": null,
+                    "creater": "297e8c7b455798280145579c73e501c1",
+                    "createtime": 1512998068000,
+                    "updatetime": 1512998068000,
+                    "style": "three"
+                  }, {
+                    "id": "402888816045059b016045b5691c000a",
+                    "name": "混子",
+                    "code": "hun",
+                    "title": "混子",
+                    "parentid": null,
+                    "memo": null,
+                    "playwayid": "402888815fe3f44a015feba86a330003",
+                    "game": "402888815fe3f44a015feba097ce0000",
+                    "orgi": "beimi",
+                    "type": "radio",
+                    "sortindex": 2,
+                    "status": null,
+                    "creater": "297e8c7b455798280145579c73e501c1",
+                    "createtime": 1512997836000,
+                    "updatetime": 1512997836000,
+                    "style": "four"
+                  }
+                ],
+                "items": [
+                  {
+                    "id": "402888816045059b016045b356500008",
+                    "name": "4局",
+                    "code": "ju1",
+                    "title": null,
+                    "groupid": "402888816045059b016045b2d3de0006",
+                    "memo": null,
+                    "playwayid": "402888815fe3f44a015feba86a330003",
+                    "game": "402888815fe3f44a015feba097ce0000",
+                    "orgi": "beimi",
+                    "status": null,
+                    "type": null,
+                    "defaultvalue": true,
+                    "value": "4",
+                    "creater": "297e8c7b455798280145579c73e501c1",
+                    "createtime": 1512997869000,
+                    "updatetime": 1512997869000,
+                    "sortindex": 1
+                  }, {
+                    "id": "402888816045059b016045b4c6ce0009",
+                    "name": "8局",
+                    "code": "ju2",
+                    "title": null,
+                    "groupid": "402888816045059b016045b2d3de0006",
+                    "memo": null,
+                    "playwayid": "402888815fe3f44a015feba86a330003",
+                    "game": "402888815fe3f44a015feba097ce0000",
+                    "orgi": "beimi",
+                    "status": null,
+                    "type": null,
+                    "defaultvalue": false,
+                    "value": "8",
+                    "creater": "297e8c7b455798280145579c73e501c1",
+                    "createtime": 1512997963000,
+                    "updatetime": 1512997963000,
+                    "sortindex": 2
+                  }, {
+                    "id": "402888816045059b016045b5fb3c000b",
+                    "name": "12局",
+                    "code": "ju3",
+                    "title": null,
+                    "groupid": "402888816045059b016045b2d3de0006",
+                    "memo": null,
+                    "playwayid": "402888815fe3f44a015feba86a330003",
+                    "game": "402888815fe3f44a015feba097ce0000",
+                    "orgi": "beimi",
+                    "status": null,
+                    "type": null,
+                    "defaultvalue": false,
+                    "value": "12",
+                    "creater": "297e8c7b455798280145579c73e501c1",
+                    "createtime": 1512998042000,
+                    "updatetime": 1512998042000,
+                    "sortindex": 3
+                  }, {
+                    "id": "402888816045059b016045b622a1000c",
+                    "name": "单混(上)",
+                    "code": "hun1",
+                    "title": null,
+                    "groupid": "402888816045059b016045b5691c000a",
+                    "memo": null,
+                    "playwayid": "402888815fe3f44a015feba86a330003",
+                    "game": "402888815fe3f44a015feba097ce0000",
+                    "orgi": "beimi",
+                    "status": null,
+                    "type": null,
+                    "defaultvalue": true,
+                    "value": "1",
+                    "creater": "297e8c7b455798280145579c73e501c1",
+                    "createtime": 1513006714000,
+                    "updatetime": 1513006720000,
+                    "sortindex": 4
+                  }, {
+                    "id": "402888816045059b016045b647e6000b",
+                    "name": "2混(上下)",
+                    "code": "hun2",
+                    "title": null,
+                    "groupid": "402888816045059b016045b5691c000a",
+                    "memo": null,
+                    "playwayid": "402888815fe3f44a015feba86a330003",
+                    "game": "402888815fe3f44a015feba097ce0000",
+                    "orgi": "beimi",
+                    "status": null,
+                    "type": null,
+                    "defaultvalue": false,
+                    "value": "2",
+                    "creater": "297e8c7b455798280145579c73e501c1",
+                    "createtime": null,
+                    "updatetime": null,
+                    "sortindex": 5
+                  }, {
+                    "id": "402888816045059b016045b647e6000d",
+                    "name": "3混(上中下)",
+                    "code": "hun3",
+                    "title": null,
+                    "groupid": "402888816045059b016045b5691c000a",
+                    "memo": null,
+                    "playwayid": "402888815fe3f44a015feba86a330003",
+                    "game": "402888815fe3f44a015feba097ce0000",
+                    "orgi": "beimi",
+                    "status": null,
+                    "type": null,
+                    "defaultvalue": false,
+                    "value": "3",
+                    "creater": "297e8c7b455798280145579c73e501c1",
+                    "createtime": 1512998062000,
+                    "updatetime": 1512998062000,
+                    "sortindex": 5
+                  }
+                ],
+                "roomtitle": "房间-河北麻将",
+                "extpro": true
+              }, {
+                "id": "1111122",
+                "name": "扣大将",
+                "code": "koudajiang",
+                "score": 2,
+                "mincoins": 0,
+                "maxcoins": 0,
+                "changecard": true,
+                "onlineusers": 0,
+                "shuffle": true,
+                "level": "3",
+                "skin": "1",
+                "memo": "扣大将玩法",
+                "free": false,
+                "groups": [
+                  {
+                    "id": "4444444",
+                    "name": "扣大将局数",
+                    "code": "kou",
+                    "title": "局数",
+                    "parentid": null,
+                    "memo": null,
+                    "playwayid": "1111122",
+                    "game": "402888815fe3f44a015feba097ce0000",
+                    "orgi": "beimi",
+                    "type": "radio",
+                    "sortindex": 0,
+                    "status": null,
+                    "creater": "297e8c7b455798280145579c73e501c1",
+                    "createtime": 1512997836000,
+                    "updatetime": 1512997836000,
+                    "style": "five"
+                  }
+                ],
+                "items": [
+                  {
+                    "id": "66666666",
+                    "name": "4局",
+                    "code": "koujun1",
+                    "title": null,
+                    "groupid": "4444444",
+                    "memo": null,
+                    "playwayid": "1111122",
+                    "game": "402888815fe3f44a015feba097ce0000",
+                    "orgi": "beimi",
+                    "status": null,
+                    "type": null,
+                    "defaultvalue": true,
+                    "value": "1",
+                    "creater": "297e8c7b455798280145579c73e501c1",
+                    "createtime": 1522590077000,
+                    "updatetime": 1522590080000,
+                    "sortindex": 1
+                  }
+                ],
+                "roomtitle": "扣大将玩法",
+                "extpro": false
+              }
+            ]
+          }
+        ]
+      }
+    ]
+
+    cc.beimi.gametype = data.gametype;
+    cc.beimi.announcement = data.announcement;
+
+    cc.beimi.data = data;
+    cc.beimi.playway = null;
+    this.io.put("userinfo", result);
+  },
+  logout: function() {
+    this.closeOpenWin();
+    cc.beimi.authorization = null;
+    cc.beimi.user = null;
+    cc.beimi.games = null;
+
+    cc.beimi.playway = null;
+
+    this.disconnect();
+  },
+  socket: function() {
+    let socket = cc.beimi.socket;
+    if (socket == null) {
+      socket = this.connect();
+    }
+    return socket;
+  },
+  map: function(command, callback) {
+    if (cc.beimi != null && cc.beimi.routes[command] == null) {
+      cc.beimi.routes[command] = callback || function() {};
+    }
+  },
+  cleanmap: function() {
+    if (cc.beimi != null && cc.beimi.routes != null) {
+      //cc.beimi.routes.splice(0 , cc.beimi.routes.length) ;
+      for (var p in cc.beimi.routes) {
+        delete cc.beimi.routes[p];
+      }
+    }
+  },
+
+  route: function(command) {
+    return cc.beimi.routes[command] || function() {};
+  },
+
+  /**
      * 解决Layout的渲染顺序和显示顺序不一致的问题
      * @param target
      * @param func
      */
-    layout:function(target , func){
-        if(target != null){
-            let temp = new Array() ;
-            let children = target.children ;
-            for(var inx = 0 ; inx < children.length ; inx++){
-                temp.push(children[inx]) ;
-            }
-            for(var inx = 0 ; inx < temp.length ; inx++){
-                target.removeChild(temp[inx]) ;
-            }
-            temp.sort(func) ;
-            for(var inx =0 ; inx<temp.length ; inx++){
-                temp[inx].parent = target ;
-            }
-            temp.splice(0 , temp.length) ;
-        }
+  layout: function(target, func) {
+    if (target != null) {
+      let temp = new Array();
+      let children = target.children;
+      for (var inx = 0; inx < children.length; inx++) {
+        temp.push(children[inx]);
+      }
+      for (var inx = 0; inx < temp.length; inx++) {
+        target.removeChild(temp[inx]);
+      }
+      temp.sort(func);
+      for (var inx = 0; inx < temp.length; inx++) {
+        temp[inx].parent = target;
+      }
+      temp.splice(0, temp.length);
     }
+  }
 
-    // called every frame, uncomment this function to activate update callback
-    // update: function (dt) {
+  // called every frame, uncomment this function to activate update callback
+  // update: function (dt) {
 
-    // },
+  // },
 });

@@ -16,9 +16,9 @@ for(var i = 0; i < 256; ++i){
         code = crypto(v);
     }
     else{
-        code = String.fromCharCode(v);    
+        code = String.fromCharCode(v);
     }
-    
+
     encodermap[i] = code;
     decodermap[code] = i;
 }
@@ -59,7 +59,7 @@ function decode(content){
         var v = decodermap[c];
         len |= v << (3-i)*8;
     }
-    
+
     var newData = new Uint8Array(len);
     var cnt = 0;
     while(index < content.length){
@@ -71,8 +71,10 @@ function decode(content){
     return newData;
 }
 
+var beiMiCommon = require("BeiMiCommon");
+
 cc.Class({
-    extends: cc.Component,
+    extends: beiMiCommon,
 
     properties: {
         // foo: {
@@ -100,29 +102,29 @@ cc.Class({
             content += sep + fileData[i];
             sep = ",";
         }
-        
+
         var url = cc.url.raw("resources/test.txt");
         jsb.fileUtils.writeStringToFile(content,url);
-        
+
         var url = cc.url.raw("resources/test2.amrs");
         var content = encode(fileData);
         jsb.fileUtils.writeStringToFile(content,url);
-        
+
         var url = cc.url.raw("resources/test2.amr");
         jsb.fileUtils.writeDataToFile(decode(content),url);
         */
-        
+
         if(cc.sys.isNative){
             this._voiceMediaPath = jsb.fileUtils.getWritablePath() + "/voicemsgs/";
             this.setStorageDir(this._voiceMediaPath);
         }
     },
-    
+
     prepare:function(filename){
         if(!cc.sys.isNative){
             return;
         }
-        cc.vv.audioMgr.pauseAll();
+        cc.beimi.audio.pauseAll();
         this.clearCache(filename);
         if(cc.sys.os == cc.sys.OS_ANDROID){
             jsb.reflection.callStaticMethod("com/vivigames/voicesdk/VoiceRecorder", "prepare", "(Ljava/lang/String;)V",filename);
@@ -131,12 +133,12 @@ cc.Class({
             jsb.reflection.callStaticMethod("VoiceSDK", "prepareRecord:",filename);
         }
     },
-    
+
     release:function(){
         if(!cc.sys.isNative){
             return;
         }
-        cc.vv.audioMgr.resumeAll();
+        cc.beimi.audio.resumeAll();
         if(cc.sys.os == cc.sys.OS_ANDROID){
             jsb.reflection.callStaticMethod("com/vivigames/voicesdk/VoiceRecorder", "release", "()V");
         }
@@ -144,12 +146,12 @@ cc.Class({
             jsb.reflection.callStaticMethod("VoiceSDK", "finishRecord");
         }
     },
-    
+
     cancel:function(){
         if(!cc.sys.isNative){
             return;
         }
-        cc.vv.audioMgr.resumeAll();
+        cc.beimi.audio.resumeAll();
         if(cc.sys.os == cc.sys.OS_ANDROID){
             jsb.reflection.callStaticMethod("com/vivigames/voicesdk/VoiceRecorder", "cancel", "()V");
         }
@@ -166,10 +168,10 @@ cc.Class({
             var fileData = decode(voiceData);
             var url = this._voiceMediaPath + filename;
             this.clearCache(filename);
-            jsb.fileUtils.writeDataToFile(fileData,url); 
+            jsb.fileUtils.writeDataToFile(fileData,url);
         }
     },
-    
+
     clearCache:function(filename){
         if(cc.sys.isNative){
             var url = this._voiceMediaPath + filename;
@@ -181,17 +183,17 @@ cc.Class({
             if(jsb.fileUtils.isFileExist(url + ".wav")){
                 //console.log("remove:" + url + ".wav");
                 jsb.fileUtils.removeFile(url + ".wav");
-            }   
+            }
         }
     },
-    
+
     play:function(filename){
         if(!cc.sys.isNative){
             return;
         }
-        cc.vv.audioMgr.pauseAll();
+        cc.beimi.audio.pauseAll();
         if(cc.sys.os == cc.sys.OS_ANDROID){
-            jsb.reflection.callStaticMethod("com/vivigames/voicesdk/VoicePlayer", "play", "(Ljava/lang/String;)V",filename); 
+            jsb.reflection.callStaticMethod("com/vivigames/voicesdk/VoicePlayer", "play", "(Ljava/lang/String;)V",filename);
         }
         else if(cc.sys.os == cc.sys.OS_IOS){
             jsb.reflection.callStaticMethod("VoiceSDK", "play:",filename);
@@ -199,14 +201,14 @@ cc.Class({
         else{
         }
     },
-    
+
     stop:function(){
         if(!cc.sys.isNative){
             return;
         }
-        cc.vv.audioMgr.resumeAll();
+        cc.beimi.audio.resumeAll();
         if(cc.sys.os == cc.sys.OS_ANDROID){
-            jsb.reflection.callStaticMethod("com/vivigames/voicesdk/VoicePlayer", "stop", "()V"); 
+            jsb.reflection.callStaticMethod("com/vivigames/voicesdk/VoicePlayer", "stop", "()V");
         }
         else if(cc.sys.os == cc.sys.OS_IOS){
             jsb.reflection.callStaticMethod("VoiceSDK", "stopPlay");
@@ -214,10 +216,10 @@ cc.Class({
         else{
         }
     },
-    
+
     getVoiceLevel:function(maxLevel){
         return Math.floor(Math.random() * maxLevel + 1);
-        if(cc.sys.os == cc.sys.OS_ANDROID){ 
+        if(cc.sys.os == cc.sys.OS_ANDROID){
             return jsb.reflection.callStaticMethod("com/vivigames/voicesdk/VoiceRecorder", "getVoiceLevel", "(I)I",maxLevel);
         }
         else if(cc.sys.os == cc.sys.OS_IOS){
@@ -226,7 +228,7 @@ cc.Class({
             return Math.floor(Math.random() * maxLevel + 1);
         }
     },
-    
+
     getVoiceData:function(filename){
         if(cc.sys.isNative){
             var url = this._voiceMediaPath + filename;
@@ -239,21 +241,21 @@ cc.Class({
         }
         return "";
     },
-    
+
     download:function(){
-        
+
     },
     // called every frame, uncomment this function to activate update callback
     // update: function (dt) {
 
     // },
-    
+
     setStorageDir:function(dir){
         if(!cc.sys.isNative){
             return;
         }
-        if(cc.sys.os == cc.sys.OS_ANDROID){ 
-            jsb.reflection.callStaticMethod("com/vivigames/voicesdk/VoiceRecorder", "setStorageDir", "(Ljava/lang/String;)V",dir);    
+        if(cc.sys.os == cc.sys.OS_ANDROID){
+            jsb.reflection.callStaticMethod("com/vivigames/voicesdk/VoiceRecorder", "setStorageDir", "(Ljava/lang/String;)V",dir);
         }
         else if(cc.sys.os == cc.sys.OS_IOS){
             jsb.reflection.callStaticMethod("VoiceSDK", "setStorageDir:",dir);

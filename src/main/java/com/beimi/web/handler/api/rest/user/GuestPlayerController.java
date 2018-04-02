@@ -6,9 +6,12 @@ import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
+import com.alibaba.fastjson.JSONObject;
 import com.beimi.web.model.*;
 import com.beimi.web.service.repository.jpa.AnnouncementRespository;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +50,8 @@ public class GuestPlayerController extends Handler{
 	
 	@Autowired
 	private TokenESRepository tokenESRes ;
+
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	@RequestMapping
     public ResponseEntity<ResultData> guest(HttpServletRequest request , @Valid String token) {
@@ -139,7 +144,8 @@ public class GuestPlayerController extends Handler{
 		/**
 		 * 根据游戏配置 ， 选择 返回的 玩法列表
 		 */
-        return new ResponseEntity<>(playerResultData, HttpStatus.OK);
+		logger.info("登录返回数据 data:{}", JSONObject.toJSONString(playerResultData));
+		return new ResponseEntity<>(playerResultData, HttpStatus.OK);
     }
 	/**
 	 * 注册用户

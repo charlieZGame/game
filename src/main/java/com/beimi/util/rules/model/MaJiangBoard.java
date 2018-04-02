@@ -2,10 +2,13 @@ package com.beimi.util.rules.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.alibaba.fastjson.JSONObject;
 import com.beimi.model.GameResultSummary;
 import com.beimi.util.GameWinCheck;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -45,6 +48,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 	private static final long serialVersionUID = 6143646772231515350L;
 
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
+	private Map<String,Integer> answer = new ConcurrentHashMap<String,Integer>();
 
 	/**
 	 * 翻底牌 ， 斗地主
@@ -223,6 +227,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 				/*	if (temp.getColor() == takeCards.getCard() / 36) {
 						continue;
 					}*/
+					GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), orgi) ;
 
 					/**
 					 * 检查是否有 杠碰吃胡的 状况
@@ -230,7 +235,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 					if (!temp.getPlayuser().equals(player.getPlayuser())) {
 
 						logger.info("参与校验的牌为 card:{}",takeCards.getCard());
-						MJCardMessage mjCard = checkMJCard(temp, takeCards.getCard(),false);
+						MJCardMessage mjCard = checkMJCard(temp, takeCards.getCard(),false,gamePlayway.getCode());
 						logger.info("whether having gang chi hu mjCard:{}",mjCard);
 						if (mjCard.isGang() || mjCard.isPeng() || mjCard.isChi() || mjCard.isHu()) {
 							/**
@@ -238,6 +243,10 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 							 */
 							logger.info("通知客户端吃碰胡 peng:{}",mjCard.isPeng());
 							hasAction = true;
+							ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
+						}else{
+							mjCard.setCommand("ting");
+							mjCard.setRecommendCards(GameUtils.recommandCards(temp, temp.getCardsArray(),gamePlayway.getCode()));
 							ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
 						}
 					}
@@ -269,10 +278,10 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 	 * @param deal   是否抓牌
 	 * @return
 	 */
-	public MJCardMessage checkMJCard(Player player, byte card, boolean deal) {
+	public MJCardMessage checkMJCard(Player player, byte card, boolean deal,String code) {
 		//MJCardMessage mjCard = GameUtils.processMJCard(player, player.getCardsArray(), card, deal);
 		//暂时使用带混糊发
-		MJCardMessage mjCard = GameUtils.processLaiyuanMJCard(player, player.getCardsArray(),card,deal,null);
+		MJCardMessage mjCard = GameUtils.processLaiyuanMJCard(player, player.getCardsArray(),card,deal,null,code);
 		mjCard.setDeal(deal);
 		mjCard.setTakeuser(player.getPlayuser());
 		return mjCard;
@@ -298,16 +307,14 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 				newCard = board.getDeskcards().remove(0);
 			}
 			logger.info("new card:{}", newCard);
-			MJCardMessage mjCard = checkMJCard(next, newCard, true);
+			GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), orgi) ;
+			MJCardMessage mjCard = checkMJCard(next, newCard, true,gamePlayway.getCode());
 			boolean hasAction = false;
 			if (mjCard.isGang() || mjCard.isPeng() || mjCard.isChi() || mjCard.isHu()) {
 				/**
 				 * 通知客户端 有杠碰吃胡了
 				 */
 				hasAction = true;
-				ActionTaskUtils.sendEvent(next.getPlayuser(), mjCard);
-			}else{
-				mjCard.setRecommendCards(GameUtils.recommandCards(next, next.getCardsArray()));
 				ActionTaskUtils.sendEvent(next.getPlayuser(), mjCard);
 			}
 
@@ -395,7 +402,13 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 			//	MJCardMessage mjCard = GameUtils.processLaiyuanMJCard(player, b, card, false,null);
 			if (!player.isWin()) {
 				logger.info("roomId:{} 整理棋牌为没赢", board.getRoom());
-				summaryPlayer.setCards(player.getCardsArray()); //未出完的牌
+				List<GameResultSummary> gameResultChecks = GameWinCheck.playerSunmary(player,player.getCollections());
+				if(CollectionUtils.isEmpty(gameResultChecks)){
+					GameResultSummary gameResultSummary = new GameResultSummary();
+					gameResultChecks.add(gameResultSummary);
+				}
+				gameResultChecks.get(0).setOthers(player.getCardsArray()); //未出完的牌
+				summaryPlayer.setGameResultChecks(gameResultChecks);
 			} else {
 				logger.info("roomId:{} 整理棋牌为赢", board.getRoom());
 				List<GameResultSummary> gameResultChecks = GameWinCheck.playerSunmary(player, player.getCollections());
@@ -448,4 +461,11 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 		 */
 	}
 
+	public Map<String, Integer> getAnswer() {
+		return answer;
+	}
+
+	public void setAnswer(Map<String, Integer> answer) {
+		this.answer = answer;
+	}
 }

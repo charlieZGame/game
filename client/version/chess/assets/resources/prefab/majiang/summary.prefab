@@ -95,7 +95,7 @@
       "__id__": 4
     },
     "_id": "",
-    "_opacity": 55,
+    "_opacity": 255,
     "_color": {
       "__type__": "cc.Color",
       "r": 255,
@@ -731,7 +731,7 @@
     },
     "_children": [],
     "_tag": -1,
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 23
@@ -958,6 +958,12 @@
     },
     "content_panel": {
       "__id__": 5
+    },
+    "atlas": {
+      "__uuid__": "1ea3f79b-d0a6-4d37-9856-87a53d9ffe0c"
+    },
+    "win": {
+      "__id__": 9
     }
   },
   {

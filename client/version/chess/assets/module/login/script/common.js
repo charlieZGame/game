@@ -28,7 +28,7 @@ cc.Class({
         this.loadding();
         if(this.io.get("userinfo") == null){
             //发送游客注册请求
-            var xhr = cc.beimi.http.httpGet("/api/guest", this.sucess , this.error , this);
+            var xhr = cc.beimi.http.httpGet("/api/guest?servertime="+new Date().getTime() , this.sucess , this.error , this);
         }else{
             //通过ID获取 玩家信息
             var data = JSON.parse(this.io.get("userinfo")) ;

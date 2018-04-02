@@ -16,7 +16,12 @@ cc.Class({
         let self = this ;
         console.log('点击的handCards.isLaizi---->',handCards);
         if(handCards.laizi.active){
+          console.log('点击的赖子--->');
           return
+        }
+        if (handCards.koucard) {
+            console.log('点击的扣牌--->');
+            return
         }
         if(this.clickstate == true){
             //出牌

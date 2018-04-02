@@ -1,6 +1,8 @@
 package com.beimi.util.cache.hazelcast.impl;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,12 +14,14 @@ import com.hazelcast.core.HazelcastInstance;
 @Service("system_cache")
 public class SystemCache implements CacheBean{
 	
-	@Autowired
-	public HazelcastInstance hazelcastInstance;	
-	
+	//@Autowired
+	//public HazelcastInstance hazelcastInstance;
+
+	public Map<String,Object> hazelcastInstance = new HashMap<String,Object>();
+
 	private String cacheName ; 
 	
-	public HazelcastInstance getInstance(){
+	public Map<String,Object> getInstance(){
 		return hazelcastInstance ;
 	}
 	public CacheBean getCacheInstance(String cacheName){
@@ -27,27 +31,27 @@ public class SystemCache implements CacheBean{
 	
 	@Override
 	public void put(String key, Object value, String orgi) {
-		getInstance().getMap(getName()).put(key, value) ;
+		getInstance().put(key, value) ;
 	}
 
 	@Override
 	public void clear(String orgi) {
-		getInstance().getMap(getName()).clear();
+		getInstance().clear();
 	}
 
 	@Override
 	public Object delete(String key, String orgi) {
-		return getInstance().getMap(getName()).remove(key) ;
+		return getInstance().remove(key) ;
 	}
 
 	@Override
 	public void update(String key, String orgi, Object value) {
-		getInstance().getMap(getName()).put(key, value);
+		getInstance().put(key, value);
 	}
 
 	@Override
 	public Object getCacheObject(String key, String orgi) {
-		return getInstance().getMap(getName()).get(key);
+		return getInstance().get(key);
 	}
 
 	public String getName() {
@@ -62,7 +66,7 @@ public class SystemCache implements CacheBean{
 
 	@Override
 	public Collection<?> getAllCacheObject(String orgi) {
-		return getInstance().getMap(getName()).keySet();
+		return getInstance().keySet();
 	}
 	@Override
 	public Object getCacheObject(String key, String orgi, Object defaultValue) {
@@ -70,24 +74,26 @@ public class SystemCache implements CacheBean{
 	}
 	@Override
 	public Object getCache() {
-		return getInstance().getMap(cacheName);
+		return getInstance().get(cacheName);
 	}
 	
 	@Override
 	public Lock getLock(String lock , String orgi) {
 		// TODO Auto-generated method stub
-		return getInstance().getLock(lock);
+		//return getInstance().getLock(lock);
+		return null;
 	}
 	@Override
 	public long getSize() {
-		return getInstance().getMap(getName()).size();
+		return getInstance().size();
 	}
 	@Override
 	public long getAtomicLong(String cacheName) {
-		return getInstance().getAtomicLong(getName()).incrementAndGet();
+		//return getInstance().getAtomicLong(getName()).incrementAndGet();
+		return 1;
 	}
 	@Override
 	public void setAtomicLong(String cacheName, long start) {
-		getInstance().getAtomicLong(getName()).set(start);
+		//getInstance().getAtomicLong(getName()).set(start);
 	}
 }

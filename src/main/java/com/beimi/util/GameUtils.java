@@ -53,6 +53,7 @@ public class GameUtils {
 	static{
 		games.put("dizhu", new DizhuGame()) ;
 		games.put("majiang", new MaJiangGame()) ;
+		games.put("koudajiang", new MaJiangGame()) ;
 	}
 	
 	public static Game getGame(String playway ,String orgi){
@@ -63,6 +64,8 @@ public class GameUtils {
 			if(dic.getCode().equals("dizhu") || gamePlayway.getCode().equals("dizhu")){
 				game = (Game) BMDataContext.getContext().getBean("dizhuGame") ;
 			}else if(dic.getCode().equals("majiang") || gamePlayway.getCode().equals("majiang")){
+				game = (Game) BMDataContext.getContext().getBean("majiangGame") ;
+			}else {
 				game = (Game) BMDataContext.getContext().getBean("majiangGame") ;
 			}
 		}
@@ -393,11 +396,11 @@ public class GameUtils {
 	}
 
 
-	public static List<Byte> recommandCards(Player player ,byte[] cards){
+	public static List<Byte> recommandCards(Player player ,byte[] cards,String code){
 
 		List<Byte> recommendCard = new ArrayList<Byte>();
 		for(int i = -7 ; i < 27;i++){
-			MJCardMessage message = processLaiyuanMJCard(player,cards,(byte)(i*4),true,null);
+			MJCardMessage message = processLaiyuanMJCard(player,cards,(byte)(i*4),true,null,code);
 			if(message.isHu()){
 				recommendCard.add((byte)(i*4));
 			}
@@ -417,7 +420,7 @@ public class GameUtils {
      * @return
      */
 	public static MJCardMessage processLaiyuanMJCard(Player player ,byte[] cards , byte takecard ,boolean deal,
-													 List<List<Byte>> collections) {
+													 List<List<Byte>> collections,String code) {
 
 		MJCardMessage mjCard = new MJCardMessage();
 		mjCard.setCommand("action");
@@ -453,7 +456,7 @@ public class GameUtils {
 			if(entry.getKey() == takecard/4){
 				if(entry.getValue() == 2 && !deal){
 					mjCard.setPeng(true);
-				}else if(entry.getValue() == 3 && !deal){
+				}else if(entry.getValue() == 3){
 					mjCard.setGang(true);
 				}
 			}
@@ -470,26 +473,50 @@ public class GameUtils {
 		}
 		allCards.add(takecard);
 
-		if(!GameWinCheck.haveEightAndQueBefore(player,allCards,true,hunMap)){
-			logger.info(" 牌面前校验不通过 playerId:{}",player.getPlayuser());
-			mjCard.setHu(false);
-			return mjCard;
+		if("majiang".equals(code)) {
+			if (!GameWinCheck.haveEightAndQueBefore(player, allCards, true, hunMap)) {
+				logger.info(" 牌面前校验不通过 playerId:{}", player.getPlayuser());
+				mjCard.setHu(false);
+				return mjCard;
+			}
+		}else{
+			if (!GameWinCheck.haveEightAndQueBefore(player, allCards, false, hunMap)) {
+				logger.info(" 牌面前校验不通过 playerId:{}", player.getPlayuser());
+				mjCard.setHu(false);
+				return mjCard;
+			}
 		}
 		if(collections == null) {
 			collections = new ArrayList<List<Byte>>();
 		}
 		GameWinCheck.pairWinAlgorithm(mapCards, huns, collections);
-		if(!GameWinCheck.haveEightAndQueEnd(player,hunMap,null,collections,true)){
-			mjCard.setHu(false);
-			player.setWin(false);
-			logger.info("牌面后校验不通过 playerId:{}",player.getPlayuser());
-		}else {
-			logger.info("=========进行加牌操作==================");
-			player.setCollections(collections);
-			player.setWin(true);
-			System.out.println("========================");
-			mjCard.setHu(true);
-			logger.info("牌面后校验通过 playerId:{}", player.getPlayuser());
+
+		if("majiang".equals(code)) {
+			if (!GameWinCheck.haveEightAndQueEnd(player, hunMap, null, collections, true)) {
+				mjCard.setHu(false);
+				player.setWin(false);
+				logger.info("牌面后校验不通过 playerId:{}", player.getPlayuser());
+			} else {
+				logger.info("=========进行加牌操作==================");
+				player.setCollections(collections);
+				player.setWin(true);
+				System.out.println("========================");
+				mjCard.setHu(true);
+				logger.info("牌面后校验通过 playerId:{}", player.getPlayuser());
+			}
+		}else{
+			if (!GameWinCheck.haveEightAndQueEnd(player, hunMap, null, collections, false)) {
+				mjCard.setHu(false);
+				player.setWin(false);
+				logger.info("牌面后校验不通过 playerId:{}", player.getPlayuser());
+			} else {
+				logger.info("=========进行加牌操作==================");
+				player.setCollections(collections);
+				player.setWin(true);
+				System.out.println("========================");
+				mjCard.setHu(true);
+				logger.info("牌面后校验通过 playerId:{}", player.getPlayuser());
+			}
 		}
 		return mjCard;
 	}
@@ -512,8 +539,8 @@ public class GameUtils {
 	public static void main(String[] args) {
 		long start = System.nanoTime();
 		//-24,-25,-26
-		byte[] cards = new byte[]{-17,34,39,40,47,66,70,73,75,93,79,81,-23,37};
-		byte takecard = 41;
+		byte[] cards = new byte[]{48,52,60,61,62,76,80,84,100,101};
+		byte takecard =44;
 		List<Byte> test = new ArrayList<Byte>();
 		for (byte temp : cards) {
 			test.add(temp);
@@ -534,18 +561,18 @@ public class GameUtils {
 		}
 		Player player = new Player("USER1");
 		player.setColor(2);
-		byte[] powerfull = new byte[2];
-		powerfull[0] = 22;
-		powerfull[1] = 23;
+		byte[] powerfull = new byte[0];
+		//powerfull[0] = 22;
+		//powerfull[1] = 23;
 		player.setPowerfull(powerfull);
 		List<Action> actions = new ArrayList<Action>();
-		Action playerAction = new Action("adfaf" , BMDataContext.PlayerAction.PENG.toString() , (byte)-25);
+		Action playerAction = new Action("adfaf" , BMDataContext.PlayerAction.PENG.toString() , (byte)96);
 		actions.add(playerAction);
 		player.setActions(actions);
 		player.setCards(cards);
 
 		List<List<Byte>> collections = new ArrayList<List<Byte>>();
-		MJCardMessage mjCardMessage = GameUtils.processLaiyuanMJCard(player, cards, takecard,false,collections);
+		MJCardMessage mjCardMessage = GameUtils.processLaiyuanMJCard(player, cards, takecard,false,collections,null);
 		if(mjCardMessage.isHu()){
 			logger.info("胡牌啦");
 			for(List<Byte> cds : collections){

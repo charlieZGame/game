@@ -524,6 +524,28 @@ public class GameEventHandler {
 	}
 
 
+	@OnEvent(value = "answerKou")
+	public void giveKouInfo(SocketIOClient client, String data) {
+
+		logger.info("接收到客户端扣应答,data:{}",data);
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		String token = beiMiClient.getToken();
+		if (!StringUtils.isBlank(token)) {
+			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
+			if (userToken != null) {
+				String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
+				GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, beiMiClient.getOrgi());
+				MaJiangBoard board = (MaJiangBoard) CacheHelper.getBoardCacheBean().getCacheObject(gameRoom.getId(), gameRoom.getOrgi());
+				if(board.getAnswer().containsKey(beiMiClient.getUserid())){
+					board.getAnswer().put(beiMiClient.getUserid(),board.getAnswer().get(beiMiClient.getUserid())+1);
+				}else{
+					board.getAnswer().put(beiMiClient.getUserid(),1);
+				}
+			}
+		}
+	}
+
+
 
 	//抢地主事件
 	@OnEvent(value = "docatch")

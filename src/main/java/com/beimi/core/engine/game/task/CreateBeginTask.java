@@ -1,7 +1,11 @@
 package com.beimi.core.engine.game.task;
 
 import java.util.List;
+import java.util.Map;
 
+import com.beimi.util.rules.model.MaJiangBoard;
+import com.beimi.util.rules.model.Player;
+import com.beimi.web.model.GamePlayway;
 import org.apache.commons.lang3.StringUtils;
 import org.cache2k.expiry.ValueWithExpiryTime;
 
@@ -30,7 +34,7 @@ public class CreateBeginTask extends AbstractTask implements ValueWithExpiryTime
 	private GameRoom gameRoom = null ;
 	private String orgi ;
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
-	
+
 	public CreateBeginTask(long timer , GameRoom gameRoom, String orgi){
 		super();
 		this.timer = timer ;
@@ -41,11 +45,11 @@ public class CreateBeginTask extends AbstractTask implements ValueWithExpiryTime
 	public long getCacheExpiryTime() {
 		return System.currentTimeMillis()+timer*1000;	//5秒后执行
 	}
-	
+
 	public void execute(){
 		List<PlayUserClient> playerList = CacheHelper.getGamePlayerCacheBean().getCacheObject(gameRoom.getId(), orgi) ;
 		/**
-		 * 
+		 *
 		 * 顺手 把牌发了，注：此处应根据 GameRoom的类型获取 发牌方式
 		 */
 		boolean inroom = false; //初始设置当前不是新开房间
@@ -63,27 +67,32 @@ public class CreateBeginTask extends AbstractTask implements ValueWithExpiryTime
 		 * 通知所有玩家 新的庄
 		 */
 		ActionTaskUtils.sendEvent("banker",  new Banker(gameRoom.getLastwinner()), gameRoom);
-		
+
 		Board board = GameUtils.playGame(playerList, gameRoom, gameRoom.getLastwinner(), gameRoom.getCardsnum()) ;
 		CacheHelper.getBoardCacheBean().put(gameRoom.getId(), board, gameRoom.getOrgi());
-		for(Object temp : playerList){
-			PlayUserClient playerUser = (PlayUserClient) temp ;
-			playerUser.setGamestatus(BMDataContext.GameStatusEnum.PLAYING.toString());
-			/**
-			 * 更新状态到 PLAYING
-			 */
-			if(CacheHelper.getApiUserCacheBean().getCacheObject(playerUser.getId(), playerUser.getOrgi())!=null){
-				CacheHelper.getApiUserCacheBean().put(playerUser.getId(), playerUser, orgi);
+		GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), orgi);
+		if ("koudajiang".equals(gamePlayway.getCode())) {
+			koudajiangHandler(board,playerList);
+		}else {
+			for (Object temp : playerList) {
+				PlayUserClient playerUser = (PlayUserClient) temp;
+				playerUser.setGamestatus(BMDataContext.GameStatusEnum.PLAYING.toString());
+				/**
+				 * 更新状态到 PLAYING
+				 */
+				if (CacheHelper.getApiUserCacheBean().getCacheObject(playerUser.getId(), playerUser.getOrgi()) != null) {
+					CacheHelper.getApiUserCacheBean().put(playerUser.getId(), playerUser, orgi);
+				}
+				/**
+				 * 每个人收到的 牌面不同，所以不用 ROOM发送广播消息，而是用 遍历房间里所有成员发送消息的方式
+				 */
+				ActionTaskUtils.sendEvent(playerUser, new UserBoard(board, playerUser.getId(), "play", gameRoom.getNumofgames(), gameRoom.getCurrentnum(),false,null));
 			}
-			/**
-			 * 每个人收到的 牌面不同，所以不用 ROOM发送广播消息，而是用 遍历房间里所有成员发送消息的方式
-			 */
-			ActionTaskUtils.sendEvent(playerUser, new UserBoard(board , playerUser.getId() , "play",gameRoom.getNumofgames(),gameRoom.getCurrentnum()));
 		}
-		
+
 		CacheHelper.getGameRoomCacheBean().put(gameRoom.getId(), gameRoom, gameRoom.getOrgi());
-		
-		
+
+
 		/**
 		 * 发送一个 Begin 事件
 		 *
@@ -92,4 +101,102 @@ public class CreateBeginTask extends AbstractTask implements ValueWithExpiryTime
 		//super.getGame(gameRoom.getPlayway(), orgi).change(gameRoom , BeiMiGameEvent.AUTO.toString() , 2);	//通知状态机 , 此处应由状态机处理异步执行
 		super.getGame(gameRoom.getPlayway(), orgi).change(gameRoom , BeiMiGameEvent.RAISEHANDS.toString() , 2);	//通知状态机 , 此处应由状态机处理异步执行
 	}
+
+
+	private void koudajiangHandler(Board board,List<PlayUserClient> playerList){
+
+		for (PlayUserClient playerUser : playerList) {
+			playerUser.setGamestatus(BMDataContext.GameStatusEnum.PLAYING.toString());
+			if (CacheHelper.getApiUserCacheBean().getCacheObject(playerUser.getId(), playerUser.getOrgi()) != null) {
+				CacheHelper.getApiUserCacheBean().put(playerUser.getId(), playerUser, orgi);
+			}
+		}
+
+
+		Board tempBoard = generateTempBoard((MaJiangBoard) board);
+		int cardsNum = 0;
+		for(int i = 0;i<4;i++) {
+			for (int j = 0;j< playerList.size();j++) {
+				PlayUserClient playerUser = playerList.get(j);
+				byte[] b = null;
+				if(playerUser.getId().equals(tempBoard.getBanker())) {
+					b = new byte[ i < 3 ? 4 : 2];
+					System.arraycopy(getCards(playerUser, board), i * 4, b, 0, i < 3 ? 4 : 2);
+				}else{
+					b = new byte[ i < 3 ? 4 : 1];
+					System.arraycopy(getCards(playerUser, board), i * 4, b, 0, i < 3 ? 4 : 1);
+				}
+
+				UserBoard userBoard = new UserBoard(tempBoard, playerUser.getId(), "play", gameRoom.getNumofgames(), gameRoom.getCurrentnum(),true,b);
+				userBoard.setPlayway("2");
+				userBoard.setDeskcards(136 - (cardsNum + b.length));
+				logger.info("扣大将第num:{}发牌b:{}",i,b.length);
+				ActionTaskUtils.sendEvent(playerUser, userBoard);
+			}
+			while(true) {
+				boolean isQi = true;
+				if(((MaJiangBoard) board).getAnswer().size() < 4){
+					isQi = false;
+				}else {
+					for (Map.Entry<String, Integer> entry : ((MaJiangBoard) board).getAnswer().entrySet()) {
+						if (entry.getValue() != (i + 1) || entry.getValue() > 4 || entry.getValue() <= 0) {
+							isQi = false;
+						}
+					}
+				}
+				if(!isQi){
+					try {
+						Thread.sleep(500);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}else{
+					break;
+				}
+			}
+
+		}
+	}
+
+	private byte[] getCards(PlayUserClient playUserClient,Board board){
+
+		for(Player player : board.getPlayers()){
+			if(playUserClient.getId().equals(player.getPlayuser())){
+				return player.getCardsArray();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 *
+	 * @param board
+	 * @return
+     */
+	private Board generateTempBoard(MaJiangBoard board){
+
+		MaJiangBoard temp = new MaJiangBoard();
+		temp.setCommand(board.getCommand());
+		temp.setAdded(board.isAdded());
+		temp.setBanker(board.getBanker());
+		temp.setCurrcard(board.getCurrcard());
+		temp.setDeskcards(board.getDeskcards());
+		temp.setCurrplayer(board.getCurrplayer());
+		temp.setDocatch(board.isDocatch());
+		temp.setFinished(board.isFinished());
+		temp.setCommand(board.getCommand());
+		temp.setHistory(board.getHistory());
+		temp.setId(board.getId());
+		temp.setCurrcard(board.getCurrcard());
+		temp.setLast(board.getLast());
+		temp.setNextplayer(board.getNextplayer());
+		temp.setPlayers(board.getPlayers());
+		temp.setLasthands(board.getLasthands());
+		temp.setRatio(board.getRatio());
+		temp.setRoom(board.getRoom());
+		temp.setWinner(board.getWinner());
+		return temp;
+	}
+
+
 }

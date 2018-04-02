@@ -87,7 +87,10 @@ public class MaJiangGame implements ChessGame{
 		/**
 		 * 以下为定癞子牌(根据玩法需要)
 		 */
-		generatePowerful(board,cards,playway,players,gameRoom.getPowerfulsize());
+		if("majiang".equals(playway.getCode())) {
+			generatePowerful(board, cards, playway, players, gameRoom.getPowerfulsize());
+		}else if("koudajiang".equals(playway.getCode())){
+		}
 
 		/**
 		 * 切墩 ， 每次 4张， 发够 12张，然后再挑一张牌 ， 切墩 跳过了 骰子

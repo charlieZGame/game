@@ -40,9 +40,14 @@ cc.Class({
         if(playway.code == "dizhu"){
             this.gametype.getComponent(cc.Sprite).spriteFrame = this.atlas.getSpriteFrame("斗地主");
         }else if(playway.code == "majiang"){
-            this.gametype.getComponent(cc.Sprite).spriteFrame = this.atlas.getSpriteFrame("广东麻将");
+          this.gametype.getComponent(cc.Sprite).spriteFrame = this.atlas.getSpriteFrame("广东麻将");
         }else if(playway.code == "poker"){
             this.gametype.getComponent(cc.Sprite).spriteFrame = this.atlas.getSpriteFrame("德州扑克");
+        }else if(playway.code == "koudajiang"){
+          let self = this;
+          cc.loader.loadRes("images/img/koudajiang", cc.SpriteFrame, function(error, spriteFrame) {
+              self.gametype.getComponent(cc.Sprite).spriteFrame = spriteFrame;
+            });
         }
     }
     // called every frame, uncomment this function to activate update callback

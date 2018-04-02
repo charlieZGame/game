@@ -399,6 +399,18 @@ public class GameWinCheck {
         Map<Integer, Integer> que = new HashMap<Integer, Integer>();
         Map<Integer, Byte> data = new HashMap<Integer, Byte>();
 
+       // Map<Integer,Integer> que = new HashMap<Integer,Integer>();
+        if(CollectionUtils.isNotEmpty(player.getActions())){
+            for(Action action : player.getActions()){
+                if(BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())){
+                    addQue(action.getCard(),3,que);
+                }else if(BMDataContext.PlayerAction.GANG.toString().equals(action.getAction())){
+                    addQue(action.getCard(),4,que);
+                }
+            }
+        }
+
+
         for (byte temp : cards) {
 
             int key = temp / 4;
@@ -442,7 +454,7 @@ public class GameWinCheck {
             for(Action action : player.getActions()){
                 if(BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())){
                     addQue(action.getCard(),3,que);
-                }else if(BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())){
+                }else if(BMDataContext.PlayerAction.GANG.toString().equals(action.getAction())){
                     addQue(action.getCard(),4,que);
                 }
             }
@@ -592,7 +604,14 @@ public class GameWinCheck {
     public static List<GameResultSummary> playerSunmary(Player player, List<List<Byte>>collections){
 
         if(CollectionUtils.isEmpty(collections)){
-            return null;
+            List<GameResultSummary> gameResultChecks = new ArrayList<GameResultSummary>();
+            GameResultSummary gameResultCheck = new GameResultSummary();
+            if(CollectionUtils.isEmpty(player.getActions())){
+                return gameResultChecks;
+            }
+            generateGangPeng(player,gameResultCheck);
+            gameResultChecks.add(gameResultCheck);
+            return gameResultChecks;
         }
         List<GameResultSummary> gameResultChecks = new ArrayList<GameResultSummary>();
         for(List<Byte> list : collections){
@@ -615,26 +634,39 @@ public class GameWinCheck {
             if(CollectionUtils.isEmpty(player.getActions())){
                 return gameResultChecks;
             }
-            List<Byte> pengs = new ArrayList<Byte>();
-            gameResultCheck.setPengs(pengs);
-            List<Byte> gangs = new ArrayList<Byte>();
-            gameResultCheck.setGangs(gangs);
-            for(Action action : player.getActions()){
-                if(BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())){
-                    pengs.add((byte)(action.getCard()/4 *4));
-                    pengs.add((byte)(action.getCard()/4 *4+1));
-                    pengs.add((byte)(action.getCard()/4 *4+2));
-                }else if(BMDataContext.PlayerAction.GANG.toString().equals(action.getAction())){
-                    gangs.add((byte)(action.getCard()/4 *4));
-                    gangs.add((byte)(action.getCard()/4 *4+1));
-                    gangs.add((byte)(action.getCard()/4 *4+2));
-                    gangs.add((byte)(action.getCard()/4 *4+3));
-                }
-            }
+            generateGangPeng(player,gameResultCheck);
             gameResultChecks.add(gameResultCheck);
         }
         return gameResultChecks;
     }
 
+
+    private static void generateGangPeng(Player player,GameResultSummary gameResultCheck){
+        List<Byte> pengs = new ArrayList<Byte>();
+        List<Byte> agangs = new ArrayList<Byte>();
+        List<Byte> mgangs = new ArrayList<Byte>();
+        gameResultCheck.setPengs(pengs);
+        gameResultCheck.setAgangs(agangs);
+        gameResultCheck.setMgangs(mgangs);
+        for(Action action : player.getActions()){
+            if(BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())){
+                pengs.add((byte)(action.getCard()/4 *4));
+                pengs.add((byte)(action.getCard()/4 *4+1));
+                pengs.add((byte)(action.getCard()/4 *4+2));
+            }else if(BMDataContext.PlayerAction.GANG.toString().equals(action.getAction())){
+                if(BMDataContext.PlayerGangAction.AN.toString().equals(action.getType())) {
+                    agangs.add((byte) (action.getCard() / 4 * 4));
+                    agangs.add((byte) (action.getCard() / 4 * 4 + 1));
+                    agangs.add((byte) (action.getCard() / 4 * 4 + 2));
+                    agangs.add((byte) (action.getCard() / 4 * 4 + 3));
+                }else if(BMDataContext.PlayerGangAction.MING.toString().equals(action.getType())){
+                    mgangs.add((byte) (action.getCard() / 4 * 4));
+                    mgangs.add((byte) (action.getCard() / 4 * 4 + 1));
+                    mgangs.add((byte) (action.getCard() / 4 * 4 + 2));
+                    mgangs.add((byte) (action.getCard() / 4 * 4 + 3));
+                }
+            }
+        }
+    }
 
 }

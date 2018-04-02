@@ -264,7 +264,22 @@ cc.Class({
     ju: {
       default: null,
       type: cc.Label
-    }
+    },
+
+    hucards_tip: { //我 将要胡的牌
+      default: null,
+      type: cc.Prefab
+    },
+
+    ting_tip: { //ting牌node
+      default: null,
+      type: cc.Node
+    },
+
+    hucards_tip_layout: { //我将要胡的牌摆放位置
+      default: null,
+      type: cc.Node
+    },
   },
 
   // use this for initialization
@@ -274,6 +289,7 @@ cc.Class({
   onLoad: function() {
     this.initdata(true);
     this.resize();
+    this.ting_tip.active = false;
     let self = this;
     if (this.mask != null) {
       this.mask.active = false;
@@ -283,40 +299,86 @@ cc.Class({
       this.chatScrollView.active = false;
     }
 
-    this.node.on('mousedown', function(event) {
-      console.log("场景中的鼠标点击事件--mousedown---------", self.chatScrollView, self.chatScrollView.active);
-      if (self.chatScrollView && self.chatScrollView.active == true) {
-        self.chatScrollView.active = false
-      }
-    }, self);
+    // this.node.on('mousedown', function(event) {
+    //   console.log("场景中的鼠标点击事件--mousedown---------", self.chatScrollView, self.chatScrollView.active);
+    //   if (self.chatScrollView && self.chatScrollView.active == true) {
+    //     self.chatScrollView.active = false
+    //   }
+    // }, self);
 
     // let testNum=0;
     this.chatScrollView.on('mousedown', function(event) {
       console.log("场景中的鼠标点击事件--聊天框---------");
-     //  testNum++;
-     //  const data={
-     //    actype:'',
-     //    action:testNum%2==0?'gang':'',
-     //    card:5,
-     //  };
-     //  let cards_gang;
-     //  if (data.actype == "an") {
-     //    cards_gang = cc.instantiate(self.cards_gang_an_right_prefab);
-     //  } else {
-     //    cards_gang = cc.instantiate(self.cards_gang_ming_right_prefab);
-     //  }
-     //  let temp_script = cards_gang.getComponent("GangAction");
-     //  if (data.action == "gang") {
-     //    temp_script.init(data.card, true);
-     //  } else {
-     //    temp_script.init(data.card, false);
-     //  }
-     //  // cards_gang.parent = self.gang_left;
-     // //  cards_gang.parent = self.gang_top;
-     //   cards_gang.parent = self.gang_right;
-     //  self.leftactioncards.push(cards_gang);
+      //---------------------测试
+    //   let readybtn = null,
+    //     waitting = null,
+    //     selectbtn = null,
+    //     banker = null,
+    //     invitefriendsbtn = null,
+    //     selectkoubtn = null;
+    //   for (var i = 0; i < self.statebtn.children.length; i++) {
+    //     let target = self.statebtn.children[i];
+    //     if (target.name == "readybtn") {
+    //       readybtn = target;
+    //     } else if (target.name == "invitefriends") {
+    //       invitefriendsbtn = target;
+    //     } else if (target.name == "waitting") {
+    //       waitting = target;
+    //     } else if (target.name == "select") {
+    //       selectbtn = target;
+    //     } else if (target.name == "banker") {
+    //       banker = target;
+    //     }else if(target.name =="selectkou"){
+    //       selectkoubtn= target;
+    //         console.log("target---->",target.name, selectkoubtn);
+    //     }
+    //     target.active = false;
+    // //    console.log("target---->",target.name, selectkoubtn);
+    //   };
+    //   selectkoubtn.active = true;
+    //   testNum++;
+    //   const data={
+    //     actype:'',
+    //     action:testNum%2==0?'gang':'',
+    //     card:5,
+    //   };
+    //   let cards_gang;
+    //   if (data.actype == "an") {
+    //     cards_gang = cc.instantiate(self.cards_gang_an_prefab);
+    //   } else {
+    //     cards_gang = cc.instantiate(self.cards_gang_ming_prefab);
+    //   }
+    //   let temp_script = cards_gang.getComponent("GangAction");
+    //   if (data.action == "gang") {
+    //     temp_script.init(data.card, true);
+    //   } else {
+    //     temp_script.init(data.card, false);
+    //   }
+    //    // cards_gang.parent = self.gang_current;
+    //     cards_gang.parent = self.gang_top;
+    // //   cards_gang.parent = self.gang_right;
+    //   self.leftactioncards.push(cards_gang);
 
-      event.stopPropagation();
+    //   //胡牌测试
+      // for (var i = 0; i < 10; i++) {
+        // let hucards_tip;
+        // hucards_tip = cc.instantiate(self.hucards_tip);
+        // self.leftactioncards.push(hucards_tip);
+        // let temp_script = hucards_tip.getComponent("huCards");
+        // temp_script.init(89);
+        // hucards_tip.parent = self.hucards_tip_layout;
+      // }
+
+    //
+          //结果页面测试
+
+      // self.summarypage = cc.instantiate(self.summary);
+      // self.summarypage.parent = self.root();
+      // let temp = self.summarypage.getComponent("summary");
+      // let datare={"game":"d7128eb8f70b49c9ac0eedd5c4c1083b","ratio":2,"command":"allcards","finished":true,"gameRoomOver":false,"score":4,"players":[{"userid":"c178612037ac413dad4d824416961f2a","username":"Guest_11MQ5x","ratio":2,"score":4,"gameover":false,"balance":0,"win":true,"gameResultChecks":[{"pairs":"88,16","three":"92,1,5,14,17,21,23,25,31,93,80,81"},{"pairs":"88,17","three":"92,1,5,14,16,21,23,25,31,93,80,81"},{"pairs":"16,17","three":"88,1,5,92,14,21,23,25,31,93,80,81"},{"pairs":"80,81","three":"88,1,5,92,14,16,93,17,21,23,25,31"}],"dizhu":true},{"userid":"f3fa56bdf75e4bc4a1496d797d63286c","username":"Guest_1F5oVN","ratio":2,"score":4,"gameover":false,"balance":0,"win":false,"gameResultChecks":[{"others":"39,54,62,63,76,79,95,96,97,105,74,84,53"}],"dizhu":false},{"userid":"960017a406234b8784ed9bf649797089","username":"Guest_1opcw5","ratio":2,"score":4,"gameover":false,"balance":0,"win":false,"gameResultChecks":[{"pengs":"44,45,46","others":"-7,-6,51,67,68,100,101,107,47,60"}],"dizhu":false},{"userid":"140c7ea5999848b48195302fe497702b","username":"Guest_1cR94c","ratio":2,"score":4,"gameover":false,"balance":0,"win":false,"gameResultChecks":[{"pengs":"0,1,2","others":"4,11,20,26,30,49,59,64,66,99"}],"dizhu":false}],"hu":false}
+      // temp.create(self, datare);
+
+    event.stopPropagation();
     }, self);
 
     if (this.ready()) {
@@ -341,6 +403,7 @@ cc.Class({
       this.leftactioncards = new Array();
       this.rightactioncards = new Array();
       this.topactioncards = new Array();
+      this.huactioncardstip = new Array();
 
       this.laiziValues = new Array();
 
@@ -413,6 +476,23 @@ cc.Class({
         event.stopPropagation();
       });
 
+      this.node.on("bukou", function(event) {
+        socket.emit("selectaction", "bukou");
+        event.stopPropagation();
+      });
+
+      this.node.on("koupai", function(event) {
+        socket.emit("selectaction", "koupai");
+        //---------------------测试
+          console.log("可扣牌张数----》",handcards.length);
+          for (var inx =self.playercards.length-4; inx>0&&inx < self.playercards.length;inx++) {
+            let handcards = self.playercards[inx].getComponent("HandCards");
+            console.log("最后的4张牌----》",handcards);
+            handcards.koucard();
+          }
+        event.stopPropagation();
+      });
+
       if (cc.beimi != null) {
         if (cc.beimi.gamestatus != null && cc.beimi.gamestatus == "playing") {
           //恢复数据
@@ -475,6 +555,7 @@ cc.Class({
       this.map("takecards", this.takecard_event); //揭牌
 
       this.map("action", this.action_event); //服务端发送的 动作事件，有杠碰吃胡过可以选择
+      this.map("ting", this.ting_event);
 
       this.map("selectaction", this.selectaction_event); //我选择的动作， 杠碰吃胡
 
@@ -620,13 +701,13 @@ cc.Class({
              * 预制的 对象池
              * @type {cc.NodePool}
              */
-      this.playerspool = new cc.NodePool();
+      context.playerspool = new cc.NodePool();
       /**
              *
              * 初始化玩家 的 对象池
              */
       for (var i = 0; i < 4; i++) {
-        this.playerspool.put(cc.instantiate(this.playerprefab));
+        context.playerspool.put(cc.instantiate(context.playerprefab));
       }
       player = context.playerspool.get();
     }
@@ -791,7 +872,7 @@ cc.Class({
       /**
              * 销毁其中一个对象
              */
-      if (cardpanel != null) {
+      if (cardpanel != null && cardpanel.children && cardpanel.children.length > 0) {
         cardpanel.children[cardpanel.children.length - 1].destroy();
       }
       let desk_card = cc.instantiate(cardprefab);
@@ -853,6 +934,8 @@ cc.Class({
     context.select_action_searchlight(data, context, player);
     if (data.userid == cc.beimi.user.id) {
       context.initDealHandCards(context, data);
+      console.log("我出牌了");
+      context.cleanTingTip(context);
     } else {
       let inx = 0;
       if (player.tablepos == "top") {
@@ -873,12 +956,11 @@ cc.Class({
 
   select_action_searchlight: function(data, context, player) {
     context.exchange_searchlight(player.tablepos, context);
-    /**
-         */
     context.exchange_state("nextplayer", context);
   },
 
   allcards_event: function(data, context) {
+    console.log("收到allcards_event",data);
     cc.beimi.gamestatus = "notready";
     //结算界面，
     context.gameover = false;
@@ -886,7 +968,7 @@ cc.Class({
       context.summarypage = cc.instantiate(context.summary);
       context.summarypage.parent = context.root();
       let temp = context.summarypage.getComponent("summary");
-      temp.create(context, data);
+      temp.create(context, data,context.laiziValues );
 
       if (data.gameRoomOver == true) { //房间解散
         context.gameover = true;
@@ -1051,6 +1133,25 @@ cc.Class({
       context.recover_desk_cards(data.userid, hiscards[j], context);
     }
   },
+
+
+  //听牌通知
+  ting_event:function(data, context) {
+    if (data.recommendCards&&data.recommendCards.length>0&&data.userid==cc.beimi.user.id) {
+      context.ting_tip.active = true;
+      let recommendCardsValue = context.decode(data.recommendCards);
+      console.log("收到胡牌提醒---》");
+      for (var i = 0; i < recommendCardsValue.length; i++) {
+        let hucards_tip;
+         hucards_tip = cc.instantiate(context.hucards_tip);
+         context.huactioncardstip.push(hucards_tip);
+         let temp_script = hucards_tip.getComponent("huCards");
+         temp_script.init(recommendCardsValue[i]);
+         hucards_tip.parent = context.hucards_tip_layout;
+      }
+    }
+  },
+
   /**
      * 接受服务端的数据，玩家杠碰、吃胡等动作
      * @param data
@@ -1169,13 +1270,13 @@ cc.Class({
          * 然后将此牌 移除即可，如果对象是 all， 则不用做任何处理即可
          */
     if (cc.beimi.user.id == data.userid) {
-      console.error("-------我自己碰杠吃胡-------");
+
+      console.log("-------我自己碰杠吃胡-------");
       /**
              * 碰，显示碰的动画，
              * 杠，显示杠的动画，杠分为：明杠，暗杠，弯杠，每种动画效果不同，明杠/暗杠需要扣三家分，弯杠需要扣一家分
              * 胡，根据玩法不同，推倒胡和血流/血战
              */
-      console.error("-------我自己碰杠吃胡----执行碰的特效---");
       //碰的特效
       context.select_action_searchlight(data, context, player);
 
@@ -1257,7 +1358,7 @@ cc.Class({
              */
       context.exchange_state("action", context);
     } else {
-      console.error("-------有其他玩家碰杠吃胡-------");
+      console.log("-------有其他玩家碰杠吃胡-------");
       //以下代码是用于找到 杠/碰/吃/胡牌的 目标牌  ， 然后将此牌 从 桌面牌中移除
       if (data.target!='all') {  //暗杠
         let temp = context.player(data.target, context),
@@ -1280,12 +1381,19 @@ cc.Class({
       //提示当前玩家有人杠/碰/吃/胡牌
       let actionPlayer = context.player(data.userid, context);
       context.exchange_searchlight(actionPlayer.tablepos,context);
-      console.error("点击了碰杠吃的玩家---》",actionPlayer);
+      console.log("点击了碰杠吃的玩家---》",actionPlayer);
       let cards_gang;
+      let  actionPlayerDeskcardpanel;
       if (actionPlayer.tablepos == "right") {
+
         let rightpre;
         if (data.action=="peng") {
           rightpre = cc.instantiate(context.action_peng_prefab);
+
+          if (deskcardpanel && deskcardpanel.children.length > 0) {
+            deskcardpanel.children[deskcardpanel.children.length - 1].destroy();
+          }
+
         }else if (data.action=="chi") {
           rightpre = cc.instantiate(context.action_chi_prefab);
         }else if(data.action == "gang") {
@@ -1625,6 +1733,7 @@ cc.Class({
     }
   },
 
+//左上角赖子展示
   showLaizi: function(context, cards) {
     context.laiziNode.active = true;
     for (var i = 0; i < cards.length; i++) {
@@ -1685,7 +1794,8 @@ cc.Class({
       waitting = null,
       selectbtn = null,
       banker = null,
-      invitefriendsbtn = null;
+      invitefriendsbtn = null,
+      selectkoubtn = null;
     for (var i = 0; i < object.statebtn.children.length; i++) {
       let target = object.statebtn.children[i];
       if (target.name == "readybtn") {
@@ -1698,7 +1808,10 @@ cc.Class({
         selectbtn = target;
       } else if (target.name == "banker") {
         banker = target;
+      }else if(target.name =="selectkou"){
+        selectkoubtn= target;
       }
+      console.log("target.name====>",target.name,selectkoubtn);
       target.active = false;
     };
 
@@ -1759,6 +1872,7 @@ cc.Class({
         selectbtn.active = true;
         object.timer(object, 5);
         break;
+
       case "selectresult":
         /**
                  * 选择了定缺结果，关闭选择按钮
@@ -1767,6 +1881,26 @@ cc.Class({
         selectbtn.active = false;
         object.canceltimer(object);
         break;
+      case "selectkou":
+          /**
+                   * 显示选择扣的弹框
+                   * @type {boolean}
+                   */
+          selectkoubtn.active = true;
+          object.timer(object, 30);
+          break;
+      case "selectkouresult":
+          /**
+                   * 选择了扣与不扣结果，关闭选择按钮
+                   * @type {boolean}
+                   */
+          selectkoubtn.active = false;
+          object.canceltimer(object);
+          for (var inx =object.playercards.length-4; inx < object.playercards.length;inx++) {
+            let handcards = object.playercards[inx].getComponent("HandCards");
+            handcards.koucard();
+          }
+      break;
       case "lasthands":
         /**
                  * 选择了定缺结果，关闭选择按钮
@@ -1948,6 +2082,11 @@ cc.Class({
          * 玩家数据销毁条件（房间解散，或者有玩家退出房价的时候，所有玩家数据销毁后冲洗排序）
          */
     this.mask.active = false;
+
+    if (this.summarypage) {
+      this.summarypage.destroy();
+    }
+
   },
 
   restart: function() {
@@ -1997,6 +2136,7 @@ cc.Class({
     // }
     this.inited = false;
     this.cleanmap();
+    this.cleanTingTip(this);
     if (this.ready()) {
       let socket = this.socket();
       socket.emit("leave", "leave");
@@ -2006,4 +2146,15 @@ cc.Class({
   // update: function (dt) {
 
   // },
+
+  cleanTingTip: function(context){
+    if (context.ting_tip.active) {
+      context.ting_tip.active = false;
+      if (context.huactioncardstip&&context.huactioncardstip.length>0) {
+        for (var inx = 0; inx < context.huactioncardstip.length; inx++) {
+          context.huactioncardstip[inx].destroy();
+        }
+      }
+    }
+  }
 });

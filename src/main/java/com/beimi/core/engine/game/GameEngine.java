@@ -90,7 +90,7 @@ public class GameEngine {
 */
 				}
 			}else{
-				//通知状态
+				//通知状态 开局
 				GameUtils.getGame(beiMiClient.getPlayway() , gameEvent.getOrgi()).change(gameEvent);	//通知状态机 , 此处应由状态机处理异步执行
 			}
 		}
@@ -505,18 +505,21 @@ public class GameEngine {
 					
 					board.playcards(board, gameRoom, player, orgi);
 					
-				}else if(!StringUtils.isBlank(action) && action.equals(BMDataContext.PlayerAction.GANG.toString()) && allowAction(card, player.getActions() , BMDataContext.PlayerAction.GANG.toString())){
+				}else if(!StringUtils.isBlank(action) && action.equals(BMDataContext.PlayerAction.GANG.toString()) &&
+						allowAction(card, player.getActions() , BMDataContext.PlayerAction.GANG.toString())){
+					Action playerAction = new Action(userid , action , card);
 					if(board.getNextplayer().getNextplayer().equals(userid)){
 						card = GameUtils.getGangCard(player.getCardsArray()) ;
 						actionEvent = new ActionEvent(board.getBanker() , userid , card , action);
 						actionEvent.setActype(BMDataContext.PlayerGangAction.AN.toString());
+						playerAction.setType(BMDataContext.PlayerGangAction.AN.toString());
 					}else{
 						actionEvent.setActype(BMDataContext.PlayerGangAction.MING.toString());	//还需要进一步区分一下是否 弯杠
+						playerAction.setType(BMDataContext.PlayerGangAction.MING.toString());
 					}
 					/**
 					 * 检查是否有弯杠
 					 */
-					Action playerAction = new Action(userid , action , card);
 					for(Action ac : player.getActions()){
 						if(ac.getCard() == card && ac.getAction().equals(BMDataContext.PlayerAction.PENG.toString())){
 							ac.setGang(true);

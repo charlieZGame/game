@@ -29,6 +29,7 @@ cc.Class({
     onLoad: function () {
         this.lastonecard = false ;
         this.take = false ;
+        this.koucard = false;
 
         this.isLaizi = false;
         this.node.on('mousedown', function ( event ) {
@@ -117,6 +118,7 @@ cc.Class({
     },
 
     koucard:function(){
+      this.koucard = true;
       var anim = this.getComponent(cc.Animation);
       anim.play("majiang_kou");
     }
