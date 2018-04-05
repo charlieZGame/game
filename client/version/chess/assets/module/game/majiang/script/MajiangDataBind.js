@@ -280,6 +280,16 @@ cc.Class({
       default: null,
       type: cc.Node
     },
+
+    selectkou_dialog:{
+      default: null,
+      type: cc.Node
+    },
+
+    desk_title:{
+      default: null,
+      type: cc.Sprite
+    }
   },
 
   // use this for initialization
@@ -291,6 +301,11 @@ cc.Class({
     this.resize();
     this.ting_tip.active = false;
     let self = this;
+    if (cc.beimi.extparams.gametype == "koudajiang") {
+      cc.loader.loadRes("images/img/game_kou", cc.SpriteFrame, function(error, spriteFrame) {
+          self.desk_title.spriteFrame = spriteFrame;
+        });
+    }
     if (this.mask != null) {
       this.mask.active = false;
     }
@@ -309,33 +324,7 @@ cc.Class({
     // let testNum=0;
     this.chatScrollView.on('mousedown', function(event) {
       console.log("场景中的鼠标点击事件--聊天框---------");
-      //---------------------测试
-    //   let readybtn = null,
-    //     waitting = null,
-    //     selectbtn = null,
-    //     banker = null,
-    //     invitefriendsbtn = null,
-    //     selectkoubtn = null;
-    //   for (var i = 0; i < self.statebtn.children.length; i++) {
-    //     let target = self.statebtn.children[i];
-    //     if (target.name == "readybtn") {
-    //       readybtn = target;
-    //     } else if (target.name == "invitefriends") {
-    //       invitefriendsbtn = target;
-    //     } else if (target.name == "waitting") {
-    //       waitting = target;
-    //     } else if (target.name == "select") {
-    //       selectbtn = target;
-    //     } else if (target.name == "banker") {
-    //       banker = target;
-    //     }else if(target.name =="selectkou"){
-    //       selectkoubtn= target;
-    //         console.log("target---->",target.name, selectkoubtn);
-    //     }
-    //     target.active = false;
-    // //    console.log("target---->",target.name, selectkoubtn);
-    //   };
-    //   selectkoubtn.active = true;
+      //---------------------测试杠碰的
     //   testNum++;
     //   const data={
     //     actype:'',
@@ -369,9 +358,17 @@ cc.Class({
         // hucards_tip.parent = self.hucards_tip_layout;
       // }
 
-    //
-          //结果页面测试
 
+    //  测试扣牌
+    // self.selectkou_dialog.active = true;
+    // console.log("可扣牌张数----》", self.playercards.length);
+    //   for (var inx =self.playercards.length-4; inx>=0&&inx < self.playercards.length;inx++) {
+    //     let handcards = self.playercards[inx].getComponent("HandCards");
+    //     console.log("最后的4张牌----》",handcards);
+    //     handcards.setCardKou();
+    //     self.isCankou = true;
+    //   }
+      //结果页面测试
       // self.summarypage = cc.instantiate(self.summary);
       // self.summarypage.parent = self.root();
       // let temp = self.summarypage.getComponent("summary");
@@ -404,6 +401,9 @@ cc.Class({
       this.rightactioncards = new Array();
       this.topactioncards = new Array();
       this.huactioncardstip = new Array();
+
+      //记录一下是否可以扣
+      this.isCankou = true;
 
       this.laiziValues = new Array();
 
@@ -477,19 +477,31 @@ cc.Class({
       });
 
       this.node.on("bukou", function(event) {
-        socket.emit("selectaction", "bukou");
+        socket.emit("answerKou","0");
+        self.isCankou = false;
+        self.selectkou_dialog.active = false;
+        self.canceltimer(self);
         event.stopPropagation();
       });
 
       this.node.on("koupai", function(event) {
-        socket.emit("selectaction", "koupai");
+        socket.emit("answerKou","1");
         //---------------------测试
-          console.log("可扣牌张数----》",handcards.length);
-          for (var inx =self.playercards.length-4; inx>0&&inx < self.playercards.length;inx++) {
+          console.log("可扣牌张数----》", self.playercards.length);
+          for (var inx =self.playercards.length-4; inx>=0&&inx < self.playercards.length;inx++) {
             let handcards = self.playercards[inx].getComponent("HandCards");
             console.log("最后的4张牌----》",handcards);
-            handcards.koucard();
+            handcards.setCardKou();
+            self.isCankou = true;
+
+            //是扣的牌
+            if(handcards.koucard){
+              self.playercards[inx].zIndex = handcards.value - 1000;
+            }
+
           }
+        self.selectkou_dialog.active = false;
+        self.canceltimer(self)
         event.stopPropagation();
       });
 
@@ -816,11 +828,16 @@ cc.Class({
             if (handcards.selectcolor == true) {
               context.playercards[inx].zIndex = 1000 + handcards.value;
             } else {
-              if (handcards.value >= 0) {
-                context.playercards[inx].zIndex = handcards.value;
-              } else {
-                context.playercards[inx].zIndex = 200 + handcards.value;
+              if(handcards.koucard){
+                context.playercards[inx].zIndex = handcards.value - 1000;
+              }else {
+                if (handcards.value >= 0) {
+                  context.playercards[inx].zIndex = handcards.value;
+                } else {
+                  context.playercards[inx].zIndex = 200 + handcards.value;
+                }
               }
+
             }
           }
           inx = inx + 1; //遍历 ++,不处理移除的 牌
@@ -1055,13 +1072,13 @@ cc.Class({
     }
     return inroom;
   },
+
   /**
      * 接受新的庄家数据
      * @param data
      * @param context
      */
   banker_event: function(data, context) {
-
     for (var inx = 0; inx < context.playersarray.length; inx++) {
       let temp = context.playersarray[inx].getComponent("MaJiangPlayer");
       if (temp.data.id == data.userid) {
@@ -1099,7 +1116,7 @@ cc.Class({
     /**
          * 恢复玩家数据
          */
-    context.play_event(data.userboard, context);
+    context.play_event(data.userboard, context,true);
 
     /**
          * 恢复庄家数据
@@ -1483,10 +1500,11 @@ cc.Class({
      * @param data
      * @param context
      */
-  play_event: function(data, context) {
+  play_event: function(data, context,isRecovery) {
     cc.beimi.gamestatus = "playing";
     //改变状态，开始发牌
     context.exchange_state("begin", context);
+
     cc.beimi.audio.beginGame();
     var temp_player = data.player;
     var cards = context.decode(temp_player.cards);
@@ -1527,9 +1545,16 @@ cc.Class({
       } else {
         context.playercards[i].zIndex = 200 + temp_script.value;
       }
+      //是赖子
       if (temp_script.laizi.active) {
         context.playercards[i].zIndex = temp_script.value - 1000;
       }
+
+      //是扣的牌
+      if(temp_script.koucard){
+        context.playercards[i].zIndex = temp_script.value - 1000;
+      }
+
       if (context.playercards[i].zIndex > maxvalue) {
         maxvalue = context.playercards[i].zIndex;
         maxvalluecard = context.playercards[i];
@@ -1560,6 +1585,15 @@ cc.Class({
     //this.statusbtn.active = true ;
 
     context.showLaizi(context, laizis);
+
+    //提示扣牌
+    if (context.isCankou&&(data.playway=="2"||data.playway==2)&&!isRecovery&&cards.length==4) {
+      context.selectkou_dialog.active = true;
+      context.timer(context, 30, true);
+    }else if ((!context.isCankou||cards.length!=4 )&&(data.playway=="2"||data.playway==2)&&!isRecovery) {
+      let socket = context.socket();
+      socket.emit("answerKou","0");
+    }
   },
   /**
      * 开始定缺
@@ -1702,6 +1736,7 @@ cc.Class({
     }
     context.initOtherCards(groupNums, context, deskcards, prefab, cardarray, parent, spec, inx); //左侧，
   },
+
   initOtherCards: function(group, context, cards, prefab, cardsarray, parent, spec, inx) {
     for (var i = group * 4; i < cards && i < (group + 1) * 4; i++) {
       //let temp = context.cardpool.get();
@@ -1775,6 +1810,7 @@ cc.Class({
   waittingForPlayers: function() {
     this.exchange_state("ready", this);
   },
+
   player: function(pid, context) {
     let player;
     for (var inx = 0; inx < context.playersarray.length; inx++) {
@@ -1794,8 +1830,8 @@ cc.Class({
       waitting = null,
       selectbtn = null,
       banker = null,
-      invitefriendsbtn = null,
-      selectkoubtn = null;
+      invitefriendsbtn = null;
+
     for (var i = 0; i < object.statebtn.children.length; i++) {
       let target = object.statebtn.children[i];
       if (target.name == "readybtn") {
@@ -1808,10 +1844,7 @@ cc.Class({
         selectbtn = target;
       } else if (target.name == "banker") {
         banker = target;
-      }else if(target.name =="selectkou"){
-        selectkoubtn= target;
       }
-      console.log("target.name====>",target.name,selectkoubtn);
       target.active = false;
     };
 
@@ -1856,6 +1889,7 @@ cc.Class({
                  * 开始发牌动画，取消所有进行中的计时器
                  */
         object.canceltimer(object);
+
         break;
       case "play":
         /**
@@ -1881,26 +1915,6 @@ cc.Class({
         selectbtn.active = false;
         object.canceltimer(object);
         break;
-      case "selectkou":
-          /**
-                   * 显示选择扣的弹框
-                   * @type {boolean}
-                   */
-          selectkoubtn.active = true;
-          object.timer(object, 30);
-          break;
-      case "selectkouresult":
-          /**
-                   * 选择了扣与不扣结果，关闭选择按钮
-                   * @type {boolean}
-                   */
-          selectkoubtn.active = false;
-          object.canceltimer(object);
-          for (var inx =object.playercards.length-4; inx < object.playercards.length;inx++) {
-            let handcards = object.playercards[inx].getComponent("HandCards");
-            handcards.koucard();
-          }
-      break;
       case "lasthands":
         /**
                  * 选择了定缺结果，关闭选择按钮
@@ -1985,7 +1999,7 @@ cc.Class({
   recovery: function() {
     //this.initgame();
   },
-  timer: function(object, times) {
+  timer: function(object, times, isCancelKouCard) {
     if (times > 9) {
       object.mjtimer.string = times;
     } else {
@@ -2000,6 +2014,13 @@ cc.Class({
           text = "0" + times;
         }
         object.mjtimer.string = text;
+      }
+      if (isCancelKouCard&&times==0) {
+        console.log("发送不扣的通知");
+        object.selectkou_dialog.active = false;
+        let socket = this.socket();
+        socket.emit("answerKou","0");
+        object.isCankou = false;
       }
     }
     object.unscheduleAllCallbacks();

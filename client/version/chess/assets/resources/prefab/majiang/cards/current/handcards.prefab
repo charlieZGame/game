@@ -263,7 +263,7 @@
     "_rotationX": 0,
     "_rotationY": 0,
     "_scaleX": 1,
-    "_scaleY": 1,
+    "_scaleY": 0.955,
     "_position": {
       "__type__": "cc.Vec2",
       "x": 0,
@@ -339,7 +339,7 @@
     },
     "_enabled": true,
     "_spriteFrame": {
-      "__uuid__": "2d041342-15b1-4609-9304-e5d9cf5c5be5"
+      "__uuid__": "20434c06-de33-4219-80cd-0a2a297f3930"
     },
     "_type": 0,
     "_sizeMode": 1,

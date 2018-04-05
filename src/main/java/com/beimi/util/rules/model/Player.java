@@ -42,6 +42,8 @@ public class Player implements Message,java.io.Serializable , Cloneable{
 
 	private byte[] powerfull; //混子
 
+	private List<Byte> coverCards;
+
 	private boolean isWin;
 
 	private List<List<Byte>>collections;
@@ -238,5 +240,13 @@ public class Player implements Message,java.io.Serializable , Cloneable{
 
 	public void setWin(boolean win) {
 		isWin = win;
+	}
+
+	public List<Byte> getCoverCards() {
+		return coverCards;
+	}
+
+	public void setCoverCards(List<Byte> coverCards) {
+		this.coverCards = coverCards;
 	}
 }

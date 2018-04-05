@@ -175,7 +175,6 @@ public class GameEventHandler {
 		}
 
 		if("1".equals(map.get("type"))){
-
 			String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
 			GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, beiMiClient.getOrgi());
 			List<PlayUserClient> playUserClients = CacheHelper.getGamePlayerCacheBean().getCacheObject(gameRoom.getId(), beiMiClient.getOrgi());
@@ -190,7 +189,6 @@ public class GameEventHandler {
 				BeiMiClient tmpClient = NettyClients.getInstance().getClient(playUserClient.getId());
 				tmpClient.getClient().sendEvent(BMDataContext.CHAT, map);
 			}
-
 		}else if("2".equals(map.get("type"))){
 
 			//// TODO: 2018/3/19 后期处理
@@ -293,7 +291,6 @@ public class GameEventHandler {
 		}
 
 	}
-
 
 
 
@@ -527,8 +524,8 @@ public class GameEventHandler {
 	@OnEvent(value = "answerKou")
 	public void giveKouInfo(SocketIOClient client, String data) {
 
-		logger.info("接收到客户端扣应答,data:{}",data);
 		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		logger.info("接收到客户端扣应答,userId:{},data:{},userName:{}", beiMiClient.getUserid(), data);
 		String token = beiMiClient.getToken();
 		if (!StringUtils.isBlank(token)) {
 			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
@@ -536,10 +533,18 @@ public class GameEventHandler {
 				String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
 				GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, beiMiClient.getOrgi());
 				MaJiangBoard board = (MaJiangBoard) CacheHelper.getBoardCacheBean().getCacheObject(gameRoom.getId(), gameRoom.getOrgi());
-				if(board.getAnswer().containsKey(beiMiClient.getUserid())){
-					board.getAnswer().put(beiMiClient.getUserid(),board.getAnswer().get(beiMiClient.getUserid())+1);
-				}else{
-					board.getAnswer().put(beiMiClient.getUserid(),1);
+				if (board.getAnswer().containsKey(beiMiClient.getUserid())) {
+					if ("0".equals(data)) {
+						board.getAnswer().put(beiMiClient.getUserid(), -1);
+					} else {
+						board.getAnswer().put(beiMiClient.getUserid(), board.getAnswer().get(beiMiClient.getUserid()) + 1);
+					}
+				} else {
+					if ("0".equals(data)) {
+						board.getAnswer().put(beiMiClient.getUserid(), -1);
+					} else {
+						board.getAnswer().put(beiMiClient.getUserid(), 1);
+					}
 				}
 			}
 		}

@@ -451,16 +451,23 @@ public class GameUtils {
 				data.put(card/4,data.get(card/4)+1);
 			}
 		}
-		//碰杠
-		for(Map.Entry<Integer,Integer> entry : data.entrySet()){
-			if(entry.getKey() == takecard/4){
-				if(entry.getValue() == 2 && !deal){
-					mjCard.setPeng(true);
-				}else if(entry.getValue() == 3){
-					mjCard.setGang(true);
+		if("majiang".equals(code) || CollectionUtils.isEmpty(player.getCoverCards())) {
+			//碰杠
+			for (Map.Entry<Integer, Integer> entry : data.entrySet()) {
+				if (entry.getKey() == takecard / 4) {
+					if (entry.getValue() == 2 && !deal) {
+						mjCard.setCard(takecard);
+						mjCard.setPeng(true);
+					} else if (entry.getValue() == 3) {
+						mjCard.setCard(takecard);
+						mjCard.setGang(true);
+					}
 				}
 			}
+		}else{
+			kougangpeng(player,takecard,data,mjCard,deal);
 		}
+
 		// 处理手牌
 		if(hunMap.containsKey(takecard/4)) {
 			huns.add(takecard);
@@ -523,15 +530,42 @@ public class GameUtils {
 
 
 
-/*	private static void addCards(Player player,byte card){
-		if(player == null || player.getCardsArray() == null){
-			return ;
-		}
-		byte[] b = new byte[player.getCardsArray().length+1];
-		System.arraycopy(player.getCardsArray(),0,b,0,player.getCardsArray().length);
-		b[player.getCardsArray().length] = card;
+	private static void kougangpeng(Player player, byte takecard ,Map<Integer, Integer> data,MJCardMessage mjCard,boolean deal) {
 
-	}*/
+
+		if (CollectionUtils.isEmpty(player.getCoverCards())) {
+			return;
+		}
+
+		Map<Integer, Integer> coverCardsData = new HashMap<Integer, Integer>();
+		for (Byte b : player.getCoverCards()) {
+			if (coverCardsData.containsKey(b / 4)) {
+				coverCardsData.put(b / 4, coverCardsData.get(b / 4) + 1);
+			} else {
+				coverCardsData.put(b / 4, 1);
+			}
+		}
+
+
+		//碰杠
+		for (Map.Entry<Integer, Integer> entry : data.entrySet()) {
+			if (entry.getKey() == takecard / 4) {
+				if (entry.getValue() == 2 && !deal) {
+					Integer isNeedNum = 2 - (coverCardsData.get(takecard / 4) == null?0:coverCardsData.get(takecard / 4));
+					if (isNeedNum <= 0 || (player.getCardsArray().length - player.getCoverCards().size()) > isNeedNum) {
+						mjCard.setCard(takecard);
+						mjCard.setPeng(true);
+					}
+				} else if (entry.getValue() == 3) {
+					Integer isNeedNum = 3 - (coverCardsData.get(takecard / 4) == null?0:coverCardsData.get(takecard / 4));
+					if (isNeedNum <= 0 || (player.getCardsArray().length - player.getCoverCards().size()) > isNeedNum) {
+						mjCard.setCard(takecard);
+						mjCard.setGang(true);
+					}
+				}
+			}
+		}
+	}
 
 
 
@@ -590,6 +624,7 @@ public class GameUtils {
 		}else{
 			logger.info("没有胡牌");
 		}
+
 	}
 
 

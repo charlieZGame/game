@@ -117,7 +117,7 @@ cc.Class({
         }
     },
 
-    koucard:function(){
+    setCardKou:function(){
       this.koucard = true;
       var anim = this.getComponent(cc.Animation);
       anim.play("majiang_kou");

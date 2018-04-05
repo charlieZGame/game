@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.annotation.Resource;
 
 import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.kie.api.runtime.KieSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -478,10 +479,10 @@ public class GameEngine {
 					board.dealRequest(gameRoom, board, orgi , false , null);
 				}else if(!StringUtils.isBlank(action) && action.equals(BMDataContext.PlayerAction.PENG.toString()) && allowAction(card, player.getActions() , BMDataContext.PlayerAction.PENG.toString())){
 					Action playerAction = new Action(userid , action , card);
-					
+
 					int color = card / 36 ;
 					int value = card % 36 / 4 ;
-					List<Byte> otherCardList = new ArrayList<Byte>(); 
+					List<Byte> otherCardList = new ArrayList<Byte>();
 					for(int i=0 ; i<player.getCardsArray().length ; i++){
 						if(player.getCardsArray()[i]/36 == color && (player.getCardsArray()[i]%36) / 4 == value){
 							continue ;
@@ -492,19 +493,21 @@ public class GameEngine {
 					for(int i=0 ; i<otherCardList.size() ; i++){
 						otherCards[i] = otherCardList.get(i) ;
 					}
+
+					coverCardsHandler(player,color,value);
 					player.setCards(otherCards);
 					player.getActions().add(playerAction) ;
-					
+
 					board.setNextplayer(new NextPlayer(userid , false));
-					
+
 					//actionEvent.setTarget(board.getLast().getUserid());
 					actionEvent.setTarget(board.getLast().getUserid());
 					ActionTaskUtils.sendEvent("selectaction", actionEvent , gameRoom);
-					
+
 					CacheHelper.getBoardCacheBean().put(gameRoom.getId() , board, gameRoom.getOrgi());	//更新缓存数据
-					
+
 					board.playcards(board, gameRoom, player, orgi);
-					
+
 				}else if(!StringUtils.isBlank(action) && action.equals(BMDataContext.PlayerAction.GANG.toString()) &&
 						allowAction(card, player.getActions() , BMDataContext.PlayerAction.GANG.toString())){
 					Action playerAction = new Action(userid , action , card);
@@ -541,6 +544,7 @@ public class GameEngine {
 					for(int i=0 ; i<otherCardList.size() ; i++){
 						otherCards[i] = otherCardList.get(i) ;
 					}
+					coverCardsHandler(player,color,value);
 					player.setCards(otherCards);
 					player.getActions().add(playerAction) ;
 
@@ -603,6 +607,23 @@ public class GameEngine {
 		}
 		return actionEvent ;
 	}
+
+
+	private void coverCardsHandler(Player player,Integer color,Integer value){
+
+		if(CollectionUtils.isNotEmpty(player.getCoverCards())){
+			List<Byte> coverCardList = new ArrayList<Byte>();
+			for(int i=0 ; i<player.getCoverCards().size() ; i++){
+				if(player.getCoverCards().get(i)/36 == color && player.getCoverCards().get(i) / 4 == value){
+					continue ;
+				}
+				coverCardList.add(player.getCoverCards().get(i)) ;
+			}
+			player.setCoverCards(coverCardList);
+		}
+	}
+
+
 	/**
 	 * 为防止同步数据错误，校验是否允许刚碰牌
 	 * @param card

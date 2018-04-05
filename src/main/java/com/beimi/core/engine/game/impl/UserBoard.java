@@ -75,6 +75,7 @@ public class UserBoard implements Message,Serializable{
 					player.setDocatch(temp.isDocatch());
 					player.setHu(temp.isHu());
 					player.setRecatch(temp.isRecatch());
+					player.setDeskcards(cards.length);
 					this.player = player;
 				}else{
 					player = temp;

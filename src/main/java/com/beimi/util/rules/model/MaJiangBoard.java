@@ -468,4 +468,5 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 	public void setAnswer(Map<String, Integer> answer) {
 		this.answer = answer;
 	}
+
 }
