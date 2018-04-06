@@ -156,7 +156,7 @@ public class GuestPlayerController extends Handler{
 	 */
 	public PlayUserClient register(PlayUser player , IP ipdata , HttpServletRequest request ) throws IllegalAccessException, InvocationTargetException{
 		PlayUserClient playUserClient = GameUtils.create(player, ipdata, request) ;
-		int users = playUserESRes.countByUsername(player.getUsername()) ;
+		int users = playUserESRes.countByUsername(player.getUsername()+"") ;
 		if(users == 0){
 			UKTools.published(player , playUserESRes , playUserRes);
 		}

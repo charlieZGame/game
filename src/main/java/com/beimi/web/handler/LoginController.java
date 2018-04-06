@@ -147,6 +147,26 @@ public class LoginController extends Handler{
     public String logout(HttpServletRequest request  ){  
     	request.getSession().removeAttribute(BMDataContext.USER_SESSION_NAME) ;
          return "redirect:/";
-    }  
-    
+    }
+
+
+	@RequestMapping(value="/appWebLogin", method=RequestMethod.POST)
+	public ModelAndView appWebLogin(HttpServletRequest request, HttpServletResponse response , @Valid User user ,@Valid String referer){
+
+
+		ModelAndView modelAndView = new ModelAndView("mobileweb/index");
+		return modelAndView;
+	}
+
+
+
+	@RequestMapping(value="/home")
+	public ModelAndView home(HttpServletRequest request, HttpServletResponse response , @Valid User user ,@Valid String referer){
+
+		ModelAndView modelAndView = new ModelAndView("mobileweb/home");
+		return modelAndView;
+	}
+
+
+
 }

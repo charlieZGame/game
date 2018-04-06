@@ -50,6 +50,8 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	private Map<String,Integer> answer = new ConcurrentHashMap<String,Integer>();
 
+	private boolean isFPEnd;
+
 	/**
 	 * 翻底牌 ， 斗地主
 	 */
@@ -253,7 +255,6 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 				}
 
 
-
 				/**
 				 * 无杠碰吃
 				 */
@@ -395,7 +396,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 	private void laiYuanHunSummary(Board board, List<PlayUserClient> players,Summary summary,GamePlayway playway,boolean gameRoomOver){
 		for (Player player : board.getPlayers()) {
 			PlayUserClient playUser = getPlayerClient(players, player.getPlayuser());
-			SummaryPlayer summaryPlayer = new SummaryPlayer(player.getPlayuser(), playUser.getUsername(), board.getRatio(), board.getRatio() * playway.getScore(), false, player.getPlayuser().equals(board.getBanker()));
+			SummaryPlayer summaryPlayer = new SummaryPlayer(player.getPlayuser(), playUser.getUsername()+"", board.getRatio(), board.getRatio() * playway.getScore(), false, player.getPlayuser().equals(board.getBanker()));
 			logger.info("汇总结果");
 			logger.info("player:{} 牌数 size:{}", player.getPlayuser(), player.getCardsArray().length);
 
@@ -437,7 +438,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 
 		for (Player player : board.getPlayers()) {
 			PlayUserClient playUser = getPlayerClient(players, player.getPlayuser());
-			SummaryPlayer summaryPlayer = new SummaryPlayer(player.getPlayuser(), playUser.getUsername(), board.getRatio(), board.getRatio() * playway.getScore(), false, player.getPlayuser().equals(board.getBanker()));
+			SummaryPlayer summaryPlayer = new SummaryPlayer(player.getPlayuser(), playUser.getUsername()+"", board.getRatio(), board.getRatio() * playway.getScore(), false, player.getPlayuser().equals(board.getBanker()));
 			/**
 			 * 遍历Action ， Action类型 ：1、杠（明/暗）、碰、吃、胡（自摸/瞎胡），被自摸，点炮、点杠、被杠
 			 */
@@ -469,4 +470,11 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 		this.answer = answer;
 	}
 
+	public boolean isFPEnd() {
+		return isFPEnd;
+	}
+
+	public void setFPEnd(boolean FPEnd) {
+		isFPEnd = FPEnd;
+	}
 }

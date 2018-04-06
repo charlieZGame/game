@@ -37,7 +37,7 @@ public class PlayUserClient implements UserEvent ,Message, java.io.Serializable 
     @Id
 	private String id = UKTools.getUUID().toLowerCase();
 	
-	private String username ;
+	private Integer username ;
 	
 	private String orgi ;
 	private String creater;
@@ -105,15 +105,13 @@ public class PlayUserClient implements UserEvent ,Message, java.io.Serializable 
 	}
 
 
-	public String getUsername() {
+	public Integer getUsername() {
 		return username;
 	}
 
-
-	public void setUsername(String username) {
+	public void setUsername(Integer username) {
 		this.username = username;
 	}
-
 
 	public String getOrgi() {
 		return orgi;

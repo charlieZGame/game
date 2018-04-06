@@ -70,11 +70,13 @@ public class CreateBeginTask extends AbstractTask implements ValueWithExpiryTime
 		/**
 		 * 通知所有玩家 新的庄
 		 */
-		ActionTaskUtils.sendEvent("banker",  new Banker(gameRoom.getLastwinner()), gameRoom);
+		GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), orgi);
+		if(!"koudajiang".equals(gamePlayway.getCode())) {
+			ActionTaskUtils.sendEvent("banker", new Banker(gameRoom.getLastwinner()), gameRoom);
+		}
 
 		Board board = GameUtils.playGame(playerList, gameRoom, gameRoom.getLastwinner(), gameRoom.getCardsnum()) ;
 		CacheHelper.getBoardCacheBean().put(gameRoom.getId(), board, gameRoom.getOrgi());
-		GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), orgi);
 		if ("koudajiang".equals(gamePlayway.getCode())) {
 			new Thread(new Runnable() {
 				@Override
@@ -195,6 +197,8 @@ public class CreateBeginTask extends AbstractTask implements ValueWithExpiryTime
 			}
 
 		}
+		ActionTaskUtils.sendEvent("banker", new Banker(gameRoom.getLastwinner()), gameRoom);
+		((MaJiangBoard)board).setFPEnd(true);
 		return true;
 	}
 

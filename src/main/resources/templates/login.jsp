@@ -61,8 +61,8 @@
 		<!-- /.login-logo -->
 		<div class="login-box-body">
 			<p class="login-box-msg">账号密码登陆</p>
-			<form id="loginForm" action="/login.html"
-				class="loginFormWrapper" method="post">
+			<form id="loginForm" action="/appWebLogin" method="post"
+				class="loginFormWrapper" >
 				<#if referer??>
 				<input type="hidden" name="referer" value="${referer!''}"/>
 				</#if>
@@ -95,8 +95,7 @@
 
 					<!-- /.col -->
 					<div class="col-xs-12">
-						<button class="btn btn-block btn-primary btn-lg" style="margin-top:10px;">电脑登陆</button>
-						<input type="button" class="btn btn-block btn-primary btn-lg" style="margin-top:10px;" onclick="submitappweb()" value="手机登陆"/>
+						<input type="submit" class="btn btn-block btn-primary btn-lg" style="margin-top:10px;" value="用户登陆"></input>
 					</div>
 					<!-- /.col -->
 				</div>

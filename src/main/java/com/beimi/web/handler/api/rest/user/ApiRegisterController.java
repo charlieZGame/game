@@ -1,6 +1,7 @@
 package com.beimi.web.handler.api.rest.user;
 
 import java.util.Date;
+import java.util.Random;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -44,8 +45,8 @@ public class ApiRegisterController extends Handler{
 	 */
 	public PlayUser register(PlayUser player){
 		if(player!= null && !StringUtils.isBlank(player.getMobile()) && !StringUtils.isBlank(player.getPassword())){
-    		if(StringUtils.isBlank(player.getUsername())){
-    			player.setUsername("Guest_"+Base62.encode(UKTools.getUUID().toLowerCase()));
+    		if(StringUtils.isBlank(player.getUsername()+"")){
+    			player.setUsername(new Random().nextInt(99999999));
     		}
     		if(!StringUtils.isBlank(player.getPassword())){
     			player.setPassword(UKTools.md5(player.getPassword()));
@@ -56,7 +57,7 @@ public class ApiRegisterController extends Handler{
     		player.setUpdatetime(new Date());
     		player.setLastlogintime(new Date());
     		
-    		int users = playUserESRes.countByUsername(player.getUsername()) ;
+    		int users = playUserESRes.countByUsername(player.getUsername()+"") ;
     		if(users == 0){
     			playUserESRes.save(player) ;
     		}else{

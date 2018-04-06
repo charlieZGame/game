@@ -1,3 +1,4 @@
+/*
 package com.beimi.web.handler;
 
 import com.alibaba.fastjson.JSONObject;
@@ -22,9 +23,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Map;
 
+*/
 /**
  * Created by zhengchenglei on 2018/3/15.
- */
+ *//*
+
 @Controller
 //@RequestMapping("/wchartLogin")
 //@RequestMapping("/login")
@@ -75,11 +78,13 @@ public class WLoginController extends Handler {
     }
 
 
-    /**
+    */
+/**
      *
      * @param params
      * @return
-     */
+     *//*
+
     private String paramValidate(Map<String, String[]> params) {
         if (!params.containsKey("channel") || params.get("channel") == null ||  params.get("channel").length <= 0) {
             return "channel can't be null";
@@ -186,3 +191,4 @@ public class WLoginController extends Handler {
     }
 
 }
+*/

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 import com.beimi.core.BMDataContext;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 
 @EnableAutoConfiguration

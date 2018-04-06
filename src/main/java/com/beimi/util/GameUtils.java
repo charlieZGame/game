@@ -213,8 +213,8 @@ public class GameUtils {
 	public static PlayUserClient create(PlayUser player , IP ipdata , HttpServletRequest request , String playertype){
 		PlayUserClient playUserClient = null ;
 		if(player!= null){
-    		if(StringUtils.isBlank(player.getUsername())){
-    			player.setUsername("Guest_"+Base62.encode(UKTools.getUUID().toLowerCase()));
+    		if(StringUtils.isBlank(player.getUsername()+"")){
+    			//player.setUsername("Guest_"+Base62.encode(UKTools.getUUID().toLowerCase()));
     		}
     		if(!StringUtils.isBlank(player.getPassword())){
     			player.setPassword(UKTools.md5(player.getPassword()));

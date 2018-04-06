@@ -35,7 +35,7 @@ public class PlayUser implements UserEvent , java.io.Serializable{
     @Id
 	private String id = UKTools.getUUID().toLowerCase();
 	
-	private String username ;
+	private Integer username ;
 	private String password ;
 	private String email ;
 	private String uname ;
@@ -121,15 +121,13 @@ public class PlayUser implements UserEvent , java.io.Serializable{
 	}
 
 
-	public String getUsername() {
+	public Integer getUsername() {
 		return username;
 	}
 
-
-	public void setUsername(String username) {
+	public void setUsername(Integer username) {
 		this.username = username;
 	}
-
 
 	public String getPassword() {
 		return password;
@@ -356,8 +354,8 @@ public class PlayUser implements UserEvent , java.io.Serializable{
 	}
 
 
-	public void setLogin(boolean login) {
-		this.login = login;
+	public void setLogin(Boolean login) {
+		this.login = login == null ? false : login;
 	}
 
 
@@ -366,8 +364,8 @@ public class PlayUser implements UserEvent , java.io.Serializable{
 	}
 
 
-	public void setOnline(boolean online) {
-		this.online = online;
+	public void setOnline(Boolean online) {
+		this.online = online == null ? false : online;
 	}
 
 
@@ -386,8 +384,8 @@ public class PlayUser implements UserEvent , java.io.Serializable{
 	}
 
 
-	public void setDatastatus(boolean datastatus) {
-		this.datastatus = datastatus;
+	public void setDatastatus(Boolean datastatus) {
+		this.datastatus = datastatus == null ? false:datastatus;
 	}
 
 
@@ -396,8 +394,8 @@ public class PlayUser implements UserEvent , java.io.Serializable{
 	}
 
 
-	public void setHeadimg(boolean headimg) {
-		this.headimg = headimg;
+	public void setHeadimg(Boolean headimg) {
+		this.headimg = headimg == null ? false : headimg;
 	}
 
 
@@ -416,8 +414,8 @@ public class PlayUser implements UserEvent , java.io.Serializable{
 	}
 
 
-	public void setExperience(int experience) {
-		this.experience = experience;
+	public void setExperience(Integer experience) {
+		this.experience = experience == null ? 0 : experience;
 	}
 
 
@@ -446,8 +444,8 @@ public class PlayUser implements UserEvent , java.io.Serializable{
 	}
 
 
-	public void setFans(int fans) {
-		this.fans = fans;
+	public void setFans(Integer fans) {
+		this.fans = fans == null ? 0 : fans;
 	}
 
 
@@ -456,8 +454,8 @@ public class PlayUser implements UserEvent , java.io.Serializable{
 	}
 
 
-	public void setFollows(int follows) {
-		this.follows = follows;
+	public void setFollows(Integer follows) {
+		this.follows = follows == null ? 0 : follows;
 	}
 
 
@@ -466,8 +464,8 @@ public class PlayUser implements UserEvent , java.io.Serializable{
 	}
 
 
-	public void setIntegral(int integral) {
-		this.integral = integral;
+	public void setIntegral(Integer integral) {
+		this.integral = integral == null ? 0 : integral;
 	}
 
 
@@ -481,8 +479,8 @@ public class PlayUser implements UserEvent , java.io.Serializable{
 	}
 
 
-	public void setCards(int cards) {
-		this.cards = cards;
+	public void setCards(Integer cards) {
+		this.cards = cards == null ? 0 : cards;
 	}
 
 
@@ -491,8 +489,8 @@ public class PlayUser implements UserEvent , java.io.Serializable{
 	}
 
 
-	public void setGoldcoins(int goldcoins) {
-		this.goldcoins = goldcoins;
+	public void setGoldcoins(Integer goldcoins) {
+		this.goldcoins = goldcoins == null ? 0 : goldcoins;
 	}
 
 
@@ -511,8 +509,8 @@ public class PlayUser implements UserEvent , java.io.Serializable{
 	}
 
 
-	public void setDiamonds(int diamonds) {
-		this.diamonds = diamonds;
+	public void setDiamonds(Integer diamonds) {
+		this.diamonds = diamonds == null ? 0 : diamonds;
 	}
 
 
@@ -581,8 +579,8 @@ public class PlayUser implements UserEvent , java.io.Serializable{
 	}
 
 
-	public void setDisabled(boolean disabled) {
-		this.disabled = disabled;
+	public void setDisabled(Boolean disabled) {
+		this.disabled = disabled == null ? false : disabled;
 	}
 
 

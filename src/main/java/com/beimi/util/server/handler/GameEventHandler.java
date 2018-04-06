@@ -220,7 +220,7 @@ public class GameEventHandler {
 			}
 			logger.info("tid:{} 发出投票请求 userId:{}",tid,playUserClient.getId());
 			BeiMiClient tmpClient = NettyClients.getInstance().getClient(playUserClient.getId());
-			tmpClient.getClient().sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new PlayerChartMsg<String>(playUser.getId(), playUser.getUsername(), playUserClient.getId(), playUserClient.getUsername(), "3", "用户 [" + playUser.getUsername() + "]请求离场"));
+			tmpClient.getClient().sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new PlayerChartMsg<String>(playUser.getId(), playUser.getUsername()+"", playUserClient.getId(), playUserClient.getUsername()+"", "3", "用户 [" + playUser.getUsername() + "]请求离场"));
 		}
 
 	}
@@ -578,6 +578,15 @@ public class GameEventHandler {
 			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
 			if (userToken != null) {
 				String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(userToken.getUserid(), userToken.getOrgi());
+				GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, beiMiClient.getOrgi()) ;
+				Board board = (Board) CacheHelper.getBoardCacheBean().getCacheObject(gameRoom.getId(), gameRoom.getOrgi());
+
+				if(board instanceof MaJiangBoard){
+					if(!((MaJiangBoard)board).isFPEnd()){
+						return;
+					}
+				}
+
 				String[] cards = data.split(",");
 
 				logger.info("用户打出来的牌为 data:{}",data);
@@ -623,6 +632,7 @@ public class GameEventHandler {
 	//出牌  // TODO: 2018/3/15 吃碰杠胡方法调用
 	@OnEvent(value = "selectaction")
 	public void onActionEvent(SocketIOClient client, String data) {
+		logger.info("sessionId:{}",client.getSessionId());
 		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
 		String token = beiMiClient.getToken();
 		if (!StringUtils.isBlank(token)) {

@@ -23,15 +23,17 @@ public class ConsumeCard implements Serializable {
 
     private String name;
 
-    private String num;
+    private Integer effectiveNum;
 
-    private String create_time;
+    private Integer totalNum;
 
-    private String update_time;
+    private String createTime;
 
-    private String create_pin;
+    private String updateTime;
 
-    private String update_pin;
+    private String createPin;
+
+    private String updatePin;
 
     private String xybj;
 
@@ -66,44 +68,53 @@ public class ConsumeCard implements Serializable {
         this.name = name;
     }
 
-    public String getNum() {
-        return num;
+    public Integer getEffectiveNum() {
+        return effectiveNum;
     }
 
-    public void setNum(String num) {
-        this.num = num;
+    public void setEffectiveNum(Integer effectiveNum) {
+        this.effectiveNum = effectiveNum;
     }
 
-    public String getCreate_time() {
-        return create_time;
+    public Integer getTotalNum() {
+        return totalNum;
     }
 
-    public void setCreate_time(String create_time) {
-        this.create_time = create_time;
+    public void setTotalNum(Integer totalNum) {
+        this.totalNum = totalNum;
     }
 
-    public String getUpdate_time() {
-        return update_time;
+    public String getCreateTime() {
+        return createTime;
     }
 
-    public void setUpdate_time(String update_time) {
-        this.update_time = update_time;
+    public void setCreateTime(String createTime) {
+        this.createTime = createTime;
     }
 
-    public String getCreate_pin() {
-        return create_pin;
+    public String getUpdateTime() {
+        return updateTime;
     }
 
-    public void setCreate_pin(String create_pin) {
-        this.create_pin = create_pin;
+    public void setUpdateTime(String updateTime) {
+        this.updateTime = updateTime;
     }
 
-    public String getUpdate_pin() {
-        return update_pin;
+
+    public String getCreatePin() {
+        return createPin;
     }
 
-    public void setUpdate_pin(String update_pin) {
-        this.update_pin = update_pin;
+    public void setCreatePin(String createPin) {
+        this.createPin = createPin;
+    }
+
+    public String getUpdatePin() {
+        return updatePin;
+    }
+
+    public void setUpdatePin(String updatePin) {
+        this.updatePin = updatePin;
     }
 
     public String getXybj() {

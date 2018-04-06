@@ -5,6 +5,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Date;
 
 
 @Entity
@@ -23,9 +24,11 @@ public class DealFlow implements Serializable{
 
     private String consumeCardId;
 
-    private String num;
+    private String srcType;
 
-    private String createTime ;
+    private Integer num;
+
+    private Date createTime ;
 
     private String updateTime ;
 
@@ -81,19 +84,19 @@ public class DealFlow implements Serializable{
         this.consumeCardId = consumeCardId;
     }
 
-    public String getNum() {
+    public Integer getNum() {
         return num;
     }
 
-    public void setNum(String num) {
+    public void setNum(Integer num) {
         this.num = num;
     }
 
-    public String getCreateTime() {
+    public Date getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(String createTime) {
+    public void setCreateTime(Date createTime) {
         this.createTime = createTime;
     }
 
@@ -135,5 +138,13 @@ public class DealFlow implements Serializable{
 
     public void setYxbj(String yxbj) {
         this.yxbj = yxbj;
+    }
+
+    public String getSrcType() {
+        return srcType;
+    }
+
+    public void setSrcType(String srcType) {
+        this.srcType = srcType;
     }
 }

@@ -340,7 +340,7 @@ public class DuZhuBoard extends Board implements java.io.Serializable{
 		
 		for(Player player : board.getPlayers()){
 			PlayUserClient playUser = getPlayerClient(players, player.getPlayuser());
-			SummaryPlayer summaryPlayer = new SummaryPlayer(player.getPlayuser() , playUser.getUsername() , board.getRatio() , board.getRatio() * playway.getScore() , false , player.getPlayuser().equals(board.getBanker())) ;
+			SummaryPlayer summaryPlayer = new SummaryPlayer(player.getPlayuser() , playUser.getUsername()+"" , board.getRatio() , board.getRatio() * playway.getScore() , false , player.getPlayuser().equals(board.getBanker())) ;
 			/**
 			 * 找到对应的玩家结算信息
 			 */

@@ -164,6 +164,9 @@ public class GameEngine {
 						if(jsonObject != null && StringUtils.isNotEmpty((String)jsonObject.get("jun"))){
 							gameRoom.setNumofgames(Integer.parseInt(jsonObject.get("jun").toString()));
 						}
+						if(jsonObject != null && StringUtils.isNotEmpty((String)jsonObject.get("koujun"))){
+							gameRoom.setNumofgames(Integer.parseInt(jsonObject.get("koujun").toString()));
+						}
 					}
 				}
 

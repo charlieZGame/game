@@ -9,20 +9,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 /**
  * Created by zhengchenglei on 2018/3/20.
  */
-public abstract class ConsumeCardRepository implements JpaRepository<ConsumeCard, String> {
+public abstract interface ConsumeCardRepository extends JpaRepository<ConsumeCard, String> {
 
 
     public abstract ConsumeCard findById(String id);
 
-    public abstract ConsumeCard findByUserId(String userId,Pageable paramPageable);
+    public abstract ConsumeCard findByType(String type);
 
-    public abstract ConsumeCard findByUserName(String userName,Pageable paramPageable);
-
-
-    public abstract ConsumeCard findByConsumeCardId(String consumeCardId,Pageable paramPageable);
-
-
-    public abstract ConsumeCard findByCreatePin(String createPin,Pageable paramPageable);
+    public abstract Page<ConsumeCard> findByCreatePin(String createPin,Pageable paramPageable);
 
 
 }

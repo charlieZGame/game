@@ -25,17 +25,18 @@ import org.springframework.web.util.WebUtils;
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-	@Override
+    @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.addFilterAfter(tokenInfoTokenFilterSecurityInterceptor() , BasicAuthenticationFilter.class)
-	        .antMatcher("*/*").authorizeRequests()
-	        .anyRequest().permitAll()
-	        .and().addFilterAfter(csrfHeaderFilter(), BasicAuthenticationFilter.class)
-	        .addFilterAfter(apiTokenFilterSecurityInterceptor(), BasicAuthenticationFilter.class);
+        http.addFilterAfter(tokenInfoTokenFilterSecurityInterceptor(), BasicAuthenticationFilter.class)
+                .antMatcher("*/*").authorizeRequests()
+                .anyRequest().permitAll()
+                .and().addFilterAfter(csrfHeaderFilter(), BasicAuthenticationFilter.class)
+                .addFilterAfter(apiTokenFilterSecurityInterceptor(), BasicAuthenticationFilter.class);
     }
+
     @Bean
-    public Filter tokenInfoTokenFilterSecurityInterceptor() throws Exception
-    {
+    public Filter tokenInfoTokenFilterSecurityInterceptor() throws Exception {
+
         RequestMatcher autconfig = new AntPathRequestMatcher("/autoconfig/**");
         RequestMatcher configprops = new AntPathRequestMatcher("/configprops/**");
         RequestMatcher beans = new AntPathRequestMatcher("/beans/**");
@@ -47,20 +48,25 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         RequestMatcher metrics = new AntPathRequestMatcher("/metrics/**");
         RequestMatcher trace = new AntPathRequestMatcher("/trace/**");
         RequestMatcher druid = new AntPathRequestMatcher("/druid/**");
-        
-        return new DelegateRequestMatchingFilter(autconfig , configprops , beans , dump , env , health , info , mappings , metrics , trace, druid);
+        RequestMatcher dealFlow = new AntPathRequestMatcher("/dealFlow/**");
+        RequestMatcher hoseCard = new AntPathRequestMatcher("/hoseCard/**");
+        RequestMatcher userManager = new AntPathRequestMatcher("/userManager/**");
+
+        return new DelegateRequestMatchingFilter(autconfig, configprops, beans, dump, env, health,
+                info, mappings, metrics, trace, druid, dealFlow, hoseCard, userManager);
     }
+
     /**
      * 手机注册 和 游客注册 保留两个 免验证 访问
+     *
      * @return
      * @throws Exception
      */
     @Bean
-    public Filter apiTokenFilterSecurityInterceptor() throws Exception
-    {
-        return new ApiRequestMatchingFilter(new AntPathRequestMatcher[]{new AntPathRequestMatcher("/api/register"),new AntPathRequestMatcher("/api/guest")} , new AntPathRequestMatcher("/api/**"));
+    public Filter apiTokenFilterSecurityInterceptor() throws Exception {
+        return new ApiRequestMatchingFilter(new AntPathRequestMatcher[]{new AntPathRequestMatcher("/api/register"), new AntPathRequestMatcher("/api/guest")}, new AntPathRequestMatcher("/api/**"));
     }
-    
+
     private Filter csrfHeaderFilter() {
         return new OncePerRequestFilter() {
 
