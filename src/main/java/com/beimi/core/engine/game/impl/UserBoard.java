@@ -5,7 +5,7 @@ import java.io.Serializable;
 import com.beimi.core.engine.game.Message;
 import com.beimi.util.rules.model.Board;
 import com.beimi.util.rules.model.Player;
-
+import java.util.List;
 /**
  * 当前用户桌面牌
  */
@@ -73,6 +73,9 @@ public class UserBoard implements Message,Serializable{
 					player.setPlayed(temp.getPlayed());
 					player.setSelected(temp.isSelected());
 					player.setDocatch(temp.isDocatch());
+					player.setCoverCards(temp.getCoverCards());
+					player.setCoverySize(temp.getCoverCards() == null ? 0 : temp.getCoverCards().size());
+					player.setHistory(temp.getRecoveryHistoryArray());
 					player.setHu(temp.isHu());
 					player.setRecatch(temp.isRecatch());
 					player.setDeskcards(cards.length);
@@ -84,6 +87,8 @@ public class UserBoard implements Message,Serializable{
 				Player clonePlayer = temp.clone() ;
 				clonePlayer.setDeskcards(clonePlayer.getCardsArray().length);
 				clonePlayer.setCards(null);	//克隆对象，然后将 其他玩家手里的牌清空
+				clonePlayer.setCoverCards(null);
+				clonePlayer.setCoverySize(temp.getCoverCards() == null ? 0 : temp.getCoverCards().size());
 				players[inx++] = clonePlayer;
 			}
 		}

@@ -9,6 +9,7 @@ import java.util.Properties;
 
 import javax.annotation.PreDestroy;
 
+import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

@@ -33,8 +33,9 @@ public class CreateMJPlayCardsTask extends AbstractTask implements ValueWithExpi
 	
 	public void execute(){
 		/**
-		 * 合并代码，玩家 出牌超时处理和 玩家出牌统一使用一处代码
+		 * 合并代码，玩家 出牌超时处理和 玩家出牌统一使用一处代码  //todo 超时取牌的逻辑去掉
+		 *
 		 */
-		BMDataContext.getGameEngine().takeCardsRequest(this.gameRoom.getId(), this.player, orgi,true,  null);
+		//BMDataContext.getGameEngine().takeCardsRequest(this.gameRoom.getId(), this.player, orgi,true,  null);
 	}
 }

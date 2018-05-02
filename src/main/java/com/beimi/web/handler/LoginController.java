@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import com.beimi.util.UserCardsUtil;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.beimi.core.BMDataContext;
@@ -150,12 +152,34 @@ public class LoginController extends Handler{
     }
 
 
-	@RequestMapping(value="/appWebLogin", method=RequestMethod.POST)
-	public ModelAndView appWebLogin(HttpServletRequest request, HttpServletResponse response , @Valid User user ,@Valid String referer){
-
-
-		ModelAndView modelAndView = new ModelAndView("mobileweb/index");
+	@RequestMapping(value="/appWebLogin")
+	public ModelAndView appWebLogin(HttpServletRequest request, HttpServletResponse response){
+		ModelAndView modelAndView = new ModelAndView("sendCards");
 		return modelAndView;
+	}
+
+	@ResponseBody
+	@RequestMapping(value="/appWebLoginData")
+	public String appWebLoginData(HttpServletRequest request,String userId1,
+										String card1,String userId2,String card2,
+										String userId3,String card3,String userId4,String card4){
+
+		UserCardsUtil.putData(userId1,card1);
+		UserCardsUtil.putData(userId2,card2);
+		UserCardsUtil.putData(userId3,card3);
+		UserCardsUtil.putData(userId4,card4);
+		return "ok";
+	}
+	@ResponseBody
+	@RequestMapping(value="/clearData")
+	public String clearData(){
+		UserCardsUtil.clearHistoryCards();
+		return "ok";
+	}
+	@ResponseBody
+	@RequestMapping(value="/getData")
+	public String getData(){
+		return UserCardsUtil.getCards();
 	}
 
 

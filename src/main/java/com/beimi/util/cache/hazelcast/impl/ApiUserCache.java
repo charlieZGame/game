@@ -36,12 +36,13 @@ public class ApiUserCache implements CacheBean{
 
 	@Override
 	public void clear(String orgi) {
-		getInstance().clear();
+		//getInstance().clear();
 	}
 
 	@Override
 	public Object delete(String key, String orgi) {
-		return getInstance().remove(key) ;
+		//return getInstance().remove(key) ;
+		return null;
 	}
 
 	@Override

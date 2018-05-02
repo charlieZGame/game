@@ -14,12 +14,15 @@ public class SummaryPlayer implements java.io.Serializable{
 	private static final long serialVersionUID = 1L;
 	private String userid ;
 	private String username ;
+	private String nickName;
+	private String photo;
 	private int ratio ;
 	private int score ;
 	private boolean gameover ;//破产了
 	private int balance ;	  //玩家账户余额
 	private boolean win ;
 	private byte[] cards ;
+	private String desc;  // 赢牌描述
 	private List<GameResultSummary> gameResultChecks;
 	
 	private boolean dizhu ;
@@ -109,5 +112,29 @@ public class SummaryPlayer implements java.io.Serializable{
 
 	public void setGameResultChecks(List<GameResultSummary> gameResultChecks) {
 		this.gameResultChecks = gameResultChecks;
+	}
+
+	public String getDesc() {
+		return desc;
+	}
+
+	public void setDesc(String desc) {
+		this.desc = desc;
+	}
+
+	public String getNickName() {
+		return nickName;
+	}
+
+	public void setNickName(String nickName) {
+		this.nickName = nickName;
+	}
+
+	public String getPhoto() {
+		return photo;
+	}
+
+	public void setPhoto(String photo) {
+		this.photo = photo;
 	}
 }

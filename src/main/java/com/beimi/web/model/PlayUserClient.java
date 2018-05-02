@@ -85,6 +85,10 @@ public class PlayUserClient implements UserEvent ,Message, java.io.Serializable 
 	private int cards;			//房卡数量
 	private int goldcoins;		//金币数量
 	private int diamonds ;		//钻石数量
+	private String photo;
+
+
+	private String nickname;
 	
 	/**
 	 *对金币+房卡+id进行RSA签名 ， 任何对ID,cards ， goldcoins 进行修改之前，都需要做签名验证，
@@ -448,5 +452,65 @@ public class PlayUserClient implements UserEvent ,Message, java.io.Serializable 
 	@Override
 	public int compareTo(PlayUserClient o) {
 		return (int) (this.playerindex - o.getPlayerindex());
+	}
+
+	public String getNickname() {
+		return nickname;
+	}
+
+	public void setNickname(String nickname) {
+		this.nickname = nickname;
+	}
+
+	public String getPhoto() {
+		return photo;
+	}
+
+	public void setPhoto(String photo) {
+		this.photo = photo;
+	}
+
+
+	@Override
+	public String toString() {
+		return "PlayUserClient{" +
+				"id='" + id + '\'' +
+				", username=" + username +
+				", orgi='" + orgi + '\'' +
+				", creater='" + creater + '\'' +
+				", createtime=" + createtime +
+				", updatetime=" + updatetime +
+				", passupdatetime=" + passupdatetime +
+				", playerindex=" + playerindex +
+				", command='" + command + '\'' +
+				", memo='" + memo + '\'' +
+				", city='" + city + '\'' +
+				", province='" + province + '\'' +
+				", login=" + login +
+				", online=" + online +
+				", status='" + status + '\'' +
+				", datastatus=" + datastatus +
+				", headimg=" + headimg +
+				", roomid='" + roomid + '\'' +
+				", roomready=" + roomready +
+				", opendeal=" + opendeal +
+				", gamestatus='" + gamestatus + '\'' +
+				", playertype='" + playertype + '\'' +
+				", token='" + token + '\'' +
+				", playerlevel='" + playerlevel + '\'' +
+				", experience=" + experience +
+				", openid='" + openid + '\'' +
+				", qqid='" + qqid + '\'' +
+				", lastlogintime=" + lastlogintime +
+				", fans=" + fans +
+				", follows=" + follows +
+				", integral=" + integral +
+				", cards=" + cards +
+				", goldcoins=" + goldcoins +
+				", diamonds=" + diamonds +
+				", photo='" + photo + '\'' +
+				", nickname='" + nickname + '\'' +
+				", sign='" + sign + '\'' +
+				'}';
 	}
 }

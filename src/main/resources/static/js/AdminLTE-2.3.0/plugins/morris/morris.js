@@ -156,7 +156,7 @@ Licensed under the BSD-2-Clause License.
           if (_this.timeoutId != null) {
             window.clearTimeout(_this.timeoutId);
           }
-          return _this.timeoutId = window.setTimeout(_this.resizeHandler, 100);
+          return _this.timeoutId = window.setTimeout(_this.resizeHandler, 1000);
         });
       }
       this.el.css('-webkit-tap-highlight-color', 'rgba(0,0,0,0)');

@@ -7,12 +7,13 @@ import com.beimi.core.engine.game.GameBoard;
 import com.beimi.core.engine.game.Message;
 import com.beimi.core.engine.game.impl.Banker;
 import com.beimi.core.engine.game.impl.UserBoard;
+import com.beimi.web.model.GameRoom;
 
 public class RecoveryData implements Message{
-	private String command ;
-	private String userid ;
-	private Player player ;
-	private byte[] lasthands;
+	private String command ; //指令
+	private String userid ; //用户ID
+	private Player player ;  //当前玩家信息
+	private byte[] lasthands; //
 	private TakeCards last ;
 	private Banker banker ;
 	private String nextplayer ;//正在出牌的玩家
@@ -22,13 +23,14 @@ public class RecoveryData implements Message{
 	private GameBoard data ;
 	private int ratio ;
 	private byte[] hiscards ;
-	
+	private int answerNum;  //第几次发牌
+
 	private SelectColor selectcolor ;
 	
 	private UserBoard userboard ;
 	
 	
-	public RecoveryData(Player player , byte[] lasthands , String nextplayer , int time , boolean automic , Board board){
+	public RecoveryData(Player player ,UserBoard userboard, byte[] lasthands , String nextplayer , int time , boolean automic , Board board){
 		this.player = player ;
 		this.userid = player.getPlayuser() ;
 		this.lasthands = lasthands ;
@@ -38,28 +40,72 @@ public class RecoveryData implements Message{
 		this.automic = automic;
 		this.data = new GameBoard(board.getBanker(), board.getRatio()) ;
 		
-		this.hiscards = player.getHistory() ;
+		this.hiscards = player.getHistoryArray() ;
 		
 		this.ratio = board.getRatio() ;
 		
-		this.userboard = new UserBoard(board, player.getPlayuser(), "play") ;
+	//	this.userboard = new UserBoard(board, player.getPlayuser(), "play") ;
+		this.userboard = userboard;
 		
-		this.selectcolor =  new SelectColor(board.getBanker(), player.getPlayuser()) ;
-		this.selectcolor.setColor(player.getColor());
+	/*	this.selectcolor =  new SelectColor(board.getBanker(), player.getPlayuser()) ;
+		this.selectcolor.setColor(player.getColor());*/
 		
 		this.last = board.getLast() ;
 		this.cardsnum = new CardsInfo[board.getPlayers().length - 1];
 		List<CardsInfo> tempList = new ArrayList<CardsInfo>();
 		for(Player temp : board.getPlayers()){
 			if(!temp.getPlayuser().equals(player.getPlayuser())){
-				tempList.add(new CardsInfo(temp.getPlayuser() , temp.getCardsArray().length , temp.getHistory() , temp.getActions() , board , temp)) ;
+				tempList.add(new CardsInfo(temp.getPlayuser() , temp.getHistoryArray().length , temp.getHistoryArray() , temp.getActions() , board , temp)) ;
 			}
 			
 		}
 		cardsnum = tempList.toArray(this.cardsnum) ;
 	}
-	
-	
+
+
+	/**
+	 * 扣构造
+	 * @param userBoard
+	 * @param player
+	 * @param lasthands
+	 * @param nextplayer
+	 * @param time
+	 * @param automic
+     * @param board
+     * @param answerNum
+     */
+	public RecoveryData(UserBoard userBoard ,Player player , byte[] lasthands , String nextplayer , int time , boolean automic , Board board,int answerNum){
+		this.player = player ;
+		this.userid = player.getPlayuser() ;
+		this.lasthands = lasthands ;
+		this.nextplayer = nextplayer ;
+		this.banker = new Banker(board.getBanker()) ;
+		this.time = time ;
+		this.automic = automic;
+		this.data = new GameBoard(board.getBanker(), board.getRatio()) ;
+
+		this.hiscards = player.getHistoryArray() ;
+
+		this.ratio = board.getRatio() ;
+
+		this.userboard = userBoard;
+		//this.userboard = new UserBoard(board, player.getPlayuser(), "play") ;
+
+		this.last = board.getLast() ;
+
+		/*	this.cardsnum = new CardsInfo[board.getPlayers().length - 1];
+		List<CardsInfo> tempList = new ArrayList<CardsInfo>();
+		for(Player temp : board.getPlayers()){
+			if(!temp.getPlayuser().equals(player.getPlayuser())){
+				tempList.add(new CardsInfo(temp.getPlayuser() , temp.getCardsArray().length , temp.getHistory() , temp.getActions() , board , temp)) ;
+			}
+		}
+		cardsnum = tempList.toArray(this.cardsnum) ;*/
+
+		this.answerNum = answerNum;
+	}
+
+
 	public String getCommand() {
 		return command;
 	}
@@ -178,12 +224,32 @@ public class RecoveryData implements Message{
 	}
 
 
-	public byte[] getHiscards() {
+	public byte[] getHiscardArray() {
 		return hiscards;
+	}
+
+	public String getHiscards() {
+		if(this.hiscards == null || this.hiscards.length == 0){
+			return null;
+		}
+		StringBuilder sb = new StringBuilder();
+		for(byte b : this.hiscards){
+			sb.append(",").append(b);
+		}
+		return sb.substring(1);
 	}
 
 
 	public void setHiscards(byte[] hiscards) {
 		this.hiscards = hiscards;
+	}
+
+
+	public int getAnswerNum() {
+		return answerNum;
+	}
+
+	public void setAnswerNum(int answerNum) {
+		this.answerNum = answerNum;
 	}
 }

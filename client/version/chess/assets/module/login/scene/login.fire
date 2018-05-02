@@ -66,10 +66,10 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 48
+        "__id__": 49
       },
       {
-        "__id__": 49
+        "__id__": 50
       }
     ],
     "_prefab": null,
@@ -680,6 +680,12 @@
     "_enabled": true,
     "useragreement": {
       "__id__": 16
+    },
+    "cards_current": {
+      "__uuid__": "cdb01240-c119-4daa-b850-9cc92c92cb09"
+    },
+    "scoreHistoryDetailDialog": {
+      "__uuid__": "af79adb2-802a-4c56-b113-5319e4c99f80"
     }
   },
   {
@@ -1874,7 +1880,11 @@
     },
     "duration": 0.1,
     "zoomScale": 1.2,
-    "clickEvents": [],
+    "clickEvents": [
+      {
+        "__id__": 48
+      }
+    ],
     "_N$interactable": true,
     "_N$enableAutoGrayEffect": false,
     "_N$normalColor": {
@@ -1900,6 +1910,15 @@
     "_N$target": {
       "__id__": 45
     }
+  },
+  {
+    "__type__": "cc.ClickEvent",
+    "target": {
+      "__id__": 14
+    },
+    "component": "common",
+    "handler": "wxlogin",
+    "customEventData": ""
   },
   {
     "__type__": "cc.Canvas",

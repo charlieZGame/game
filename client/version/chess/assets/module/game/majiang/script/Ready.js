@@ -22,118 +22,119 @@ cc.Class({
   // use this for initialization
   onLoad: function() {
     let self = this;
-
     this.node.on("chatbutton", function(event) {
       self.settingChatDialog(self);
+      console.log("event---000>",event);
       event.stopPropagation();
     });
 
     this.node.on("sound1", function(event) {
+      self.settingChatDialog(self);
       var param = {
         type: '1',
         sound: 'sound1',
         srcUserId:cc.beimi.user.id
       };
       self.emitSocket(param,self);
-      self.settingChatDialog(self);
-      event.stopPropagation();
       cc.beimi.audio.playCharSound(1);
+      event.stopPropagation();
     });
 
     this.node.on("sound2", function(event) {
+      self.settingChatDialog(self);
       var param = {
         type: '1',
         sound: 'sound2',
         srcUserId:cc.beimi.user.id
       };
       self.emitSocket(param,self);
-      self.settingChatDialog(self);
-      event.stopPropagation();
       cc.beimi.audio.playCharSound(2);
+      event.stopPropagation();
     });
 
     this.node.on("sound3", function(event) {
+      self.settingChatDialog(self);
       var param = {
         type: '1',
         sound: 'sound3',
         srcUserId:cc.beimi.user.id
       };
       self.emitSocket(param,self);
-      self.settingChatDialog(self);
-      event.stopPropagation();
       cc.beimi.audio.playCharSound(3);
+      event.stopPropagation();
     });
 
     this.node.on("sound4", function(event) {
+      self.settingChatDialog(self);
       var param = {
         type: '1',
         sound: 'sound4',
         srcUserId:cc.beimi.user.id
       };
       self.emitSocket(param,self);
-      self.settingChatDialog(self);
-      event.stopPropagation();
       cc.beimi.audio.playCharSound(4);
+      event.stopPropagation();
     });
 
     this.node.on("sound5", function(event) {
+      self.settingChatDialog(self);
       var param = {
         type: '1',
         sound: 'sound5',
         srcUserId:cc.beimi.user.id
       };
       self.emitSocket(param,self);
-      self.settingChatDialog(self);
-      event.stopPropagation();
       cc.beimi.audio.playCharSound(5);
+        event.stopPropagation();
     });
 
     this.node.on("sound6", function(event) {
+        self.settingChatDialog(self);
       var param = {
         type: '1',
         sound: 'sound6',
         srcUserId:cc.beimi.user.id
       };
       self.emitSocket(param,self);
-      self.settingChatDialog(self);
-      event.stopPropagation();
       cc.beimi.audio.playCharSound(6);
+        event.stopPropagation();
     });
 
     this.node.on("sound7", function(event) {
+      self.settingChatDialog(self);
       var param = {
         type: '1',
         sound: 'sound7',
         srcUserId:cc.beimi.user.id
       };
-      self.emitSocket(param,self);
-      self.settingChatDialog(self);
-      event.stopPropagation();
       cc.beimi.audio.playCharSound(7);
+      self.emitSocket(param,self);
+      event.stopPropagation();
+
     });
 
     this.node.on("sound8", function(event) {
+      self.settingChatDialog(self);
       var param = {
         type: '1',
         sound: 'sound8',
         srcUserId:cc.beimi.user.id
       };
       self.emitSocket(param,self);
-      self.settingChatDialog(self);
-      event.stopPropagation();
       cc.beimi.audio.playCharSound(8);
+      event.stopPropagation();
     });
 
     this.node.on("sound9", function(event) {
+        self.settingChatDialog(self);
       var param = {
         type: '1',
         sound: 'sound9',
         srcUserId:cc.beimi.user.id
       };
       self.emitSocket(param,self);
-      self.settingChatDialog(self);
-      event.stopPropagation();
       cc.beimi.audio.playCharSound(9);
+      event.stopPropagation();
     });
   },
 
@@ -162,8 +163,8 @@ cc.Class({
     this.node.dispatchEvent(new cc.Event.EventCustom(data, true));
   },
 
-  onShareFriendsClick: function(event) {
+  onShareFriendsClick: function(event, data) {
     cc.beimi.audio.playUiSound();
-    console.log("---------分享好友--------");
+    this.node.dispatchEvent(new cc.Event.EventCustom(data, true));
   },
 });

@@ -65,6 +65,10 @@ public class GameRoom implements UserEvent, java.io.Serializable, Comparable<Gam
 	
 	private int numofgames ;	//局数
 	private int currentnum ;	//已完局数
+	@Transient
+	private boolean window = true;
+	@Transient
+	private Integer piao = 0;
 	
 	private PlayUser masterUser ;	//房间的创建人
 	private GamePlayway gamePlayway ;	//房间玩法
@@ -282,5 +286,21 @@ public class GameRoom implements UserEvent, java.io.Serializable, Comparable<Gam
 	public int compareTo(GameRoom o) {
 		// TODO Auto-generated method stub
 		return this.currentnum - o.getCurpalyers();
+	}
+	@Transient
+	public boolean isWindow() {
+		return window;
+	}
+	@Transient
+	public void setWindow(boolean window) {
+		this.window = window;
+	}
+	@Transient
+	public Integer getPiao() {
+		return piao;
+	}
+	@Transient
+	public void setPiao(Integer piao) {
+		this.piao = piao;
 	}
 }

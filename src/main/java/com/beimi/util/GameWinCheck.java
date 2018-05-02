@@ -20,7 +20,7 @@ public class GameWinCheck {
      * @param huns
      * @return
      */
-    public static void pairWinAlgorithm(Map<Integer, List<Byte>> cards, List<Byte> huns, List<List<Byte>> collectionCardList) {
+    public static  List<List<Byte>> pairWinAlgorithm(Map<Integer, List<Byte>> cards, List<Byte> huns, List<List<Byte>> collectionCardList) {
 
         // 先从混子里边找对子，应为这个一个共同的过程
         if (huns.size() >= 2) {
@@ -30,7 +30,15 @@ public class GameWinCheck {
             collectionCards.add(hunsTemp.remove(0));
             boolean isHu = true;
             for (Map.Entry<Integer, List<Byte>> entry : cards.entrySet()) {
-                if (!sameCardValidateHu(cloneList(entry.getValue()), collectionCards, hunsTemp)) {
+                // 混子hunsTemp 不需要处理，在方法里边有处理
+                List<Byte> temp1 = cloneList(entry.getValue());
+                Collections.sort(temp1);
+                if (sameCardValidateHu(temp1, collectionCards, hunsTemp,true)) {
+                    continue;
+                }
+                List<Byte> temp2 = cloneList(entry.getValue());
+                Collections.sort(temp2);
+                if (!sameCardValidateHu(newOrderHandler(temp2), collectionCards, hunsTemp,false)) {
                     isHu = false;
                     break;
                 }
@@ -43,6 +51,124 @@ public class GameWinCheck {
         for (Map.Entry<Integer, List<Byte>> entry : cards.entrySet()) {
             sameSeValidateHu(entry.getValue(), entry.getKey(), cards, huns, collectionCardList);
         }
+        return collectionCardList;
+    }
+
+
+    public static List<Byte> newOrderHandler(List<Byte> cards) {
+
+        if (CollectionUtils.isEmpty(cards) || cards.size() < 3) {
+            return cards;
+        }
+      /*  if(1 == 1){
+            return cards;
+        }*/
+
+
+        List<Byte> newOrderCards = new ArrayList<Byte>();
+        for(int i = 0;i<cards.size() -1;i++){
+            List<Byte> temp = new ArrayList<Byte>();
+            temp.add(cards.get(i));
+            boolean isArealyCome = false;
+            for(int j = i+1 ;j < cards.size();j++){
+                if(Math.abs(cards.get(i)/4 - cards.get(j)/4) == 1||Math.abs(cards.get(i)/4 - cards.get(j)/4) == 2){
+                    if(!isArealyCome){
+                        isArealyCome = true;
+                    }else{
+                        if(Math.abs(cards.get(i)/4 - cards.get(j)/4) == 1){
+                            continue;
+                        }
+                    }
+                    temp.add(cards.get(j));
+                    if(temp.size() == 3){
+                        break;
+                    }
+                }
+            }
+            if(temp.size() == 3){
+                Collections.sort(temp);
+                cards.removeAll(temp);
+                newOrderCards.addAll(temp);
+                i = -1;
+            }
+        }
+       // Collections.sort(newOrderCards);
+        Collections.sort(cards);
+        newOrderCards.addAll(cards);
+        return newOrderCards;
+    }
+    /**
+     * 校验七小对
+     * @param mapCards
+     * @param huns
+     * @return
+     */
+    public static boolean sevenPairCheck(Player player,Map<Integer, List<Byte>> mapCards,List<Byte> huns){
+
+
+        if(CollectionUtils.isNotEmpty(player.getActions())){
+            return false;
+        }
+
+        int needHun = 0;
+        for(Map.Entry<Integer,List<Byte>>entry : mapCards.entrySet() ){
+            List<Byte> tempb = cloneList(entry.getValue());
+            Collections.sort(tempb);
+            Map<Integer, List<Byte>>  map = findPair(tempb);
+            if(map == null || map.isEmpty()){
+                needHun = needHun + tempb.size();
+            }else {
+                needHun = needHun + (tempb.size() - map.get(entry.getKey()).size());
+            }
+            if(needHun > huns.size()){
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    /**
+     * 只要有一个胡，就返回，效率高
+     * @param cards
+     * @param huns
+     * @param collectionCardList
+     * @return
+     */
+    public static boolean pairWinAlgorithmSingle(Map<Integer, List<Byte>> cards, List<Byte> huns, List<List<Byte>> collectionCardList) {
+
+        // 先从混子里边找对子，应为这个一个共同的过程
+        if (huns.size() >= 2) {
+            List<Byte> hunsTemp = cloneList(huns);
+            List<Byte> collectionCards = new ArrayList<Byte>();
+            collectionCards.add(hunsTemp.remove(0));
+            collectionCards.add(hunsTemp.remove(0));
+            boolean isHu = true;
+            for (Map.Entry<Integer, List<Byte>> entry : cards.entrySet()) {
+                List<Byte> temp = cloneList(entry.getValue());
+                Collections.sort(temp);
+                if (sameCardValidateHu(temp, collectionCards, hunsTemp,true)) {
+                    isHu = true;
+                    continue;
+                }
+                List<Byte> temp2 = cloneList(entry.getValue());
+                Collections.sort(temp2);
+                if (!sameCardValidateHu(newOrderHandler(temp2), collectionCards, hunsTemp,false)) {
+                    isHu = false;
+                    break;
+                }
+            }
+            if (isHu) {
+                collectionCardList.add(collectionCards);
+                return true;
+            }
+        }
+        for (Map.Entry<Integer, List<Byte>> entry : cards.entrySet()) {
+            if(sameSeValidateHuSingle(entry.getValue(), entry.getKey(), cards, huns, collectionCardList)){
+                return true;
+            }
+        }
+        return false;
     }
 
 
@@ -90,6 +216,7 @@ public class GameWinCheck {
     private static void sameSeValidateHu(List<Byte> cards, int se, Map<Integer, List<Byte>> cardsMap, List<Byte> huns, List<List<Byte>> collectionCardList) {
 
         List<Byte> tempCard = null;
+        // 混子里边取一张，去两张的已经校验过了，剩下的是不取的
         if (huns.size() > 0) {
             for (int i = 0; i < cards.size(); i++) {
                 List<Byte> collectionCards = new ArrayList<Byte>();
@@ -100,7 +227,13 @@ public class GameWinCheck {
                 Collections.sort(tempCard);
                 boolean isHu = true;
                 for (Map.Entry<Integer, List<Byte>> entry : cardsMap.entrySet()) {
-                    if (!sameCardValidateHu(entry.getKey() == se ? tempCard : cloneList(entry.getValue()), collectionCards, hunsTemp)) {
+                    List<Byte> temp1 = (se == entry.getKey() ? tempCard : cloneList(entry.getValue()));
+                    Collections.sort(temp1);
+                    List<Byte> temp2 = cloneList(temp1);
+                    if (sameCardValidateHu(temp1, collectionCards, hunsTemp, true) ||
+                            sameCardValidateHu(newOrderHandler(temp2), collectionCards, hunsTemp, false)) {
+                        continue;
+                    } else {
                         isHu = false;
                         break;
                     }
@@ -128,50 +261,241 @@ public class GameWinCheck {
                 tempCard.remove(pairs.get(i));
                 tempCard.remove(pairs.get(i + 1));
                 Collections.sort(tempCard);
-                List<Byte> hunsTemp = cloneList(huns);
                 boolean isHu = true;
+                List<Byte> hunsTemp = cloneList(huns);
                 for (Map.Entry<Integer, List<Byte>> entry : cardsMap.entrySet()) {
-                    if (!sameCardValidateHu(se == entry.getKey() ? tempCard : cloneList(entry.getValue()), collectionCards, hunsTemp)) {
+                    List<Byte> temp1 = (se == entry.getKey() ? tempCard : cloneList(entry.getValue()));
+                    Collections.sort(temp1);
+                    List<Byte> temp2 = cloneList(temp1);
+                    if (sameCardValidateHu(temp1, collectionCards, hunsTemp, true) ||
+                            sameCardValidateHu(newOrderHandler(temp2), collectionCards, hunsTemp, false)) {
+                        continue;
+                    } else {
                         isHu = false;
                         break;
                     }
                 }
                 if (!isHu) {
                     tempCard = cloneList(cards);
+                    Collections.sort(tempCard);
+                    continue;
+                } else {
+                    collectionCardList.add(collectionCards);
+                    tempCard = cloneList(cards);
+                    Collections.sort(tempCard);
+                }
+            }
+        }
+    }
+
+    /**
+     *
+     * @param cards
+     * @param se
+     * @param cardsMap
+     * @param huns
+     * @param collectionCardList
+     */
+  /*  private static void sameSeValidateHuSigle(List<Byte> cards, int se, Map<Integer, List<Byte>> cardsMap, List<Byte> huns, List<List<Byte>> collectionCardList) {
+
+        List<Byte> tempCard = null;
+        // 混子里边取一张，去两张的已经校验过了，剩下的是不取的
+        if (huns.size() > 0) {
+            for (int i = 0; i < cards.size(); i++) {
+                List<Byte> collectionCards = new ArrayList<Byte>();
+                tempCard = cloneList(cards);
+                List<Byte> hunsTemp = cloneList(huns);
+                collectionCards.add(hunsTemp.remove(0));
+                collectionCards.add(tempCard.remove(i));
+                Collections.sort(tempCard);
+                boolean isHu = true;
+                for (Map.Entry<Integer, List<Byte>> entry : cardsMap.entrySet()) {
+                    List<Byte> hunsTemp1 = cloneList(hunsTemp);
+                    if (!sameCardValidateHu(entry.getKey() == se ? tempCard : cloneList(entry.getValue()), collectionCards, hunsTemp1,true)) {
+                        isHu = false;
+                    }
+                    List<Byte> hunsTemp2 = cloneList(hunsTemp);
+                    if (sameCardValidateHu(newOrderHandler(cloneList(entry.getValue())), collectionCards, hunsTemp2,false)) {
+                        isHu = true;
+                        break;
+                    }
+                }
+                if (isHu) {
+                    collectionCardList.add(collectionCards);
+                    return;
+                }
+            }
+        }
+        tempCard = cloneList(cards);
+        Map<Integer, List<Byte>> map = findPair(tempCard);
+        if ((map == null || map.isEmpty()) && huns.size() <= 0) {
+            return;
+        } else {
+
+            //这个检查逻辑以后可以去掉，因为就是从当前点校验
+            if (!map.containsKey(se)) {
+                return;
+            }
+            List<Byte> pairs = map.get(se);
+            for (int i = 0; i < pairs.size() - 1; i = i + 2) {
+                List<Byte> collectionCards = new ArrayList<Byte>();
+                collectionCards.add(pairs.get(i));
+                collectionCards.add(pairs.get(i + 1));
+                tempCard.remove(pairs.get(i));
+                tempCard.remove(pairs.get(i + 1));
+                Collections.sort(tempCard);
+            //    List<Byte> hunsTemp = cloneList(huns);
+                boolean isHu = true;
+                for (Map.Entry<Integer, List<Byte>> entry : cardsMap.entrySet()) {
+                    List<Byte> hunsTemp1 = cloneList(huns);
+                    if (!sameCardValidateHu(se == entry.getKey() ? tempCard : cloneList(entry.getValue()), collectionCards, hunsTemp1,true)) {
+                        isHu = false;
+                    }
+                    List<Byte> hunsTemp2 = cloneList(huns);
+                    if (sameCardValidateHu(newOrderHandler(cloneList(entry.getValue())), collectionCards, hunsTemp2,false)) {
+                        isHu = true;
+                        break;
+                    }
+                }
+                if (!isHu) {
+                    tempCard = cloneList(cards);
+                    // 后来BUG修复
+                    collectionCardList.clear();
                     continue;
                 }
                 collectionCardList.add(collectionCards);
             }
         }
+    }*/
+
+
+    /**
+     * 第一次校验入口
+     * @param cards
+     * @param se
+     * @param cardsMap
+     * @param huns
+     * @param collectionCardList
+     * @return
+     */
+    private static boolean sameSeValidateHuSingle(List<Byte> cards, int se, Map<Integer, List<Byte>> cardsMap, List<Byte> huns, List<List<Byte>> collectionCardList) {
+
+        List<Byte> tempCard = null;
+        // 混子里边取一张，去两张的已经校验过了，剩下的是不取的
+        if (huns.size() > 0) {
+            for (int i = 0; i < cards.size(); i++) {
+                List<Byte> collectionCards = new ArrayList<Byte>();
+                tempCard = cloneList(cards);
+                List<Byte> hunsTemp = cloneList(huns);
+                collectionCards.add(hunsTemp.remove(0));
+                collectionCards.add(tempCard.remove(i));
+                Collections.sort(tempCard);
+                boolean isHu = true;
+                for (Map.Entry<Integer, List<Byte>> entry : cardsMap.entrySet()) {
+                    List<Byte> temp1 = (se == entry.getKey() ? tempCard : cloneList(entry.getValue()));
+                    Collections.sort(temp1);
+                    List<Byte> temp2 = cloneList(temp1);
+                    if (sameCardValidateHu(temp1, collectionCards, hunsTemp,true) ||
+                            sameCardValidateHu(newOrderHandler(temp2), collectionCards, hunsTemp,false)) {
+                        continue;
+                    } else {
+                        isHu = false;
+                        break;
+                    }
+                }
+                if (isHu) {
+                    collectionCardList.add(collectionCards);
+                    return true;
+                }
+            }
+        }
+        tempCard = cloneList(cards);
+       // Collections.sort(tempCard);
+        Map<Integer, List<Byte>> map = findPair(tempCard);
+        if ((map == null || map.isEmpty()) && huns.size() <= 0) {
+            // 没有对子肯定不行
+            return false;
+        } else {
+
+            //去空操作，避免下班发生空异常
+            if (!map.containsKey(se)) {
+                return false;
+            }
+            List<Byte> pairs = map.get(se);
+            for (int i = 0; i < pairs.size() - 1; i = i + 2) {
+                List<Byte> collectionCards = new ArrayList<Byte>();
+                collectionCards.add(pairs.get(i));
+                collectionCards.add(pairs.get(i + 1));
+                tempCard.remove(pairs.get(i));
+                tempCard.remove(pairs.get(i + 1));
+                Collections.sort(tempCard);
+              //  List<Byte> hunsTemp = cloneList(huns);
+                boolean isHu = true;
+                List<Byte> hunsTemp = cloneList(huns);
+                for (Map.Entry<Integer, List<Byte>> entry : cardsMap.entrySet()) {
+                    List<Byte> temp1 = (se == entry.getKey() ? tempCard : cloneList(entry.getValue()));
+                    Collections.sort(temp1);
+                    List<Byte> temp2 = cloneList(temp1);
+                    if (sameCardValidateHu(temp1, collectionCards, hunsTemp,true) ||
+                            sameCardValidateHu(newOrderHandler(temp2), collectionCards, hunsTemp,false)) {
+                        continue;
+                    } else {
+                        isHu = false;
+                        break;
+                    }
+                }
+                if (!isHu) {
+                    tempCard = cloneList(cards);
+                     Collections.sort(tempCard);
+                   // collectionCards.clear();
+                    collectionCardList.clear();
+                    continue;
+                }else{
+                    collectionCardList.add(collectionCards);
+                    return true;
+                }
+            }
+            return false;
+        }
     }
+
 
 
     /**
      * 校验一门
      *
-     * @param tempCards
+     * @param tempCards 分类手牌
      * @param collectionCards
      * @param hunTemp
      * @return
      */
-    private static boolean sameCardValidateHu(List<Byte> tempCards, List<Byte> collectionCards, List<Byte> hunTemp) {
+    private static boolean sameCardValidateHu(List<Byte> tempCards, List<Byte> collectionCards, List<Byte> hunTemp,boolean isPairFist) {
 
         int i = 0;
+        List<Byte> temp = cloneList(hunTemp);
         int hunSize = hunTemp.size();
         List<Byte> rabbishCards = new ArrayList<Byte>();
-        Collections.sort(tempCards);
+        List<Byte> tempCollectionCards = new ArrayList<Byte>();
+
+        // Collections.sort(tempCards);
         while (true) {
 
-            if (tempCards.size() > i && tempCards.size() > (i + 1)) {
+            if (tempCards.size() > (i + 1)) {
                 int faraway = Math.abs((tempCards.get(i) / 4 - tempCards.get(i + 1) / 4));
                 if (faraway > 2) {
-                    GameWinCheckUtil.cardCollection(hunSize, collectionCards, i, hunTemp, tempCards, rabbishCards, 2);
+                    GameWinCheckUtil.cardCollection(hunSize, tempCollectionCards, i, hunTemp, tempCards, rabbishCards, 2);
                     hunSize = hunSize - 2;
                     i = i + 1;
                 } else if (faraway == 2) {
-                    GameWinCheckUtil.cardCollection(hunSize, collectionCards, i, hunTemp, tempCards, rabbishCards, 1);
-                    hunSize = hunSize - 1;
-                    i = i + 2;
+                    if (tempCards.get(i) < 0) {
+                        GameWinCheckUtil.cardCollection(hunSize, tempCollectionCards, i, hunTemp, tempCards, rabbishCards, 2);
+                        hunSize = hunSize - 2;
+                        i = i + 1;
+                    } else {
+                        GameWinCheckUtil.cardCollection(hunSize, tempCollectionCards, i, hunTemp, tempCards, rabbishCards, 1);
+                        hunSize = hunSize - 1;
+                        i = i + 2;
+                    }
                 } else if (faraway == 0) {
                     if (tempCards.size() == (i + 2)) {
                         i = i + 2;
@@ -179,10 +503,10 @@ public class GameWinCheck {
                     }
                     faraway = Math.abs((tempCards.get(i + 1) / 4 - tempCards.get(i + 2) / 4));
                     if (faraway == 0) {
-                        GameWinCheckUtil.cardCollection(hunSize, collectionCards, i, hunTemp, tempCards, rabbishCards, 0);
+                        GameWinCheckUtil.cardCollection(hunSize, tempCollectionCards, i, hunTemp, tempCards, rabbishCards, 0);
                         i = i + 3;
                     } else {
-                        GameWinCheckUtil.cardCollection(hunSize, collectionCards, i, hunTemp, tempCards, rabbishCards, 1);
+                        GameWinCheckUtil.cardCollection(hunSize, tempCollectionCards, i, hunTemp, tempCards, rabbishCards, 1);
                         hunSize = hunSize - 1;
                         i = i + 2;
                     }
@@ -191,42 +515,69 @@ public class GameWinCheck {
                         i = i + 2;
                         continue;
                     }
-                    faraway = Math.abs((tempCards.get(i + 1) / 4 - tempCards.get(i + 2) / 4));
-                    if (faraway == 1) {
-                        GameWinCheckUtil.cardCollection(hunSize, collectionCards, i, hunTemp, tempCards, rabbishCards, 0);
-                        i = i + 3;
+                    if (tempCards.get(i) < 0) {
+                        GameWinCheckUtil.cardCollection(hunSize, tempCollectionCards, i, hunTemp, tempCards, rabbishCards, 2);
+                        hunSize = hunSize - 2;
+                        i = i + 1;
+                        continue;
+                    }
+                    if (isPairFist) {
+                        faraway = Math.abs((tempCards.get(i + 1) / 4 - tempCards.get(i + 2) / 4));
+                        if (faraway == 1) {
+                            GameWinCheckUtil.cardCollection(hunSize, tempCollectionCards, i, hunTemp, tempCards, rabbishCards, 0);
+                            i = i + 3;
+                        } else {
+                            GameWinCheckUtil.cardCollection(hunSize, tempCollectionCards, i, hunTemp, tempCards, rabbishCards, 1);
+                            hunSize = hunSize - 1;
+                            i = i + 2;
+                        }
                     } else {
-                        GameWinCheckUtil.cardCollection(hunSize, collectionCards, i, hunTemp, tempCards, rabbishCards, 1);
-                        hunSize = hunSize - 1;
-                        i = i + 2;
+                        int fa = (tempCards.get(i) / 4 - tempCards.get(i + 1) / 4);
+                        int fb = (tempCards.get(i + 1) / 4 - tempCards.get(i + 2) / 4);
+                        if (fa == fb) {
+                            GameWinCheckUtil.cardCollection(hunSize, tempCollectionCards, i, hunTemp, tempCards, rabbishCards, 0);
+                            i = i + 3;
+                        } else {
+                            GameWinCheckUtil.cardCollection(hunSize, tempCollectionCards, i, hunTemp, tempCards, rabbishCards, 1);
+                            hunSize = hunSize - 1;
+                            i = i + 2;
+                        }
                     }
                 }
             } else {
                 tempCards.removeAll(rabbishCards);
                 if (tempCards.size() == 0) {
+                    collectionCards.addAll(tempCollectionCards);
                     return true;
                 } else if (tempCards.size() == 1) {
-                    GameWinCheckUtil.cardCollection(hunSize, collectionCards, 0, hunTemp, tempCards, rabbishCards, 2);
+                    GameWinCheckUtil.cardCollection(hunSize, tempCollectionCards, 0, hunTemp, tempCards, rabbishCards, 2);
                     hunSize = hunSize - 2;
                 } else if (Math.abs((tempCards.get(1) / 4 - tempCards.get(0) / 4)) > 2) {
-                    GameWinCheckUtil.cardCollection(hunSize, collectionCards, 0, hunTemp, tempCards, rabbishCards, 4);
+                    GameWinCheckUtil.cardCollection(hunSize, tempCollectionCards, 0, hunTemp, tempCards, rabbishCards, 4);
                     hunSize = hunSize - 4;
                 } else if (Math.abs((tempCards.get(1) / 4 - tempCards.get(0) / 4)) <= 2) {
-                    GameWinCheckUtil.cardCollection(hunSize, collectionCards, 0, hunTemp, tempCards, rabbishCards, 1);
-                    hunSize = hunSize - 1;
+                    if (tempCards.get(1) < 0) {
+                        GameWinCheckUtil.cardCollection(hunSize, tempCollectionCards, 0, hunTemp, tempCards, rabbishCards, 4);
+                        hunSize = hunSize - 4;
+                    } else {
+                        GameWinCheckUtil.cardCollection(hunSize, tempCollectionCards, 0, hunTemp, tempCards, rabbishCards, 1);
+                        hunSize = hunSize - 1;
+                    }
                 }
                 if (hunSize < 0) {
+                    hunTemp.clear();
+                    hunTemp.addAll(temp);
                     return false;
                 } else {
+                    collectionCards.addAll(tempCollectionCards);
                     return true;
                 }
             }
-
         }
     }
 
 
-    private static List<Byte> cloneList(List<Byte> src) {
+    public static List<Byte> cloneList(List<Byte> src) {
         if (CollectionUtils.isEmpty(src)) {
             return src;
         }
@@ -237,9 +588,9 @@ public class GameWinCheck {
         return des;
     }
 
-    private static Map<Integer, List<Byte>> findPair(List<Byte> cards) {
+    public static Map<Integer, List<Byte>> findPair(List<Byte> cards) {
         Map<Integer, List<Byte>> map = new HashMap<Integer, List<Byte>>();
-
+        Collections.sort(cards);
         for (int i = 0; i < (cards.size() - 1); i++) {
             if (cards.get(i) / 4 == cards.get(i + 1) / 4) {
                 if (cards.get(i) < -15) {
@@ -405,7 +756,7 @@ public class GameWinCheck {
                 if(BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())){
                     addQue(action.getCard(),3,que);
                 }else if(BMDataContext.PlayerAction.GANG.toString().equals(action.getAction())){
-                    addQue(action.getCard(),4,que);
+                    addQue(action.getCard(),3,que);
                 }
             }
         }
@@ -449,28 +800,27 @@ public class GameWinCheck {
 
     public static boolean haveEightAndQueEnd(Player player, Map<Integer,Byte>huns,List<Byte>pairs,List<List<Byte>> collections,boolean isNeedQue) {
 
-        Map<Integer,Integer> que = new HashMap<Integer,Integer>();
-        if(CollectionUtils.isNotEmpty(player.getActions())){
-            for(Action action : player.getActions()){
-                if(BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())){
-                    addQue(action.getCard(),3,que);
-                }else if(BMDataContext.PlayerAction.GANG.toString().equals(action.getAction())){
-                    addQue(action.getCard(),4,que);
+        Map<Integer, Integer> que = new HashMap<Integer, Integer>();
+        if (CollectionUtils.isNotEmpty(player.getActions())) {
+            for (Action action : player.getActions()) {
+                if (BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())) {
+                    addQue(action.getCard(), 3, que);
+                } else if (BMDataContext.PlayerAction.GANG.toString().equals(action.getAction())) {
+                    addQue(action.getCard(), 3, que);
                 }
             }
         }
 
 
-        if(CollectionUtils.isNotEmpty(pairs)){
-           int anyCards = addPairQue(pairs,que,huns);
-            boolean result = validateQueAndHaveEight(isNeedQue,que,anyCards);
-            System.out.println("后校验校验结果 ["+result+"]");
+        if (CollectionUtils.isNotEmpty(pairs)) {
+            int anyCards = addPairQue(pairs, que, huns);
+            boolean result = validateQueAndHaveEight(isNeedQue, que, anyCards);
+            System.out.println("后校验校验结果 [" + result + "]");
             return result;
         }
 
-
         List<List<Byte>> huCards = new ArrayList<List<Byte>>();
-        if(CollectionUtils.isNotEmpty(collections)) {
+        if (CollectionUtils.isNotEmpty(collections)) {
             for (List<Byte> collection : collections) {
                 if (CollectionUtils.isEmpty(collection)) {
                     continue;
@@ -480,39 +830,39 @@ public class GameWinCheck {
                 List<Byte> pairTemp = new ArrayList<Byte>();
                 pairTemp.add(temp.remove(0));
                 pairTemp.add(temp.remove(0));
-                anyCards = addPairQue(pairTemp,que,huns);
-                for(int i = 0;i< temp.size()-2;i = i+3){
-                    List<Byte>huntemp = new ArrayList<Byte>();
-                    List<Byte>cards = new ArrayList<Byte>();
-                    for(int j = i;j<i+3;j++){
-                        if(huns.containsKey(temp.get(j)/4)){
+                anyCards = addPairQue(pairTemp, que, huns);
+                for (int i = 0; i < temp.size() - 2; i = i + 3) {
+                    List<Byte> huntemp = new ArrayList<Byte>();
+                    List<Byte> cards = new ArrayList<Byte>();
+                    for (int j = i; j < i + 3; j++) {
+                        if (huns.containsKey(temp.get(j) / 4)) {
                             huntemp.add(temp.get(j));
-                        }else{
+                        } else {
                             cards.add(temp.get(j));
                         }
                     }
-                    if(huntemp.size() == 3){
-                        anyCards = anyCards +3;
-                    }else{
-                        addQue(cards.get(0),3,que);
+                    if (huntemp.size() == 3) {
+                        anyCards = anyCards + 3;
+                    } else {
+                        addQue(cards.get(0), 3, que);
                     }
                 }
-                if(validateQueAndHaveEight(isNeedQue,que,anyCards)){
+                if (validateQueAndHaveEight(isNeedQue, que, anyCards)) {
                     huCards.add(collection);
                 }
             }
 
             collections.clear();
             collections.addAll(huCards);
-            if(huCards.size() == 0){
-                System.out.println("后校验校验结果 ["+false+"]");
+            if (huCards.size() == 0) {
+                System.out.println("后校验校验结果 [" + false + "]");
                 return false;
-            }else{
-                System.out.println("后校验校验结果 ["+true+"]");
+            } else {
+                System.out.println("后校验校验结果 [" + true + "]");
                 return true;
             }
         }
-        System.out.println("后校验校验结果 ["+false+"]");
+        System.out.println("后校验校验结果 [" + false + "]");
         return false;
     }
 
@@ -522,14 +872,17 @@ public class GameWinCheck {
         boolean isHaveEight = false;
 
         if(isNeedQue) {
-            if (que.get(-1) == null && que.size() < 3) {
+            if (que.get(-1) != null && que.size() < 4) {
                 isQue = true;
-            } else if (que.get(-1) != null && que.size() < 4) {
+            } else if (que.get(-1) == null && que.size() < 3) {
                 isQue = true;
             }
         }
         for (Map.Entry<Integer, Integer> entry : que.entrySet()) {
 
+           /* if(entry.getKey() < 0){
+                continue;
+            }*/
             if (entry.getValue() + hunNum >= 8) {
                 isHaveEight = true;
             }
@@ -581,15 +934,15 @@ public class GameWinCheck {
 
         if(card < 0){
             if(que.get(-1) == null){
-                que.put(-1,3);
+                que.put(-1,size);
             }else{
-                que.put(-1,que.get(-1)+3);
+                que.put(-1,que.get(-1)+size);
             }
         }else{
             if(que.get(card/36) == null){
-                que.put(card/36,3);
+                que.put(card/36,size);
             }else{
-                que.put(card/36,que.get(card/36)+3);
+                que.put(card/36,que.get(card/36)+size);
             }
         }
     }
@@ -601,42 +954,42 @@ public class GameWinCheck {
      * @param collections
      * @return
      */
-    public static List<GameResultSummary> playerSunmary(Player player, List<List<Byte>>collections){
+    public static List<GameResultSummary> playerSummary(Player player, List<Byte>collections) {
 
-        if(CollectionUtils.isEmpty(collections)){
+        if (CollectionUtils.isEmpty(collections)) {
             List<GameResultSummary> gameResultChecks = new ArrayList<GameResultSummary>();
             GameResultSummary gameResultCheck = new GameResultSummary();
-            if(CollectionUtils.isEmpty(player.getActions())){
+            if (CollectionUtils.isEmpty(player.getActions())) {
                 return gameResultChecks;
             }
-            generateGangPeng(player,gameResultCheck);
+            generateGangPeng(player, gameResultCheck);
             gameResultChecks.add(gameResultCheck);
             return gameResultChecks;
         }
-        List<GameResultSummary> gameResultChecks = new ArrayList<GameResultSummary>();
-        for(List<Byte> list : collections){
-            if(CollectionUtils.isEmpty(list)){
-                continue;
-            }
-            GameResultSummary gameResultCheck = new GameResultSummary();
-            List<Byte> pairs = new ArrayList<Byte>();
-            gameResultCheck.setPairs(pairs);
-            pairs.add(list.remove(0));
-            pairs.add(list.remove(0));
-            List<Byte> three = new ArrayList<Byte>();
-            gameResultCheck.setThree(three);
-            for(int i = 0 ; i < list.size() - 2;i = i+3) {
-                three.add(list.get(i));
-                three.add(list.get(i+1));
-                three.add(list.get(i+2));
-            }
 
-            if(CollectionUtils.isEmpty(player.getActions())){
-                return gameResultChecks;
-            }
-            generateGangPeng(player,gameResultCheck);
-            gameResultChecks.add(gameResultCheck);
+
+        List<GameResultSummary> gameResultChecks = new ArrayList<GameResultSummary>();
+        if (CollectionUtils.isEmpty(collections)) {
+            return gameResultChecks;
         }
+        GameResultSummary gameResultCheck = new GameResultSummary();
+        List<Byte> pairs = new ArrayList<Byte>();
+        gameResultCheck.setPairs(pairs);
+        pairs.add(collections.remove(0));
+        pairs.add(collections.remove(0));
+        List<Byte> three = new ArrayList<Byte>();
+        gameResultCheck.setThree(three);
+        for (int i = 0; i < collections.size() - 2; i = i + 3) {
+            three.add(collections.get(i));
+            three.add(collections.get(i + 1));
+            three.add(collections.get(i + 2));
+        }
+
+        if (CollectionUtils.isEmpty(player.getActions())) {
+            return gameResultChecks;
+        }
+        generateGangPeng(player, gameResultCheck);
+        gameResultChecks.add(gameResultCheck);
         return gameResultChecks;
     }
 

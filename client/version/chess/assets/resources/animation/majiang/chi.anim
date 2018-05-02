@@ -3,8 +3,8 @@
   "_name": "chi",
   "_objFlags": 0,
   "_rawFiles": null,
-  "_duration": 0.5,
-  "sample": 12,
+  "_duration": 1,
+  "sample": 8,
   "speed": 1,
   "wrapMode": 0,
   "curveData": {
@@ -14,37 +14,49 @@
           {
             "frame": 0,
             "value": {
-              "__uuid__": "d1d4f419-ef54-4ac3-be78-44dd8ea037de"
+              "__uuid__": "5706e17a-0cf3-4821-a2e4-e3ff22437870"
             }
           },
           {
-            "frame": 0.08333333333333333,
+            "frame": 0.125,
             "value": {
-              "__uuid__": "4214c548-fcf9-4afe-9d6e-d8cc359ad628"
-            }
-          },
-          {
-            "frame": 0.16666666666666666,
-            "value": {
-              "__uuid__": "6462cb8a-cf8b-49c2-86c5-caeebad0a45c"
+              "__uuid__": "ec2e811b-f198-47c2-8f3c-dbceed735b29"
             }
           },
           {
             "frame": 0.25,
             "value": {
-              "__uuid__": "5adc76e6-7671-484b-b8d4-e692ee3fef29"
+              "__uuid__": "7488a8ea-274f-475b-82f2-6c4ac775cfef"
             }
           },
           {
-            "frame": 0.3333333333333333,
+            "frame": 0.375,
             "value": {
-              "__uuid__": "d56418fb-ea41-4fc4-978f-65dc2bd3c0e6"
+              "__uuid__": "f83c1d33-2d2a-451d-a2df-59aa210fb512"
             }
           },
           {
-            "frame": 0.4166666666666667,
+            "frame": 0.5,
             "value": {
-              "__uuid__": "944b5449-db38-4e20-9691-ad44bb7300ba"
+              "__uuid__": "724d9da7-74d0-4322-a841-ceab97d5b92a"
+            }
+          },
+          {
+            "frame": 0.625,
+            "value": {
+              "__uuid__": "73fd8790-b371-4db0-b83b-02570973499e"
+            }
+          },
+          {
+            "frame": 0.75,
+            "value": {
+              "__uuid__": "1f136be3-b0fd-49c7-9ef7-3c45e934ce40"
+            }
+          },
+          {
+            "frame": 0.875,
+            "value": {
+              "__uuid__": "d532e820-9299-4ea3-9633-33b7eb88f6d3"
             }
           }
         ]
@@ -53,12 +65,12 @@
   },
   "events": [
     {
-      "frame": -0.25,
+      "frame": -0.375,
       "func": "onAnimCompleted",
       "params": []
     },
     {
-      "frame": 0.5,
+      "frame": 0.75,
       "func": "onAnimCompleted",
       "params": []
     }

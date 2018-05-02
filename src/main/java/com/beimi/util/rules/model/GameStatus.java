@@ -5,7 +5,9 @@ import com.beimi.core.engine.game.Message;
 public class GameStatus implements Message{
 	private String command ;
 	private String gamestatus ;
-	
+	private String roomId;
+	private boolean notFinishGame;
+
 	private String userid ;
 	private String orgi ;
 	private String gametype ;
@@ -62,5 +64,20 @@ public class GameStatus implements Message{
 	public void setCardroom(boolean cardroom) {
 		this.cardroom = cardroom;
 	}
-	
+
+	public String getRoomId() {
+		return roomId;
+	}
+
+	public void setRoomId(String roomId) {
+		this.roomId = roomId;
+	}
+
+	public boolean isNotFinishGame() {
+		return notFinishGame;
+	}
+
+	public void setNotFinishGame(boolean notFinishGame) {
+		this.notFinishGame = notFinishGame;
+	}
 }

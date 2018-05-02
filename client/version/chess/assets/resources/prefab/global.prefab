@@ -1757,7 +1757,7 @@
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": -307,
+      "x": -315,
       "y": 39
     },
     "_skewX": 0,
@@ -1999,6 +1999,9 @@
     "playway": {
       "__uuid__": "54fbaf6e-436e-4b40-b89c-ae84f7fbd282"
     },
+    "scorehistory": {
+      "__uuid__": "2f5bc815-7ea9-48a7-931e-ae484d753ddb"
+    },
     "feedback": {
       "__uuid__": "97a6a5fb-80db-421f-afe2-38d17e169052"
     }
@@ -2034,7 +2037,7 @@
     },
     "_children": [],
     "_tag": -1,
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 63
@@ -2233,7 +2236,7 @@
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": 17,
+      "x": 110,
       "y": 37
     },
     "_skewX": 0,
@@ -2394,7 +2397,7 @@
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": 16,
+      "x": -110,
       "y": 37
     },
     "_skewX": 0,
@@ -2517,7 +2520,7 @@
     },
     "_children": [],
     "_tag": -1,
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 78
@@ -2716,7 +2719,7 @@
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": 335,
+      "x": 315,
       "y": 39
     },
     "_skewX": 0,
@@ -2839,7 +2842,7 @@
     },
     "_children": [],
     "_tag": -1,
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 88

@@ -7,13 +7,15 @@ import java.util.List;
 import java.util.Map;
 
 import com.alibaba.fastjson.JSONObject;
+import com.beimi.backManager.HouseCardHandlerService;
+import com.beimi.backManager.StandardResponse;
 import com.beimi.model.DefineMap;
 import com.beimi.model.OutRoom;
 import com.beimi.model.PlayCache;
 import com.beimi.util.rules.model.*;
 import com.beimi.web.model.*;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.elasticsearch.common.util.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +40,7 @@ import com.corundumstudio.socketio.annotation.OnEvent;
 
 public class GameEventHandler {
 	protected SocketIOServer server;
-	private Logger logger = LoggerFactory.getLogger(this.getClass());
+	private static Logger logger = LoggerFactory.getLogger(GameEventHandler.class);
 
 
 	@Autowired
@@ -48,11 +50,129 @@ public class GameEventHandler {
 
 	@OnConnect
 	public void onConnect(SocketIOClient client) {
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+
+		logger.info("sessionId:{}, reconnect", client.getSessionId());
+
+		client.sendEvent("connect", new Message() {
+
+			private String msg = "success";
+			private String command;
+
+			@Override
+			public String getCommand() {
+				return this.command;
+			}
+
+			@Override
+			public void setCommand(String command) {
+				this.command = command;
+			}
+
+		});
+		/*ActionTaskUtils.sendEvent("onConnect", beiMiClient.getUserid(), new Message() {
+
+			private String msg = "success";
+			private String command;
+
+			@Override
+			public String getCommand() {
+				return this.command;
+			}
+
+			@Override
+			public void setCommand(String command) {
+				this.command = command;
+			}
+		});*/
+
+		/*Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
+
+		if(userToken == null){
+			logger.info("重连失败,未发现token sessionId:{},token:{}",client.getSessionId(),token);
+			return;
+		}
+		CacheHelper.getInstance().putUserId(client.getSessionId().toString(),userToken.getUserid());
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(userToken.getUserid());
+		if(beiMiClient == null){
+			logger.info("重连失败,未发现beiMiClient sessionId:{},token:{}",client.getSessionId(),token);
+			return;
+		}
+		beiMiClient.setClient(client);
+		logger.info("重连成功 sessionId:{},token:{}",client.getSessionId(),token);
+
+		if(beiMiClient == null){
+			logger.info("reconnect can't find beimiclient,sessionId:{}",client.getSessionId());
+		}
 		if (beiMiClient != null && !StringUtils.isBlank(beiMiClient.getUserid())) {
 			if (CacheHelper.getRoomMappingCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi()) != null) {
-				ActionTaskUtils.sendEvent("", beiMiClient.getUserid(), null);
+				ActionTaskUtils.sendEvent("onConnect", beiMiClient.getUserid(), new Message() {
+
+					private String msg = "success";
+					private String command;
+
+					@Override
+					public String getCommand() {
+						return this.command;
+					}
+
+					@Override
+					public void setCommand(String command) {
+						this.command = command;
+					}
+				});
 			}
+		}*/
+	}
+
+	@OnEvent("heartbeat")
+	public void heartbeat(SocketIOClient client,String token){
+	//	logger.info("sessionId:{}心跳,tokenId:{}",client.getSessionId(),token);
+		Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
+		if(userToken == null){
+			client.sendEvent("heartbeat token null", token);
+			return;
+		}
+		logger.info("发出心跳sessionId:{},userId:{}",client.getSessionId(),userToken.getUserid());
+		CacheHelper.getInstance().putUserId(client.getSessionId().toString(),userToken.getUserid());
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(userToken.getUserid());
+		if(beiMiClient == null){
+			client.sendEvent("heartbeat", token);
+			return;
+		}
+		beiMiClient.setClient(client);
+		client.sendEvent("heartbeat", new Object[] { token });
+		sendJoinUserAgain(beiMiClient,client);
+	}
+
+
+	private void sendJoinUserAgain(BeiMiClient beiMiClient,SocketIOClient client) {
+
+		logger.info("sessionId:{} 心跳重发用户信息");
+		Token userToken;
+		if (beiMiClient != null && !StringUtils.isBlank(beiMiClient.getToken()) && (userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(beiMiClient.getToken(), beiMiClient.getOrgi())) != null) {
+			//鉴权完毕
+			PlayUserClient userClient = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(userToken.getUserid(), userToken.getOrgi());
+			if (userClient == null) {
+				return;
+			}
+
+			String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(userClient.getId(), userClient.getOrgi());
+			if (StringUtils.isEmpty(roomid) || CacheHelper.getBoardCacheBean().getCacheObject(roomid, userClient.getId()) == null) {
+				return;
+			}
+			GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, userClient.getOrgi());
+			List<PlayUserClient> playerList = CacheHelper.getGamePlayerCacheBean().getCacheObject(gameRoom.getId(), gameRoom.getOrgi());
+			int offset = 0;
+			for (PlayUserClient temp : playerList) {
+				if (temp.getId().equals(userToken.getUserid())) {
+					offset = playerList.indexOf(temp);
+					break;
+				}
+			}
+			logger.info("发送用户同步消息");
+			JoinRoom joinRoom = new JoinRoom(userClient, offset, gameRoom.getPlayers(), gameRoom);
+			joinRoom.setCommand("joinroom");
+			client.sendEvent(BMDataContext.BEIMI_MESSAGE_EVENT, joinRoom);
 		}
 	}
 
@@ -60,7 +180,7 @@ public class GameEventHandler {
 	//抢地主事件   //// TODO: 2018/3/14 zcl 系统退出麻将时，会走这个方法
 	@OnEvent(value = "start")
 	public void onStart(SocketIOClient client, String data) {
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
 		String token = beiMiClient.getToken();
 		if (!StringUtils.isBlank(token)) {
 			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
@@ -77,7 +197,8 @@ public class GameEventHandler {
 	//抢地主事件
 	@OnEvent(value = "recovery")
 	public void onRecovery(SocketIOClient client, String data) {
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		long tid = System.nanoTime();
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
 		String token = beiMiClient.getToken();
 		if (!StringUtils.isBlank(token)) {
 			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
@@ -88,10 +209,13 @@ public class GameEventHandler {
 		}
 	}
 
-	//玩家离开
 	@OnEvent(value = "leave")
-	public void onLeaveL(SocketIOClient client, String data) {
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+	public void onLeaveLHandler(SocketIOClient client, String data) {
+	}
+
+	//玩家离开
+/*	public void onLeaveL(SocketIOClient client, String data) {
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
 		String token = beiMiClient.getToken();
 		if (!StringUtils.isBlank(token)) {
 			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
@@ -99,7 +223,7 @@ public class GameEventHandler {
 				GameUtils.updatePlayerClientStatus(beiMiClient.getUserid(), beiMiClient.getOrgi(), BMDataContext.PlayerTypeEnum.LEAVE.toString(), true);
 			}
 		}
-	}
+	}*/
 
 
 	@OnEvent(value = "leaveroom")
@@ -109,14 +233,14 @@ public class GameEventHandler {
 			long tid = System.currentTimeMillis();
 			logger.info("data:{} 离场请求数据信息",data);
 			Map<String, Object> map = JSONObject.parseObject(data, Map.class);
-			BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
-			logger.info("userId:{},room:{} 离场请求用户信息",beiMiClient.getUserid(),beiMiClient.getRoom(),beiMiClient.getToken());
+			BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
+			//logger.info("userId:{},room:{} 离场请求用户信息",beiMiClient.getUserid(),beiMiClient.getRoom(),beiMiClient.getToken());
 			if ("1".equals(map.get("type"))) {
 				logger.info("userId:{},room:{} 强制离场",beiMiClient.getUserid(),beiMiClient.getRoom(),beiMiClient.getToken());
 				//// TODO: 2018/3/16  标记用户是不友好用户 这个逻辑以后处理
 				//signUserUnfriendly(tid,client,data);
 				signUserUnfriendly(tid,client,data);
-				onLeave(client, data);
+				onLeaveL(client, data);
 			} else if ("2".equals(map.get("type"))) {
 				logger.info("userId:{},room:{} 申请离场",beiMiClient.getUserid(),beiMiClient.getRoom(),beiMiClient.getToken());
 				acceptLeaveRoom(tid,client, map);
@@ -127,7 +251,15 @@ public class GameEventHandler {
 				}
 			}else if("7".equals(map.get("type"))){
 				userNormalExist(beiMiClient);
-				onLeaveL(client,data);
+				PlayUserClient playUser = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi()) ;
+				List<PlayUserClient> players = CacheHelper.getGamePlayerCacheBean().getCacheObject(playUser.getRoomid(), playUser.getOrgi()) ;
+				CacheHelper.getRoomMappingCacheBean().delete(playUser.getId(), playUser.getOrgi()) ;
+				//String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(userClient.getId(), userClient.getOrgi());
+				if(CollectionUtils.isEmpty(players)){
+					return;
+				}
+				players.remove(playUser);
+				//onLeaveL(client,data);
 			}
 		} catch (RuntimeException e) {
 			logger.error("请求退出异常", e);
@@ -135,7 +267,46 @@ public class GameEventHandler {
 		}
 	}
 
-	private void userNormalExist(BeiMiClient beiMiClient) {
+	@OnEvent(value="gameOverSummary")
+	public void gameOverSummary (SocketIOClient client, String data){
+		logger.info("主动获取总结数据 data:{}",data);
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
+		String token = beiMiClient.getToken();
+		if (!StringUtils.isBlank(token)) {
+			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
+			if (userToken != null) {
+				HouseCardHandlerService cardHandlerService = BMDataContext.getContext().getBean("houseCardHandlerService",HouseCardHandlerService.class);
+				String response = cardHandlerService.queryPlayerEnd(Integer.parseInt(data));
+				beiMiClient.getClient().sendEvent("gameSummaryExist",response);
+			}
+		}
+
+	}
+
+
+	private void existSendSummary(BeiMiClient beiMiClient){
+
+		String token = beiMiClient.getToken();
+		if (!StringUtils.isBlank(token)) {
+			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
+			if (userToken != null) {
+				String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
+				if(StringUtils.isEmpty(roomid)){
+					logger.info("roomId 空");
+					return;
+				}
+				HouseCardHandlerService cardHandlerService = BMDataContext.getContext().getBean("houseCardHandlerService",HouseCardHandlerService.class);
+				GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, beiMiClient.getOrgi());
+				String response = cardHandlerService.queryPlayerEnd(Integer.parseInt(gameRoom.getRoomid()));
+				beiMiClient.getClient().sendEvent("gameSummaryExist",response);
+			}
+		}
+
+	}
+
+
+
+	public static void userNormalExist(BeiMiClient beiMiClient) {
 
 		String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
 		GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, beiMiClient.getOrgi());
@@ -157,7 +328,7 @@ public class GameEventHandler {
 			if (playUserClient.getId().equals(beiMiClient.getUserid())) {
 				continue;
 			}
-			logger.info(" 人数未达到发出解散 userId:{}", playUserClient.getId());
+			logger.info("人数未达到发出解散 userId:{}", playUserClient.getId());
 			BeiMiClient tmpClient = NettyClients.getInstance().getClient(playUserClient.getId());
 			tmpClient.getClient().sendEvent(BMDataContext.BEIMI_MESSAGE_EVENT, gamePlayers);
 
@@ -168,7 +339,7 @@ public class GameEventHandler {
 	public void chatMessage(SocketIOClient client,String data){
 
 		Map<String,Object> map = JSONObject.parseObject(data,Map.class);
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
 
 		if(map == null || map.isEmpty()){
 			return ;
@@ -203,7 +374,7 @@ public class GameEventHandler {
      */
 	private void acceptLeaveRoom(Long tid,SocketIOClient client,Map<String,Object> map){
 
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
 		String token = beiMiClient.getToken();
 		if (StringUtils.isEmpty(token)) {
 			client.sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new PlayerChartMsg<String>(null, null, null, null, "-1", "illegal token"));
@@ -233,7 +404,7 @@ public class GameEventHandler {
      */
 	private boolean applyLeaveRoomResponse(long tid,SocketIOClient client, Map<String,Object> response) {
 
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
 		String token = beiMiClient.getToken();
 		if (StringUtils.isEmpty(token)) {
 			client.sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new DefineMap<String, String>().putData("type", "-1"));
@@ -268,28 +439,84 @@ public class GameEventHandler {
 			for (PlayUserClient playUserClient : playerList) {
 				logger.info("tid:{} 发出解散 userId:{}", tid, playUserClient.getId());
 				BeiMiClient tmpClient = NettyClients.getInstance().getClient(playUserClient.getId());
-				tmpClient.getClient().sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new DefineMap<String, String>().putData("type", "5").putData("isAgree", "1").putData("msg", "小伙伴都同意解散房间"));
+				String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
+				GameRoom gameRoom  = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, beiMiClient.getOrgi());
+				tmpClient.getClient().sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new DefineMap<String, String>().putData("type", "5").putData("isAgree", "1").putData("isHaveSummary",gameRoom.getCurrentnum() > 1 ? true : false).putData("msg", "小伙伴都同意解散房间"));
 			}
-
 			return true;
 		}
 	}
 
 	
-	private synchronized void signUserUnfriendly(long tid,SocketIOClient client, String data) {
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+	public void signUserUnfriendly(long tid,SocketIOClient client, String data) {
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
 		String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
 		List<PlayUserClient> playerList = CacheHelper.getGamePlayerCacheBean().getCacheObject(roomid, beiMiClient.getOrgi());
 		if(playerList == null || playerList.size() == 0){
 			return ;
 		}
+		GameRoom gameRoom  = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, beiMiClient.getOrgi());
 		logger.info("tid:{} 玩家强制离场 playerList:{}", tid, playerList.size());
 		for (PlayUserClient playUserClient : playerList) {
 			logger.info("tid:{} 玩家强制离场 userId:{}", tid, playUserClient.getId());
 			BeiMiClient tmpClient = NettyClients.getInstance().getClient(playUserClient.getId());
-			tmpClient.getClient().sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new DefineMap<String, String>().putData("type", "6"));
+			tmpClient.getClient().sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new DefineMap<String, String>().putData("type", "6").putData("isHaveSummary",gameRoom.getCurrentnum() > 1 ? true : false));
+			if(gameRoom.getCurrentnum() > 1) {
+				existSendSummary(tmpClient);
+			}
+		}
+	}
+
+
+
+	@OnEvent(value = "getCurrentCards")
+	public void getCurrentCards(SocketIOClient client, String data){
+		// 方法暂时停用
+		if(1 ==1) {
+			return;
 		}
 
+		long tid = System.currentTimeMillis();
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
+		PlayUserClient currentPlayer = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
+		logger.info("tid:{} 恢复用户信息[GET-CRURRENT-CARDS] currentPlayer:{}",tid,currentPlayer);
+		String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
+		if(StringUtils.isEmpty(roomid)){
+			logger.info("tid:{} roomid is null");
+			beiMiClient.getClient().sendEvent("recovery", new DefineMap<String, String>().putData("status", "-1").putData("msg","未开始"));
+			return;
+		}
+		GameRoom gameRoom  = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, beiMiClient.getOrgi());        //直接加入到 系统缓存 （只有一个地方对GameRoom进行二次写入，避免分布式锁）
+		if(gameRoom == null){
+			logger.info("tid:{} gameRoom is null",tid);
+			beiMiClient.getClient().sendEvent("recovery", new DefineMap<String, String>().putData("status", "-1").putData("msg","未开始"));
+			return;
+		}
+		Board board = (Board) CacheHelper.getBoardCacheBean().getCacheObject(gameRoom.getId(), gameRoom.getOrgi());
+
+		if(board == null){
+			logger.info("tid:{} bord is null",tid);
+			beiMiClient.getClient().sendEvent("recovery", new DefineMap<String, String>().putData("status", "-1").putData("msg","未开始"));
+			return;
+		}
+		for (Player player : board.getPlayers()) {
+			if (!currentPlayer.getId().equals(player.getPlayuser())) {
+				continue;
+			}
+			logger.info("tid:{} 恢复牌面信息[GET-CRURRENT-CARDS]  cards:{}", tid, player.getCards());
+			GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), beiMiClient.getOrgi()) ;
+			RecoveryData recoveryData = null;
+			if("koudajiang".equals(gamePlayway.getCode())){
+				recoveryData = CardRecoverUtil.kouRecoverHandler(player,board,gameRoom);
+				logger.info("tid:{} 恢复kou-shou牌面信息发牌完成[GET-CRURRENT-CARDS]  cards:{}", tid, JSONObject.toJSONString(recoveryData));
+			}else{
+				recoveryData = CardRecoverUtil.hunHandler(tid,(MaJiangBoard)board,player,gameRoom);
+				logger.info("tid:{} 恢复hun-shou牌面信息发牌完成[GET-CRURRENT-CARDS]  cards:{}", tid, JSONObject.toJSONString(recoveryData));
+			}
+			//beiMiClient.getClient().sendEvent("recovery",recoveryData, gameRoom);
+			beiMiClient.getClient().sendEvent("recovery",recoveryData);
+			//ActionTaskUtils.sendEvent("recovery", new RecoveryData(player, board.getLasthands(), board.getNextplayer() != null ? board.getNextplayer().getNextplayer() : null, 25, false, board,-1), gameRoom);
+		}
 	}
 
 
@@ -317,7 +544,7 @@ public class GameEventHandler {
 	//聊天
 	@OnEvent(value = "message")
 	public void onMessage(SocketIOClient client, String data) {
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
 		String token = beiMiClient.getToken();
 		if (!StringUtils.isBlank(token)) {
 			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
@@ -331,6 +558,8 @@ public class GameEventHandler {
 	//抢地主事件  zcl 加入房间
 	@OnEvent(value = "joinroom")
 	public void onJoinRoom(SocketIOClient client, AckRequest request, String data) {
+		long tid = System.nanoTime();
+		logger.info("tid:{}, 加入房间信息  data:{},sessionId:{}",tid,data,client.getSessionId());
 		BeiMiClient beiMiClient = JSON.parseObject(data, BeiMiClient.class);
 		String token = beiMiClient.getToken();
 		if (!StringUtils.isBlank(token)) {
@@ -351,10 +580,34 @@ public class GameEventHandler {
 			Token userToken;
 			if (beiMiClient != null && !StringUtils.isBlank(token) && (userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, beiMiClient.getOrgi())) != null) {
 				//鉴权完毕
+				logger.info("再次登录 userId:{}",userToken.getUserid());
 				PlayUserClient userClient = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(userToken.getUserid(), userToken.getOrgi());
 				beiMiClient.setClient(client);
 				beiMiClient.setUserid(userClient.getId());
-				beiMiClient.setSession(client.getSessionId().toString());
+				beiMiClient.setSession(CacheHelper.getInstance().getUserId(CacheHelper.getInstance().getUserId(client.getSessionId().toString())));
+
+				String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(userToken.getUserid(), userToken.getOrgi());
+				if(StringUtils.isEmpty(roomid)) {
+					PlayUserClient playUser = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(userToken.getUserid(), userToken.getOrgi());
+					int jun = 0;
+					if(StringUtils.isNotEmpty(data)) {
+						Map<String, Object> map = JSONObject.parseObject(data, Map.class);
+						if(map != null && !map.isEmpty() && map.containsKey("extparams")){
+							JSONObject jsonObject = (JSONObject)map.get("extparams");
+							if(jsonObject != null && org.apache.commons.lang3.StringUtils.isNotEmpty((String)jsonObject.get("jun"))){
+								jun = Integer.parseInt(jsonObject.get("jun").toString());
+							}
+							if(jsonObject != null && org.apache.commons.lang3.StringUtils.isNotEmpty((String)jsonObject.get("koujun"))){
+								jun = Integer.parseInt(jsonObject.get("koujun").toString());
+							}
+						}
+					}
+					if(playUser.getCards()<=0 || playUser.getCards() < jun){
+						beiMiClient.getClient().sendEvent(BMDataContext.CARD_CHECK, new DefineMap<String, String>().putData("status", "-1").putData("msg","房卡不够，请充值!"));
+						return;
+					}
+				}
+
 				/**
 				 * 心跳时间
 				 */
@@ -370,9 +623,7 @@ public class GameEventHandler {
 				 * 更新状态
 				 */
 				ActionTaskUtils.updatePlayerClientStatus(userClient, BMDataContext.PlayerTypeEnum.NORMAL.toString(), false);
-
 				UKTools.published(userClient, BMDataContext.getContext().getBean(PlayUserClientESRepository.class), BMDataContext.getContext().getBean(PlayUserClientRepository.class));
-
 				BMDataContext.getGameEngine().gameRequest(userToken.getUserid(), beiMiClient.getPlayway(), beiMiClient.getRoom(), beiMiClient.getOrgi(), userClient, beiMiClient,data);
 			}
 		}
@@ -383,6 +634,7 @@ public class GameEventHandler {
 	// zcl 创建房间 调用此方法
 	@OnEvent(value = "gamestatus")
 	public void onGameStatus(SocketIOClient client, String data) {
+		logger.info("sessionId:{} 获取用户状态 data:{}",client.getSessionId(),data);
 		BeiMiClient beiMiClient = JSON.parseObject(data, BeiMiClient.class);
 		Token userToken;
 		GameStatus gameStatus = new GameStatus();
@@ -404,6 +656,8 @@ public class GameEventHandler {
 					gameStatus.setGametype(gamePlayway.getCode());
 					gameStatus.setPlayway(gamePlayway.getId());
 					gameStatus.setGamestatus(BMDataContext.GameStatusEnum.PLAYING.toString());
+					gameStatus.setRoomId(gameRoom.getRoomid());
+					gameStatus.setNotFinishGame(true);
 					if (gameRoom.isCardroom()) {
 						gameStatus.setCardroom(true);
 					}
@@ -419,7 +673,7 @@ public class GameEventHandler {
 	//抢地主事件
 	// zcl 查找房间
 	@OnEvent(value = "searchroom")
-	public void onSearchRoom(SocketIOClient client, String data) {
+	public void onSearchRoom(SocketIOClient client, String data,String token) {
 		SearchRoom searchRoom = JSON.parseObject(data, SearchRoom.class);
 		GamePlayway gamePlayway = null;
 		SearchRoomResult searchRoomResult = null;
@@ -446,7 +700,13 @@ public class GameEventHandler {
 					gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), gameRoom.getOrgi());
 					List<PlayUserClient> playerList = CacheHelper.getGamePlayerCacheBean().getCacheObject(gameRoom.getId(), gameRoom.getOrgi());
 					//List<PlayUserClient> playerList = (List<PlayUserClient>) CacheHelper.getGamePlayerCacheBean().getPlayer(gameRoom.getId(), gameRoom.getOrgi());
-					if (playerList.size() < gamePlayway.getPlayers()) {
+
+					for(PlayUserClient playUserClient : playerList){
+						if(playUserClient.getId().equals(playUser.getId())){
+							joinRoom = true;
+						}
+					}
+					if (playerList.size() < gamePlayway.getPlayers() && !joinRoom) {
 						BMDataContext.getGameEngine().joinRoom(gameRoom, playUser, playerList);
 						joinRoom = true;
 					}
@@ -474,7 +734,7 @@ public class GameEventHandler {
 	//添加@OnDisconnect事件，客户端断开连接时调用，刷新客户端信息
 	@OnDisconnect
 	public void onDisconnect(SocketIOClient client) {
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
 		if (beiMiClient != null) {
 			/**
 			 * 玩家离线
@@ -484,15 +744,17 @@ public class GameEventHandler {
 			PlayUserClient playUserClient = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
 			if (playUserClient != null) {
 				if (BMDataContext.GameStatusEnum.PLAYING.toString().equals(playUserClient.getGamestatus())) {
-					signUserUnfriendly(tid,client,null);
-					GameUtils.updatePlayerClientStatus(beiMiClient.getUserid(), beiMiClient.getOrgi(), BMDataContext.PlayerTypeEnum.OFFLINE.toString(), true);
+					//signUserUnfriendly(tid,client,null);
+					GameUtils.updatePlayerClientStatus(beiMiClient.getUserid(), beiMiClient.getOrgi(), BMDataContext.PlayerTypeEnum.OFFLINE.toString(), false);
 				} else {
-					userNormalExist(beiMiClient);
-					CacheHelper.getApiUserCacheBean().delete(beiMiClient.getUserid(), beiMiClient.getOrgi());
-					if (CacheHelper.getGamePlayerCacheBean().getPlayer(beiMiClient.getUserid(), beiMiClient.getOrgi()) != null) {
+					//如果不是正在打牌状态可以进行退出，不做强退
+					//userNormalExist(beiMiClient);
+					// 用户信息暂时不用删除 用户房间信息需要删除
+					//CacheHelper.getApiUserCacheBean().delete(beiMiClient.getUserid(), beiMiClient.getOrgi());
+					/*if (CacheHelper.getGamePlayerCacheBean().getPlayer(beiMiClient.getUserid(), beiMiClient.getOrgi()) != null) {
 						CacheHelper.getGamePlayerCacheBean().delete(beiMiClient.getUserid(), beiMiClient.getOrgi());
-					}
-					CacheHelper.getRoomMappingCacheBean().delete(beiMiClient.getUserid(), beiMiClient.getOrgi());
+					}*/
+					//CacheHelper.getRoomMappingCacheBean().delete(beiMiClient.getUserid(), beiMiClient.getOrgi());
 
 					/**
 					 * 玩家退出游戏，需要发送事件给所有玩家，如果房主退出，则房间解散
@@ -508,9 +770,13 @@ public class GameEventHandler {
 
 
 	//玩家离开
-	@OnEvent(value = "leave")
-	public synchronized void onLeave(SocketIOClient client, String data) {
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+	//@OnEvent(value = "leave")
+	public void onLeaveL(SocketIOClient client, String data) {
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
+		if(beiMiClient == null){
+			logger.info("退出客户端为空");
+			return;
+		}
 		String token = beiMiClient.getToken();
 		if (!StringUtils.isBlank(token)) {
 			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
@@ -524,7 +790,7 @@ public class GameEventHandler {
 	@OnEvent(value = "answerKou")
 	public void giveKouInfo(SocketIOClient client, String data) {
 
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
 		logger.info("接收到客户端扣应答,userId:{},data:{},userName:{}", beiMiClient.getUserid(), data);
 		String token = beiMiClient.getToken();
 		if (!StringUtils.isBlank(token)) {
@@ -534,7 +800,7 @@ public class GameEventHandler {
 				GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, beiMiClient.getOrgi());
 				MaJiangBoard board = (MaJiangBoard) CacheHelper.getBoardCacheBean().getCacheObject(gameRoom.getId(), gameRoom.getOrgi());
 				if (board.getAnswer().containsKey(beiMiClient.getUserid())) {
-					if ("0".equals(data)) {
+					if ("0".equals(data)||board.getAnswer().get(beiMiClient.getUserid()) == -1) {
 						board.getAnswer().put(beiMiClient.getUserid(), -1);
 					} else {
 						board.getAnswer().put(beiMiClient.getUserid(), board.getAnswer().get(beiMiClient.getUserid()) + 1);
@@ -547,6 +813,117 @@ public class GameEventHandler {
 					}
 				}
 			}
+			client.sendEvent("answerKou", data);
+		}
+	}
+
+	@OnEvent(value = "getUserInfo")
+	public void getUserInfo(SocketIOClient client, String data){
+
+		Map<String,String> map = JSONObject.parseObject(data,Map.class);
+		String token = null;
+		if(map != null && !map.isEmpty()){
+			token = map.get("token");
+		}else{
+			client.sendEvent("getUserInfo", "token illegal");
+			return ;
+		}
+		Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
+		PlayUserClientRepository playUserClientRepository = BMDataContext.getContext().getBean("playUserClientRepository",PlayUserClientRepository.class);
+		PlayUserClient playUserClient = playUserClientRepository.findById(userToken.getUserid());
+		client.sendEvent("getUserInfo", playUserClient);
+	}
+
+	@OnEvent(value = BMDataContext.CARD_CHECK)
+	public void cardCheck(SocketIOClient client, String data) {
+
+		logger.info("房卡检查,data:{},", data);
+		Token userToken = null;
+		if (StringUtils.isEmpty(data)) {
+			logger.info("非法请求2");
+			return;
+		}
+		Map<String, Object> map = JSONObject.parseObject(data, Map.class);
+		String token = (String) map.get("token");
+		if (StringUtils.isEmpty(token)) {
+			logger.info("非法请求2");
+			return;
+		} else {
+			userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
+			if (userToken == null) {
+				logger.info("非法请求3");
+				return;
+			}
+		}
+		int jun = 0;
+		if (map != null && !map.isEmpty() && map.containsKey("extparams")) {
+			JSONObject jsonObject = (JSONObject) map.get("extparams");
+			if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("jun"))) {
+				jun = Integer.parseInt(jsonObject.get("jun").toString());
+			}
+			if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("koujun"))) {
+				jun = Integer.parseInt(jsonObject.get("koujun").toString());
+			}
+		}
+		PlayUserClientRepository playUserClientRepository = BMDataContext.getContext().getBean("playUserClientRepository",PlayUserClientRepository.class);
+		PlayUserClient playUserClient = playUserClientRepository.findById(userToken.getUserid());
+		if (playUserClient.getCards() <= 0 || playUserClient.getCards() < jun) {
+			client.sendEvent(BMDataContext.CARD_CHECK, new DefineMap<String, String>().putData("status", "-1").putData("msg", "房卡不够，请充值!"));
+		} else {
+			client.sendEvent(BMDataContext.CARD_CHECK, new DefineMap<String, String>().putData("status", "1").putData("msg", "ok"));
+		}
+	}
+
+
+	@OnEvent(value = "getPlayhistory")
+	public void getPlayhistory(SocketIOClient client, String data) {
+
+		long tid = System.currentTimeMillis();
+		Map<String,String> map = JSONObject.parseObject(data,Map.class);
+		int startPage = 0,pageSize = 10;
+		Integer roomId = null;
+		String token = null;
+		if(map != null && !map.isEmpty()){
+			startPage = StringUtils.isNotEmpty(map.get("startPage"))?Integer.parseInt(map.get("startPage")) : startPage;
+			pageSize = StringUtils.isNotEmpty(map.get("pageSize"))?Integer.parseInt(map.get("pageSize")) : startPage;
+			roomId = StringUtils.isNotEmpty(map.get("roomId"))?Integer.parseInt(map.get("roomId")) : null;
+			token = map.get("token");
+		}
+		logger.info("tid:{}, 获取战绩  data:{},token:{}",tid,data,token);
+		if (!StringUtils.isBlank(token)) {
+			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
+			if (userToken != null) {
+				HouseCardHandlerService cardHandlerService = BMDataContext.getContext().getBean("houseCardHandlerService",HouseCardHandlerService.class);
+				StandardResponse response = cardHandlerService.queryUserFlow(userToken.getUserid(),startPage,pageSize,roomId);
+				logger.info("tid:{} 返回数据 data:{}",tid,response.toJSON());
+				client.sendEvent("getPlayhistory", response);
+			}
+		}
+	}
+
+	@OnEvent(value = "getPlayhistoryDetail")
+	public void getPlayhistoryDetail(SocketIOClient client, String data) {
+
+		long tid = System.currentTimeMillis();
+		Map<String,String> map = JSONObject.parseObject(data,Map.class);
+		int startPage = 0,pageSize = 10;
+		Integer roomId = null;
+		String token = null;
+		if(map != null && !map.isEmpty()){
+			startPage = StringUtils.isNotEmpty(map.get("startPage"))?Integer.parseInt(map.get("startPage")) : startPage;
+			pageSize = StringUtils.isNotEmpty(map.get("pageSize"))?Integer.parseInt(map.get("pageSize")) : startPage;
+			roomId = StringUtils.isNotEmpty(map.get("roomId"))?Integer.parseInt(map.get("roomId")) : null;
+			token = map.get("token");
+		}
+		logger.info("tid:{}, 获取战绩详情  data:{},token:{}",tid,data,token);
+		if (!StringUtils.isBlank(token)) {
+			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
+			if (userToken != null) {
+				HouseCardHandlerService cardHandlerService = BMDataContext.getContext().getBean("houseCardHandlerService",HouseCardHandlerService.class);
+				StandardResponse response = cardHandlerService.queryUserFlow(userToken.getUserid(),startPage,pageSize,roomId);
+				logger.info("tid:{} 返回数据 data:{}",tid,response.toJSON());
+				client.sendEvent("getPlayhistoryDetail", response);
+			}
 		}
 	}
 
@@ -555,7 +932,7 @@ public class GameEventHandler {
 	//抢地主事件
 	@OnEvent(value = "docatch")
 	public void onCatch(SocketIOClient client, String data) {
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
 		String token = beiMiClient.getToken();
 		if (!StringUtils.isBlank(token)) {
 			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
@@ -572,24 +949,25 @@ public class GameEventHandler {
 	//出牌  // TODO: 2018/3/15 zcl 自己打牌调用
 	@OnEvent(value = "doplaycards")
 	public void onPlayCards(SocketIOClient client, String data) {// data 为打出去的牌
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
+		logger.info("useID:{} 自己打出去牌 data:{}",beiMiClient.getUserid(),data);
 		String token = beiMiClient.getToken();
 		if (!StringUtils.isBlank(token) && !StringUtils.isBlank(data)) {
 			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
 			if (userToken != null) {
 				String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(userToken.getUserid(), userToken.getOrgi());
-				GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, beiMiClient.getOrgi()) ;
+				GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, beiMiClient.getOrgi());
 				Board board = (Board) CacheHelper.getBoardCacheBean().getCacheObject(gameRoom.getId(), gameRoom.getOrgi());
-
-				if(board instanceof MaJiangBoard){
-					if(!((MaJiangBoard)board).isFPEnd()){
+				GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), gameRoom.getOrgi());
+				if (board instanceof MaJiangBoard && "koudajiang".equals(gamePlayway.getCode())) {
+					if (!((MaJiangBoard) board).isFPEnd()) {
+						logger.info("not start");
 						return;
 					}
 				}
 
 				String[] cards = data.split(",");
-
-				logger.info("用户打出来的牌为 data:{}",data);
+				logger.info("用户打出来的牌为 data:{}", data);
 				byte[] playCards = new byte[cards.length];
 				for (int i = 0; i < cards.length; i++) {
 					playCards[i] = Byte.parseByte(cards[i]);
@@ -602,7 +980,7 @@ public class GameEventHandler {
 	//出牌
 	@OnEvent(value = "nocards")
 	public void onNoCards(SocketIOClient client, String data) {
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
 		String token = beiMiClient.getToken();
 		if (!StringUtils.isBlank(token)) {
 			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
@@ -617,7 +995,7 @@ public class GameEventHandler {
 	//出牌 //todo ZCL 选着花色
 	@OnEvent(value = "selectcolor")
 	public void onSelectColor(SocketIOClient client, String data) {
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
 		String token = beiMiClient.getToken();
 		if (!StringUtils.isBlank(token)) {
 			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
@@ -633,7 +1011,7 @@ public class GameEventHandler {
 	@OnEvent(value = "selectaction")
 	public void onActionEvent(SocketIOClient client, String data) {
 		logger.info("sessionId:{}",client.getSessionId());
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
 		String token = beiMiClient.getToken();
 		if (!StringUtils.isBlank(token)) {
 			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
@@ -648,7 +1026,7 @@ public class GameEventHandler {
 	//抢地主事件
 	@OnEvent(value = "restart")
 	public void onRestart(SocketIOClient client, String data) {
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
 		String token = beiMiClient.getToken();
 		if (!StringUtils.isBlank(token)) {
 			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
@@ -664,7 +1042,7 @@ public class GameEventHandler {
 	//不抢/叫地主事件
 	@OnEvent(value = "giveup")
 	public void onGiveup(SocketIOClient client, String data) {
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
 		String token = beiMiClient.getToken();
 		if (!StringUtils.isBlank(token)) {
 			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);
@@ -679,7 +1057,7 @@ public class GameEventHandler {
 	//不抢/叫地主事件
 	@OnEvent(value = "cardtips")
 	public void onCardTips(SocketIOClient client, String data) {
-		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(client.getSessionId().toString());
+		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
 		String token = beiMiClient.getToken();
 		if (!StringUtils.isBlank(token)) {
 			Token userToken = (Token) CacheHelper.getApiUserCacheBean().getCacheObject(token, BMDataContext.SYSTEM_ORGI);

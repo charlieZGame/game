@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang.StringUtils;
 
 import com.beimi.core.engine.game.iface.ChessGame;
@@ -41,15 +40,15 @@ public class MaJiangGame implements ChessGame{
 		/**
 		 * 血流/战玩法 ， 无风 ，广东麻将， 有风 ， 需要根据配置的玩法 获取
 		 */
-		/*if(playway.isWind()){
+		if(gameRoom.isWindow()){
 			for(int i= -4 ; i>-32 ; i--){
 				temp.add(0 , (byte)i) ;
 			}
-		}*/
-		// 来源麻将 都有风
-		for(int i= -4 ; i>-32 ; i--){
-			temp.add(0 , (byte)i) ;
 		}
+		// 来源麻将 都有风
+	/*	for(int i= -4 ; i>-32 ; i--){
+			temp.add(0 , (byte)i) ;
+		}*/
 		/**
 		 * 洗牌次数，参数指定，建议洗牌次数 为1次，多次洗牌的随机效果更好，例如：7次
 		 */
@@ -88,7 +87,7 @@ public class MaJiangGame implements ChessGame{
 		 * 以下为定癞子牌(根据玩法需要)
 		 */
 		if("majiang".equals(playway.getCode())) {
-			generatePowerful(board, cards, playway, players, gameRoom.getPowerfulsize());
+			generatePowerful(board,gameRoom, cards, players, gameRoom.getPowerfulsize());
 		}else if("koudajiang".equals(playway.getCode())){
 		}
 
@@ -140,26 +139,33 @@ public class MaJiangGame implements ChessGame{
 	}
 
 
-	private void generatePowerful(Board board ,byte[] cards,GamePlayway playway,Player[] players,Integer size) {
+	private void generatePowerful(Board board ,GameRoom gameRoom ,byte[] cards,Player[] players,Integer size) {
 
 		if (size <= 0 || size > 3) {
 			return;
 		}
 
+		int getOffset ;
+		if(gameRoom.isWindow()){
+			getOffset = cards.length - 2;
+		}else{
+			getOffset = 108 - 2;
+		}
+
 		byte[] powerful = new byte[1];
-		if (cards[cards.length - 2] >= 0) {
-			if (cards[cards.length - 2] / 4 % 9 == 8) { // 癞子是一门循环填充
-				powerful[0] = (byte) (cards[cards.length - 2] / 4 - 8); //癞子牌， 万筒条牌面 ， +1
+		if (cards[getOffset] >= 0) {
+			if (cards[getOffset] / 4 % 9 == 8) { // 癞子是一门循环填充
+				powerful[0] = (byte) (cards[getOffset] / 4 - 8); //癞子牌， 万筒条牌面 ， +1
 			} else {
-				powerful[0] = (byte) (cards[cards.length - 2] / 4 + 1); //癞子牌， 万筒条牌面 ， +1
+				powerful[0] = (byte) (cards[getOffset] / 4 + 1); //癞子牌， 万筒条牌面 ， +1
 			}
 		} else {//东南西北风， 中发白 ， 是中的 跳过  //// TODO: 2018/3/24 ZCL 风的逻辑先屏蔽
-			powerful[0] = (byte) (cards[cards.length - 2] / 4);
+			powerful[0] = (byte) (cards[getOffset] / 4);
 		}
 
 		byte[] b = new byte[size];
 		b[0] = (byte) (powerful[0] * 4);
-		if (cards[cards.length - 2] >= 0) {
+		if (cards[getOffset] >= 0) {
 			switch (size) {
 				case 2: {
 					if (powerful[0] % 9 == 8) {

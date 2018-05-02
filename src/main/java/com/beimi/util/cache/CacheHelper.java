@@ -11,9 +11,14 @@ import com.beimi.core.engine.game.BeiMiGameTask;
 import com.beimi.util.cache.hazelcast.HazlcastCacheHelper;
 import com.beimi.util.cache.hazelcast.impl.QueneCache;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class CacheHelper {
 	private static CacheHelper instance = new CacheHelper();
 	private final Cache<String,ValueWithExpiryTime> expireCache ;
+	private static final Map<String,String> sessionUserId = new HashMap<String,String>();
 	public CacheHelper(){
 		expireCache = new Cache2kBuilder<String, ValueWithExpiryTime>() {}
 			.sharpExpiry(true)
@@ -37,7 +42,26 @@ public class CacheHelper {
 			})
 	    .build();
 	}
-	
+
+	public String getUserId(String session){
+		if(this.sessionUserId.isEmpty()){
+			return null;
+		}
+		return this.sessionUserId.get(session);
+	}
+
+	public void putUserId(String session,String userId){
+		this.sessionUserId.put(session,userId);
+	}
+
+	public static CacheInstance getCacheInstance() {
+		return cacheInstance;
+	}
+
+	public static void setCacheInstance(CacheInstance cacheInstance) {
+		CacheHelper.cacheInstance = cacheInstance;
+	}
+
 	/**
 	 * 获取缓存实例
 	 */

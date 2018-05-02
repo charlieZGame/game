@@ -97,10 +97,12 @@ public class PlayUser implements UserEvent , java.io.Serializable{
 	private int cards;			//房卡数量
 	private int goldcoins;		//金币数量
 	private int diamonds;		//钻石数量
+
 	/**
 	 * 用户类型
 	 */
 	private String usercategory;
+	private String photo;
 	
 	/**
 	 *对金币+房卡+id进行RSA签名 ， 任何对ID,cards ， goldcoins 进行修改之前，都需要做签名验证，
@@ -620,5 +622,13 @@ public class PlayUser implements UserEvent , java.io.Serializable{
 
 	public void setUsercategory(String usercategory) {
 		this.usercategory = usercategory;
+	}
+
+	public String getPhoto() {
+		return photo;
+	}
+
+	public void setPhoto(String photo) {
+		this.photo = photo;
 	}
 }

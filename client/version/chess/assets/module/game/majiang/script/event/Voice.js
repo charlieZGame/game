@@ -29,12 +29,15 @@ cc.Class({
             this._volume.children[i].active = false;
         }
 
-        // var btnVoice = cc.find("Canvas/voice/voice_failed/btn_ok");
-        // if(btnVoice){
-        //   this.addClickEvent(btnVoice,this.node,"Voice","onBtnOKClicked");
-        // }
+       var self = this;
+        var btnVoiceFaile = cc.find("Canvas/voice/voice_failed/btn_ok");
+        if(btnVoiceFaile){
+          btnVoiceFaile.on('touchstart',function(){
+             self._voice.active = false;
+          });
+        }
 
-        var self = this;
+
         var btnVoice = cc.find("Canvas/action/btn_voice");
         console.log("--------btnVoice-----------------",btnVoice);
         if(btnVoice){
@@ -77,7 +80,7 @@ cc.Class({
             cc.beimi.voiceMgr.release();
             var time = Date.now() - this._lastTouchTime;
             var msg = cc.beimi.voiceMgr.getVoiceData("record.amr");
-            self.alert(msg);
+            // self.alert(msg);
             console.log("---onVoiceOK--------",msg);
             cc.beimi.voiceMgr.play("record.amr");
             // cc.beimi.net.send("voice_msg",{msg:msg,time:time});

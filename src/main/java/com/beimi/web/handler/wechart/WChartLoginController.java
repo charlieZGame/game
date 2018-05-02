@@ -25,9 +25,11 @@ import sun.misc.BASE64Encoder;
 
 import javax.validation.Valid;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URLDecoder;
 import java.util.Date;
-import java.util.Map;
+import java.util.UUID;
 
 /**
  * Created by zhengchenglei on 2018/3/15.
@@ -45,6 +47,9 @@ public class WChartLoginController extends Handler{
     private AnnouncementRespository announcementRespository;
     @Autowired
     private TokenRepository tokenRepository ;
+
+    private String key = "LYJM#888888&6666$3333@END";
+
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -66,13 +71,25 @@ public class WChartLoginController extends Handler{
     @Transactional
     @RequestMapping("/login")
     public ResponseEntity<ResultData> login(javax.servlet.http.HttpServletRequest request ,
-                                            String openId, String nickname, String sex, String avatar) throws InvocationTargetException, IllegalAccessException {
+                                            String openId, String nickname, Integer sex, String avatar,String pwd) throws InvocationTargetException, IllegalAccessException, UnsupportedEncodingException {
+
+        //nickname = URLDecoder.decode(nickname, "utf-8");
+       // avatar = URLDecoder.decode(nickname, "utf-8");
         PlayUserClient playUserClient = null;
         Token userToken = null;
+        long tid = System.currentTimeMillis();
+        logger.info("tid:{}微信用户开始登陆 openId:{},nickname:{},avatar:{},pwd:{}",tid,openId,nickname,avatar,pwd);
 
-        if (org.apache.commons.lang.StringUtils.isBlank(openId)) {
-            return new ResponseEntity(null, HttpStatus.FAILED_DEPENDENCY);
+        if (org.apache.commons.lang.StringUtils.isBlank(openId)|| org.apache.commons.lang.StringUtils.isEmpty(pwd)) {
+            return new ResponseEntity(null, HttpStatus.FORBIDDEN);
         }
+
+        String mymd5 = UKTools.md5One(openId+key).toUpperCase();
+        if(!pwd.equals(mymd5)){
+            logger.info("tid:{} 密码校验不通过 mymd5:{},pwd:{}",tid,mymd5,pwd);
+            return new ResponseEntity(null, HttpStatus.FORBIDDEN);
+        }
+
         playUserClient = playUserClientRepository.findById(openId);
         if (playUserClient != null) {
             playUserClient.setToken(playUserClient.getUsername() + "");
@@ -80,22 +97,28 @@ public class WChartLoginController extends Handler{
         String ip = UKTools.getIpAddr(request);
         IP ipdata = IPTools.getInstance().findGeography(ip);
         if (playUserClient == null) {
+            logger.info("tid:{}构造玩家用户",tid);
             // 构造玩家用户
             PlayUser playUser = new PlayUser();
             playUser.setId(openId);
             playUser.setOpenid(openId);
-            playUser.setNickname(nickname);
+            playUser.setNickname(Base64Util.baseEncode(nickname));
             playUser.setUsercategory("1");
+            playUser.setPlayerlevel("贫农");
+            playUser.setPhoto(avatar);
             register(playUser, ipdata, request);
             playUserRes.save(playUser);
+            playUser.setNickname(nickname);
             playUserClient = playUserClientRepository.findById(playUser.getId());
+            playUserClient.setNickname(nickname);
         }
         userToken = tokenRepository.findById(playUserClient.getUsername() + "");
         if (userToken == null) { //生成token
+            logger.info("tid:{}生成token",tid);
             userToken = new Token();
             userToken.setIp(ip);
             userToken.setRegion(ipdata.getProvince() + ipdata.getCity());
-            userToken.setId(playUserClient.getUsername() + "");
+            userToken.setId(UUID.randomUUID().toString().replaceAll("-", ""));
             userToken.setUserid(openId);
             userToken.setCreatetime(new Date());
             userToken.setOrgi(playUserClient.getOrgi());
@@ -107,7 +130,6 @@ public class WChartLoginController extends Handler{
             }
             userToken.setLastlogintime(new Date());
             userToken.setUpdatetime(new Date(0));
-
             tokenRepository.save(userToken);//账号信息存入ES
         }
         playUserClient.setToken(userToken.getId()); // ApiUser中存放的是用户信息
@@ -153,6 +175,7 @@ public class WChartLoginController extends Handler{
         /**
          * 根据游戏配置 ， 选择 返回的 玩法列表
          */
+        playUserClientRepository.saveAndFlush(playUserClient);
         logger.info("登录返回数据 data:{}", JSONObject.toJSONString(playerResultData));
         return new ResponseEntity<>(playerResultData, HttpStatus.OK);
     }

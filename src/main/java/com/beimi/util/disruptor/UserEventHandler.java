@@ -2,6 +2,9 @@ package com.beimi.util.disruptor;
 
 import com.beimi.core.BMDataContext;
 import com.beimi.util.event.UserDataEvent;
+import com.beimi.util.rules.model.Player;
+import com.beimi.web.model.PlayUser;
+import com.beimi.web.model.PlayUserClient;
 import com.lmax.disruptor.EventHandler;
 
 public class UserEventHandler implements EventHandler<UserDataEvent>{
@@ -12,6 +15,9 @@ public class UserEventHandler implements EventHandler<UserDataEvent>{
 			throws Exception {
 		if(BMDataContext.UserDataEventType.SAVE.toString().equals(arg0.getCommand())){
 			if(arg0.getDbRes()!=null){
+				if(arg0.getEvent() instanceof PlayUser || arg0.getEvent() instanceof PlayUserClient){
+					return;
+				}
 				arg0.getDbRes().save(arg0.getEvent()) ;
 			}
 			if(arg0.getEsRes()!=null){

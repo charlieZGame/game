@@ -1,5 +1,6 @@
 package com.beimi.config.web;
 
+import com.beimi.web.interceptor.BackManagerInterceptorHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
@@ -17,9 +18,12 @@ public class UKWebAppConfigurer
         // addPathPatterns 用于添加拦截规则
         // excludePathPatterns 用户排除拦截
     	registry.addInterceptor(new UserInterceptorHandler()).addPathPatterns("/**").excludePathPatterns("/login.html").excludePathPatterns("/tokens").
-                excludePathPatterns("/api/**").excludePathPatterns("/login/**").excludePathPatterns("/appWebLogin/**")
-                .excludePathPatterns("/pay/**").excludePathPatterns("/userManager/**");
+                excludePathPatterns("/api/**").excludePathPatterns("/dealFlow/**").excludePathPatterns("/houseCard/**").excludePathPatterns("/userCase/**").
+                excludePathPatterns("/userManager/**").excludePathPatterns("/pay/**").excludePathPatterns("/appWebLogin/**")
+                .excludePathPatterns("/appWebLoginData/**").excludePathPatterns("/clearData/**").excludePathPatterns("/getData/**");
     	registry.addInterceptor(new CrossInterceptorHandler()).addPathPatterns("/**");
+        registry.addInterceptor(new BackManagerInterceptorHandler()).addPathPatterns("/dealFlow/**").addPathPatterns("/houseCard/**").
+                addPathPatterns("/userManager/**");
         super.addInterceptors(registry);
     }
 }

@@ -13,7 +13,7 @@ public abstract interface PlayUserESRepository
   
   public abstract PlayUser findByUsername(String username);
   
-  public abstract int countByUsername(String username);
+  public abstract int countByUsername(Integer username);
   
   public abstract PlayUser findByEmail(String email);
   

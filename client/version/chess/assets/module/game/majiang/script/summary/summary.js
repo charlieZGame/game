@@ -25,7 +25,17 @@ cc.Class({
         win:{
           default: null,
           type: cc.Node
-        }
+        },
+
+        next:{
+          default: null,
+          type: cc.Node
+        },
+
+        over:{
+          default: null,
+          type: cc.Node
+        },
     },
 
     // use this for initialization
@@ -41,6 +51,15 @@ cc.Class({
             }
             event.stopPropagation();
         });
+
+        this.workitem.on("over",function(event){
+            if(self.context !=null){
+                self.context.summarypage.destroy();
+                self.context.getGameOverSummary();
+            }
+            event.stopPropagation();
+        });
+
         /**
          * SummaryClick发射的事件，方便统一处理 / 开始
          */
@@ -52,8 +71,15 @@ cc.Class({
         });
     },
 
-    create:function(context , data,laizicards){
-        this.context = context ;
+    create:function(context , data,laizicards,inNext){
+        this.context = context;
+        if (inNext) {
+          this.next.active = true;
+          this.over.active = false;
+        }else {
+          this.over.active = true;
+          this.next.active = false;
+        }
         let cardframe;
         let isHasWin=false;
         for (var i = 0; i < data.players.length; i++) {
@@ -67,7 +93,6 @@ cc.Class({
               cardframe = this.atlas.getSpriteFrame('结算-result_win');
               break;
           }
-
         }
        console.log("isHasWin----",isHasWin);
         if (!isHasWin) {

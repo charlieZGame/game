@@ -639,7 +639,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "麻将牌-侧家出牌",
+    "_name": "麻将牌-自己出牌对家出牌对家碰牌",
     "_objFlags": 0,
     "_parent": {
       "__id__": 18
@@ -676,8 +676,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 49,
-      "height": 49
+      "width": 46,
+      "height": 72
     },
     "_rotationX": 0,
     "_rotationY": 0,
@@ -685,8 +685,8 @@
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": 0,
-      "y": 0
+      "x": -2,
+      "y": -20
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -733,14 +733,14 @@
       "width": 79,
       "height": 111
     },
-    "_rotationX": -90,
-    "_rotationY": -90,
+    "_rotationX": 0,
+    "_rotationY": 0,
     "_scaleX": 0.5,
     "_scaleY": 0.5,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": -5,
-      "y": 5
+      "x": 0,
+      "y": 11
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -785,7 +785,7 @@
     "asset": {
       "__uuid__": "d3b83d12-411e-4c5a-8b7c-f75487ba5bd3"
     },
-    "fileId": "093IhzoD5EfZ9GBFYN2y8/",
+    "fileId": "3ebXcsJ69J2qJAmfN0uNDK",
     "sync": false
   },
   {
@@ -797,7 +797,7 @@
     },
     "_enabled": true,
     "_spriteFrame": {
-      "__uuid__": "2e66b60e-6af7-4cb1-985d-79e1f3d20f95"
+      "__uuid__": "13ba2761-544f-4b24-bbb2-5846c0a43c3c"
     },
     "_type": 0,
     "_sizeMode": 1,
@@ -824,7 +824,7 @@
     "asset": {
       "__uuid__": "d3b83d12-411e-4c5a-8b7c-f75487ba5bd3"
     },
-    "fileId": "3bqt8EKYxN5ouiaovwszAh",
+    "fileId": "00qdysgdhGfLiQKkqYS5Ds",
     "sync": false
   },
   {
@@ -876,13 +876,13 @@
       "width": 0,
       "height": 0
     },
-    "_rotationX": 0,
-    "_rotationY": 0,
+    "_rotationX": 90,
+    "_rotationY": 90,
     "_scaleX": 1,
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": 33,
+      "x": 66,
       "y": -10
     },
     "_skewX": 0,
@@ -894,7 +894,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "麻将牌-侧家出牌",
+    "_name": "麻将牌-自己出牌对家出牌对家碰牌",
     "_objFlags": 0,
     "_parent": {
       "__id__": 26
@@ -931,17 +931,17 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 49,
-      "height": 49
+      "width": 46,
+      "height": 72
     },
-    "_rotationX": 0,
-    "_rotationY": 0,
+    "_rotationX": -90,
+    "_rotationY": -90,
     "_scaleX": 1,
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": 0,
-      "y": 0
+      "x": -30,
+      "y": -78
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -988,14 +988,14 @@
       "width": 79,
       "height": 111
     },
-    "_rotationX": -90,
-    "_rotationY": -90,
+    "_rotationX": 0,
+    "_rotationY": 0,
     "_scaleX": 0.5,
     "_scaleY": 0.5,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": -5,
-      "y": 5
+      "x": 0,
+      "y": 11
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -1040,7 +1040,7 @@
     "asset": {
       "__uuid__": "d3b83d12-411e-4c5a-8b7c-f75487ba5bd3"
     },
-    "fileId": "88tYFZG+xIwbjhfb8kptko",
+    "fileId": "baKU65tdtODZMss3AKAVEp",
     "sync": false
   },
   {
@@ -1052,7 +1052,7 @@
     },
     "_enabled": true,
     "_spriteFrame": {
-      "__uuid__": "2e66b60e-6af7-4cb1-985d-79e1f3d20f95"
+      "__uuid__": "13ba2761-544f-4b24-bbb2-5846c0a43c3c"
     },
     "_type": 0,
     "_sizeMode": 1,
@@ -1079,7 +1079,7 @@
     "asset": {
       "__uuid__": "d3b83d12-411e-4c5a-8b7c-f75487ba5bd3"
     },
-    "fileId": "60AFn3189DQKVDhwBM/LN5",
+    "fileId": "fenog0B11FGJlZ2Vl6M4Zz",
     "sync": false
   },
   {
@@ -1120,7 +1120,7 @@
       "__id__": 28
     },
     "card_last": {
-      "__id__": 18
+      "__id__": 26
     },
     "target": {
       "__id__": 1

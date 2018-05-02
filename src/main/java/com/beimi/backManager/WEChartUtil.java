@@ -2,13 +2,16 @@ package com.beimi.backManager;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.beimi.web.model.DealFlow;
+import com.beimi.web.model.ProxyUser;
+import com.beimi.web.service.repository.jpa.DealFlowRepository;
+import com.beimi.web.service.repository.jpa.ProxyUserRepository;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import javax.servlet.http.HttpServletRequest;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.*;
@@ -20,19 +23,100 @@ public class WEChartUtil {
 
     private static Logger logger = LoggerFactory.getLogger(WEChartUtil.class);
 
+   private static String appId="wx7890d6b46048fc05";
+   private static String appSecret="9eaa91ee7f39a9e34a401f1f75c18fbc";
+   private static String grantType="authorization_code";
 
-    public static String getSessionKeyOropenid(String code) {
-        Locale locale = new Locale("en", "US");
-        ResourceBundle resource = ResourceBundle.getBundle("config/appInfo.properties",locale);   //读取属性文件
-        String requestUrl = resource.getString("url");  //请求地址 https://api.weixin.qq.com/sns/jscode2session
+
+    public static String getSessionKeyOrOpenid(long tid,HttpServletRequest request,String codeInfo) throws IOException {
+
+        if(request == null && StringUtils.isEmpty(codeInfo)){
+            return null;
+        }
+        String code = StringUtils.isEmpty(codeInfo) ? request.getHeader("accesstoken") : codeInfo;
+        logger.info("获取OPENID应用信息 code:{}",code);
+     //   Locale locale = new Locale("en", "US");
+       // Properties resource = new Properties();
+       // resource.load(WEChartUtil.class.getResourceAsStream("config/appInfo.properties"));
+        String requestUrl = "https://api.weixin.qq.com/sns/jscode2session";  //请求地址 https://api.weixin.qq.com/sns/jscode2session
         Map<String, String> requestUrlParam = new HashMap<String, String>();
-        requestUrlParam.put("appid", resource.getString("appId"));  //开发者设置中的appId
-        requestUrlParam.put("secret", resource.getString("appSecret")); //开发者设置中的appSecret
+        //logger.info("获取OPENID应用信息 appId:{},appSecret:{}", resource.getProperty("appId"),resource.getProperty("appSecret"));
+        requestUrlParam.put("appid", appId);  //开发者设置中的appId
+        requestUrlParam.put("secret", appSecret); //开发者设置中的appSecret
         requestUrlParam.put("js_code", code); //小程序调用wx.login返回的code
-        requestUrlParam.put("grant_type", resource.getString("grantType"));    //默认参数 authorization_code
+        requestUrlParam.put("grant_type", grantType);    //默认参数 authorization_code
         //发送post请求读取调用微信 https://api.weixin.qq.com/sns/jscode2session 接口获取openid用户唯一标识
-        JSONObject jsonObject = JSON.parseObject(sendPost(requestUrl, requestUrlParam));
-        return (String)jsonObject.get("openid");
+        String response = sendPost(requestUrl, requestUrlParam);
+        logger.info("tid:{} 返回数据为 response:{}",tid,response);
+        JSONObject jsonObject = JSON.parseObject(response);
+        String openId = (String)jsonObject.get("openid");
+        logger.info("tid:{} 返回数据为 openId:{}",tid,openId);
+        return openId;
+
+    }
+
+    public static void main(String[] args) {
+        InputStream in = WEChartUtil.class.getResourceAsStream("config/appInfo.properties");
+        System.out.println(in);
+    }
+
+
+    public static String supperManagerValidate(HttpServletRequest request, ProxyUserRepository proxyUserRepository){
+
+        if(request == null){
+            return new StandardResponse<PageResponse>(-2,"no permission",null).toJSON();
+        }
+        String openId = (String)request.getAttribute("openId");
+        if(StringUtils.isEmpty(openId)){
+            return new StandardResponse<PageResponse>(-2,"no permission",null).toJSON();
+        }
+        ProxyUser proxyUser = proxyUserRepository.findByOpenId(openId);
+        if(proxyUser == null || !"3".equals(proxyUser.getUserCategory())){
+            return new StandardResponse<PageResponse>(-2,"no permission",null).toJSON();
+        }
+
+        return null;
+    }
+
+    public static String supperProxyManagerValidate(HttpServletRequest request, ProxyUserRepository proxyUserRepository){
+
+        if(request == null){
+            return new StandardResponse<PageResponse>(-2,"no permission",null).toJSON();
+        }
+        String openId = (String)request.getAttribute("openId");
+        if(StringUtils.isEmpty(openId)){
+            return new StandardResponse<PageResponse>(-2,"no permission",null).toJSON();
+        }
+        ProxyUser proxyUser = proxyUserRepository.findByOpenId(openId);
+        if(proxyUser == null || (!"3".equals(proxyUser.getUserCategory()) && !"2".equals(proxyUser.getUserCategory()))){
+            return new StandardResponse<PageResponse>(-2,"no permission",null).toJSON();
+        }
+
+        return null;
+    }
+
+    public static ProxyUser addManagerUser(long tid,ProxyUserRepository repository,String openId,String nickname,String photo){
+
+        if(repository == null || StringUtils.isEmpty(openId)){
+            return null;
+        }
+        logger.info("tid:{} 新增用户查询openId为 openId:{}",tid,openId);
+        ProxyUser proxyUser = repository.findByOpenId(openId);
+        if(proxyUser == null){
+            ProxyUser user = new ProxyUser();
+            user.setId(openId);
+            user.setOpenId(openId);
+            user.setNickname(nickname);
+            user.setPhoto(photo);
+            user.setYxbj("1");
+            user.setUserCategory("1");
+            user.setCreateTime(new Date());
+            repository.save(user);
+            proxyUser = user;
+        }else{
+            repository.saveAndFlush(proxyUser);
+        }
+        return proxyUser;
     }
 
     /**
@@ -66,7 +150,7 @@ public class WEChartUtil {
             // 发送POST请求必须设置如下两行
             conn.setDoOutput(true);
             conn.setDoInput(true);
-            // 获取URLConnection对象对应的输出流
+            // 获取UzRLConnection对象对应的输出流
             out = new PrintWriter(conn.getOutputStream());
             // 发送请求参数
             out.print(param);
@@ -95,6 +179,21 @@ public class WEChartUtil {
             }
         }
         return result;
+    }
+
+
+    public static void addDealflow(DealFlowRepository repository,String username, Integer num, String type, String userId){
+        DealFlow dealFlow = new DealFlow();
+        dealFlow.setUserName(username);
+        dealFlow.setNum(num);
+        dealFlow.setCreateTime(new Date());
+        dealFlow.setYxbj("1");
+        dealFlow.setXybj("1");
+        dealFlow.setUserId(userId);
+        dealFlow.setOpenId(userId);
+        dealFlow.setSrcType(type);
+        repository.save(dealFlow);
+
     }
 
 

@@ -43,11 +43,16 @@ cc.Class({
         type: cc.Prefab
       },
 
+      desc: {
+        default: null,
+        type: cc.Label
+      },
+
+
     },
 
 
     start () {
-
     },
 
     onLoad: function() {
@@ -58,7 +63,7 @@ cc.Class({
     init(data,laizicards){//handcards, deskcards,laizicards,banker,nickname,score
       this.cardsArray = new Array();
       let pengcards=[];
-      if (data.gameResultChecks[0].pengs&&data.gameResultChecks[0].pengs.length>0) {
+      if (data.gameResultChecks&&data.gameResultChecks[0].pengs&&data.gameResultChecks[0].pengs.length>0) {
         let tempPengCards = this.decode(data.gameResultChecks[0].pengs);
         for (var i = 0; i < tempPengCards.length; i+=3) {
           pengcards.push(tempPengCards[i]);
@@ -84,45 +89,38 @@ cc.Class({
         for (var i = 0; i < tempMgangCards.length; i+=4) {
           mgangcards.push(tempMgangCards[i]);
         }
+        console.log("所有明杠数据--》",mgangcards);
         if (mgangcards&&mgangcards.length>0) {
-          console.log("所有明杠数据--》",pengcards);
           for (var i = 0; i < mgangcards.length; i++) {
             let cards_peng = cc.instantiate(this.cards_ming_gang);
             cards_peng.setScale(0.8);
-            cards_peng.width=104;
+            cards_peng.width=118;
             let temp_script = cards_peng.getComponent("GangAction");
-            temp_script.init(pengcards[i], false);
+            temp_script.init(mgangcards[i], true);
             cards_peng.parent = this.card_panel;
             this.cardsArray.push(cards_peng);
           }
         }
       }
 
-
-
       let gangcards=[];
       if (data.gameResultChecks[0].agangs&&data.gameResultChecks[0].agangs.length>0) {
         let tempGangCards = this.decode(data.gameResultChecks[0].agangs);
-          console.log("解析暗杠数据--》",tempGangCards);
         for (var i = 0; i < tempGangCards.length; i+=4) {
           gangcards.push(tempGangCards[i]);
         }
-      }
-
-      if (gangcards&&gangcards.length>0) {
-            console.log("所有暗杠数据--》",tempGangCards);
-        for (var i = 0; i < gangcards.length; i++) {
-
-          let cards_gang = cc.instantiate(this.cards_an_gang);
-          cards_gang.setScale(0.8);
-          cards_gang.width=124;
-          let temp_script = cards_gang.getComponent("GangAction");
-          temp_script.init(gangcards[i], true);
-          cards_gang.parent = this.card_panel;
-          this.cardsArray.push(cards_gang);
+        if (gangcards&&gangcards.length>0) {
+          for (var i = 0; i < gangcards.length; i++) {
+            let cards_gang = cc.instantiate(this.cards_an_gang);
+            cards_gang.setScale(0.8);
+            cards_gang.width=144;
+            let temp_script = cards_gang.getComponent("GangAction");
+            temp_script.init(gangcards[i], true);
+            cards_gang.parent = this.card_panel;
+            this.cardsArray.push(cards_gang);
+          }
         }
       }
-
 
       this.handlecardpool = new cc.NodePool();
       for (var i = 0; i < 14; i++) {
@@ -151,7 +149,7 @@ cc.Class({
         temp.setScale(0.5);
         temp.width=38;
         let temp_script = temp.getComponent("HandCards");
-        temp_script.init(handcards[i],laizicards);
+        temp_script.init(handcards[i],laizicards,false,true);
         temp.parent = this.card_panel;
         this.cardsArray.push(temp);
       }
@@ -167,6 +165,7 @@ cc.Class({
         this.hu.active = false;
       }
       this.nickname.string = data.username;
+      this.desc.string = data.desc;
       this.score.string = data.score;
     },
 

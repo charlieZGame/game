@@ -23,6 +23,10 @@ public class ActionEvent implements Message , java.io.Serializable{
 	private String actype ;		//杠 的类型 ， 明杠/暗杠/弯杠
 	private String action;
 	private byte card ;
+
+	private boolean isZm;
+
+	private int removeCardNum;
 	
 	private byte cardtype ;
 	private byte cardvalue ;
@@ -110,5 +114,21 @@ public class ActionEvent implements Message , java.io.Serializable{
 	}
 	public void setActype(String actype) {
 		this.actype = actype;
+	}
+
+	public boolean isZm() {
+		return isZm;
+	}
+
+	public void setZm(boolean zm) {
+		isZm = zm;
+	}
+
+	public int getRemoveCardNum() {
+		return removeCardNum;
+	}
+
+	public void setRemoveCardNum(int removeCardNum) {
+		this.removeCardNum = removeCardNum;
 	}
 }

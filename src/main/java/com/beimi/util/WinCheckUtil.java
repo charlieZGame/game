@@ -20,34 +20,24 @@ public class WinCheckUtil {
      */
     public static MJCardMessage checkWin(GamePlayway gamePlayway, Player player) {
 
-        if (GameTypeEnum.LAIYUAN_HUN.getKey().equals(gamePlayway)) {
 
-        } else {
-            if (GameTypeEnum.LAIYUAN_KOU.getKey().equals(gamePlayway)) {
-
-            } else {
-
-                if (!gamePlayway.getId().equals(player.getPlayuser()) && player.getCardsArray().length < 14) {
-                    return null;
-                }
-
-                byte temp = 0;
-                if (player.getCardsArray().length == 14) {
-                    temp = player.getCardsArray()[13];
-                    byte[] b = new byte[13];
-                    System.arraycopy(player.getCardsArray(), 0, b, 0, 13);
-                    player.setCards(b);
-                }
-                MJCardMessage mjCard = GameUtils.processMJCard(player, player.getCardsArray(), temp, false,null);
-                mjCard.setDeal(false);
-                mjCard.setTakeuser(player.getPlayuser());
-                return mjCard;
-            }
+        if (player.getCardsArray().length < 14) {
+            return null;
         }
 
-        return null;
-
-
+        byte temp = 0;
+        byte[] tempCard = player.getCardsArray();
+        if (player.getCardsArray().length == 14) {
+            temp = player.getCardsArray()[13];
+            byte[] b = new byte[13];
+            System.arraycopy(player.getCardsArray(), 0, b, 0, 13);
+            player.setCards(b);
+        }
+        MJCardMessage mjCard = GameUtils.processMJCard(player, player.getCardsArray(), temp, false, null);
+        mjCard.setDeal(false);
+        mjCard.setTakeuser(player.getPlayuser());
+        player.setCards(tempCard);
+        return mjCard;
     }
 
     /**

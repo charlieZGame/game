@@ -45,6 +45,17 @@ cc.Class({
       type: cc.Node
     },
 
+    playway2ScrollNode:{
+      default: null,
+      type: cc.Node
+    },
+
+    scoreScrollNode:{
+      default: null,
+      type: cc.Node
+    },
+
+
     playwayScrollview:{
       default: null,
       type: cc.ScrollView
@@ -58,18 +69,47 @@ cc.Class({
    scoreItemPrefab:{
      default : null ,
      type : cc.Prefab
-   }
+   },
 
+
+    laiyuanselectbg:{
+      default: null,
+      type: cc.Node
+    },
+
+    laiyuanunselectbg:{
+      default: null,
+      type: cc.Node
+    },
+
+    koudajiangselectbg:{
+      default: null,
+      type: cc.Node
+    },
+
+    koudajiangunselectbg:{
+      default: null,
+      type: cc.Node
+    },
+
+    playwaytitle:{
+      default: null,
+      type: cc.Label
+    }
 
   },
 
   onLoad: function () {
-    let self = this;
-
+    this.topTag =0; //0是玩法 1是历史记录
+    this.playwayTag = 0; //0是涞源  1 是扣大将
   },
 
-  init(tag){
+
+  init(tag,data){
     let self = this;
+    this.scoreList = data;
+    this.playwayScrollNode.active=false;
+    this.playway2ScrollNode.active=false;
     console.log("----------init-------------",tag);
     if (tag==0) {
       this.selectPlayWay(self);
@@ -79,23 +119,32 @@ cc.Class({
   },
 
   selectPlayWay(){
+    this.topTag =0;
     console.log("=========selectPlayWay==========");
-    this.playwayselect.active=true;
-    this.playwaybgselect.active=true;
-    this.playwayunselect.active=false;
-    this.playwaybgunselect.active=false;
+    if (this.playwayTag ==0) {
+      this.playwayScrollNode.active=true;
+      this.playway2ScrollNode.active=false;
+    }else {
+      this.playwayScrollNode.active=false;
+      this.playway2ScrollNode.active=true;
+    }
 
-    this.scoreselect.active=false;
-    this.scorebgselect.active=false;
-    this.scoreunselect.active=true;
-    this.scorebgunselect.active=true;
+    // this.playwayselect.active=true;
+    // this.playwaybgselect.active=true;
+    // this.playwayunselect.active=false;
+    // this.playwaybgunselect.active=false;
 
-    this.playwayScrollNode.active=true;
+    // this.scoreselect.active=false;
+    // this.scorebgselect.active=false;
+    // this.scoreunselect.active=true;
+    // this.scorebgunselect.active=true;
+
     this.scoreScrollNode.active=false;
   },
 
   selectScore(){
-      console.log("=========selectScore==========");
+    this.topTag =1;
+    console.log("=========selectScore==========");
     this.playwayselect.active=false;
     this.playwaybgselect.active=false;
     this.playwayunselect.active=true;
@@ -107,6 +156,7 @@ cc.Class({
     this.scorebgunselect.active=false;
 
     this.playwayScrollNode.active=false;
+    this.playway2ScrollNode.active=false;
     this.scoreScrollNode.active=true;
 
     this.items = [];
@@ -120,9 +170,43 @@ cc.Class({
         this.items.push(item);
     	}
 
+  },
+
+  selectLaiyuan(){
+    this.playwayTag=0;
+    this.playwaytitle.string="来源玩法";
+    this.laiyuanselectbg.active = true;
+    this.laiyuanunselectbg.active = false;
+    this.koudajiangselectbg.active = false;
+    this.koudajiangunselectbg.active = true;
+    if (this.topTag) {
+        console.log("切换来源的历史记录");
+    }else {
+      this.playwayScrollNode.active=true;
+      this.playway2ScrollNode.active=false;
+    }
+
+  },
+
+  selectKouDaJiang(){
+    this.playwaytitle.string="扣大将玩法";
+    this.playwayTag=1;
+    this.laiyuanselectbg.active = false;
+    this.laiyuanunselectbg.active = true;
+    this.koudajiangselectbg.active = true;
+    this.koudajiangunselectbg.active = false;
+    if (this.topTag) {
+       console.log("切换扣大将的历史记录");
+    }else {
+      this.playwayScrollNode.active=false;
+      this.playway2ScrollNode.active=true;
+    }
   }
 
-
+  // let socket = this.socket();
+  // socket.emit("getPlayhistory", "");
+  // socket.on("getPlayhistory", function(result) {
+  //   console.log("getPlayhistory=====>", JSON.stringify(result));
 
   // update (dt) {},
 });

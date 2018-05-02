@@ -3,7 +3,10 @@ package com.beimi.util.client;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.beimi.core.BMDataContext;
+import com.beimi.util.cache.CacheHelper;
 import com.beimi.util.server.handler.BeiMiClient;
+import com.beimi.web.model.Token;
 
 public class NettySystemClient implements NettyClient{
 	
@@ -12,7 +15,7 @@ public class NettySystemClient implements NettyClient{
 	public BeiMiClient getClient(String key){
 		return  systemClientsMap.get(key);
 	}
-	
+
 	public void putClient(String userid , BeiMiClient client){
 		systemClientsMap.put(userid, client) ;
 		systemClientsMap.put(client.getSession(), client) ;

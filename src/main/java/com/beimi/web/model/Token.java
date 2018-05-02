@@ -165,4 +165,23 @@ public class Token implements UserEvent , java.io.Serializable{
 	public void setRegion(String region) {
 		this.region = region;
 	}
+
+	@Override
+	public String toString() {
+		return "Token{" +
+				"id='" + id + '\'' +
+				", token='" + token + '\'' +
+				", userid='" + userid + '\'' +
+				", exptime=" + exptime +
+				", client='" + client + '\'' +
+				", ip='" + ip + '\'' +
+				", region='" + region + '\'' +
+				", orgi='" + orgi + '\'' +
+				", creater='" + creater + '\'' +
+				", createtime=" + createtime +
+				", updatetime=" + updatetime +
+				", passupdatetime=" + passupdatetime +
+				", lastlogintime=" + lastlogintime +
+				'}';
+	}
 }

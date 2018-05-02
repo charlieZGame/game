@@ -16,7 +16,7 @@ cc.Class({
         },
         roomtitle:{
             default:null ,
-            type : cc.Node
+            type : cc.Label
         },
         optiongroup:{
             default:null ,
@@ -50,7 +50,6 @@ cc.Class({
           type : cc.Node
         },
 
-
         freeopt:{
             default:null ,
             type : cc.Node
@@ -80,6 +79,13 @@ cc.Class({
         //创建房间
         this.node.on('createroom', function (event) {
             cc.beimi.audio.playUiSound();
+            if (!cc.beimi.isConnect) {
+              self.alert("网络繁忙，请稍后再试");
+              if(cc.beimi.authorization != null) {
+                self.connect();
+              }
+              return
+            }
             /**
              * 把参数 汇总一下， 然后转JSON以后序列化成字符串，发送 创建房间的请求
              */
@@ -185,12 +191,23 @@ cc.Class({
               this.rightcreatebt.active = false;
             }
         }
-        if(playway.roomtitle!=null && playway.roomtitle!=""){
-            let frame = this.atlas.getSpriteFrame(playway.roomtitle);
-            if(frame!=null){
-                this.roomtitle.getComponent(cc.Sprite).spriteFrame = frame ;
-            }
+
+       console.log("playway.code=========>",playway.code);
+        if (playway.code=="majiang") {
+          this.roomtitle.string ="涞源玩法"
+        }else if (playway.code=="koudajiang") {
+          this.roomtitle.string ="扣大将"
         }
+        // if(playway.roomtitle!=null && playway.roomtitle!=""){
+        //     console.log("playway.roomtitle=========>",playway.roomtitle);
+        //     if (true) {
+        //
+        //     }
+        //     let frame = this.atlas.getSpriteFrame(playway.roomtitle);
+        //     if(frame!=null){
+        //         this.roomtitle.getComponent(cc.Sprite).spriteFrame = frame ;
+        //     }
+        // }
         if(this.optiongroup!=null && playway.groups!=null){
             for(var inx = 0 ; inx < playway.groups.length ; inx++){
                 let group = cc.instantiate(this.optiongroup) ;

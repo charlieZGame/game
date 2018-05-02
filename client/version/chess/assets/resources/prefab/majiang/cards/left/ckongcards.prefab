@@ -109,7 +109,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 52,
-      "height": 49
+      "height": 48
     },
     "_rotationX": 0,
     "_rotationY": 0,
@@ -117,8 +117,8 @@
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": -17,
-      "y": 0
+      "x": -22.5,
+      "y": 25
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -139,7 +139,7 @@
       "__uuid__": "e68bdfc2-a80a-47f6-a736-cf1b396af612"
     },
     "_type": 0,
-    "_sizeMode": 1,
+    "_sizeMode": 0,
     "_fillType": 0,
     "_fillCenter": {
       "__type__": "cc.Vec2",
@@ -202,7 +202,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 52,
-      "height": 49
+      "height": 48
     },
     "_rotationX": 0,
     "_rotationY": 0,
@@ -210,8 +210,8 @@
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": -17,
-      "y": -31
+      "x": -22.5,
+      "y": -7
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -232,7 +232,7 @@
       "__uuid__": "e68bdfc2-a80a-47f6-a736-cf1b396af612"
     },
     "_type": 0,
-    "_sizeMode": 1,
+    "_sizeMode": 0,
     "_fillType": 0,
     "_fillCenter": {
       "__type__": "cc.Vec2",
@@ -295,7 +295,7 @@
     "_contentSize": {
       "__type__": "cc.Size",
       "width": 52,
-      "height": 49
+      "height": 48
     },
     "_rotationX": 0,
     "_rotationY": 0,
@@ -303,8 +303,8 @@
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": -17,
-      "y": -62
+      "x": -22.5,
+      "y": -32
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -325,7 +325,7 @@
       "__uuid__": "e68bdfc2-a80a-47f6-a736-cf1b396af612"
     },
     "_type": 0,
-    "_sizeMode": 1,
+    "_sizeMode": 0,
     "_fillType": 0,
     "_fillCenter": {
       "__type__": "cc.Vec2",
@@ -396,8 +396,8 @@
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": -17.5,
-      "y": -14
+      "x": -22.5,
+      "y": 6
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -445,7 +445,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 49,
+      "width": 52,
       "height": 49
     },
     "_rotationX": 0,
@@ -569,7 +569,7 @@
       "__uuid__": "2e66b60e-6af7-4cb1-985d-79e1f3d20f95"
     },
     "_type": 0,
-    "_sizeMode": 1,
+    "_sizeMode": 0,
     "_fillType": 0,
     "_fillCenter": {
       "__type__": "cc.Vec2",

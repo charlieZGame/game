@@ -34,7 +34,6 @@ cc.Class({
 
     onLoad () {
       this.messageBtn.active = false;
-      this.playwayBtn.active = false;
       this.shoppingBtn.active = false;
       this.feedbackBtn.active = false;
     },

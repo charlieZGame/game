@@ -22,6 +22,7 @@ public class Player implements Message,java.io.Serializable , Cloneable{
 	private String playuser ;	//userid对应
 	private byte[] cards ;	//玩家手牌，顺序存储 ， 快速排序（4个Bit描述一张牌，玩家手牌 麻将 13+1/2 = 7 byte~=long）
 	private byte[] history = new byte[]{};//出牌历史 ， 特权可看
+	private byte[] recoveryHistory; //历史左面牌
 	private byte info ;		//复合信息存储，用于存储玩家位置（2^4,占用4个Bit，最大支持16个玩家）（是否在线1个Bit），是否庄家/地主（1个Bit），是否当前出牌玩家（1个Bit）（是否机器人1个Bit）
 	private boolean randomcard ;	//起到地主牌的人
 	private boolean docatch ;	//抢过庄（地主）
@@ -33,7 +34,7 @@ public class Player implements Message,java.io.Serializable , Cloneable{
 	
 	private String command ;
 	
-	private boolean selected ;	//已经选择 花色
+	private boolean selected = true ;	//已经选择 花色
 	private int color ;		//定缺 花色   0  : wan , 1:tong , 2 :tiao
 	
 	private boolean accept ;	//抢地主 : 过地主
@@ -42,11 +43,19 @@ public class Player implements Message,java.io.Serializable , Cloneable{
 
 	private byte[] powerfull; //混子
 
-	private List<Byte> coverCards;
+	private List<Byte> coverCards; //扣住的牌
+
+	private Integer coverySize;
 
 	private boolean isWin;
 
+	private boolean isZm;
+
+	private String targetUser; //点炮用户
+
 	private List<List<Byte>>collections;
+
+	private String nickname;
 
 	private List<Action> actions = new ArrayList<Action>();
 
@@ -86,8 +95,18 @@ public class Player implements Message,java.io.Serializable , Cloneable{
 		this.played = played;
 	}
 
-	public byte[] getHistory() {
+	public byte[] getHistoryArray() {
 		return history;
+	}
+	public String getHistory() {
+		if(this.history == null || this.history.length == 0){
+			return null;
+		}
+		StringBuilder sb = new StringBuilder();
+		for(byte b : this.history){
+			sb.append(",").append(b);
+		}
+		return sb.substring(1);
 	}
 
 	public void setHistory(byte[] history) {
@@ -227,7 +246,10 @@ public class Player implements Message,java.io.Serializable , Cloneable{
 	}
 
 	public List<List<Byte>> getCollections() {
-		return collections;
+		if(this.collections == null){
+			this.collections = new ArrayList<List<Byte>>();
+		}
+		return this.collections;
 	}
 
 	public void setCollections(List<List<Byte>> collections) {
@@ -248,5 +270,63 @@ public class Player implements Message,java.io.Serializable , Cloneable{
 
 	public void setCoverCards(List<Byte> coverCards) {
 		this.coverCards = coverCards;
+	}
+
+	public String getNickname() {
+		return nickname;
+	}
+
+	public void setNickname(String nickname) {
+		this.nickname = nickname;
+	}
+
+	public void clear(){
+		coverCards = new ArrayList<Byte>();
+		collections = new ArrayList<List<Byte>>();
+	}
+
+	public Integer getCoverySize() {
+		return coverySize;
+	}
+
+	public void setCoverySize(Integer coverySize) {
+		this.coverySize = coverySize;
+	}
+
+
+	public String getRecoveryHistory() {
+		if (this.recoveryHistory == null || this.recoveryHistory.length == 0) {
+			return null;
+		}
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0; i < this.recoveryHistory.length; i++) {
+			sb.append(",").append(this.recoveryHistory[i]);
+		}
+		return sb.substring(1);
+	}
+
+
+	public byte[] getRecoveryHistoryArray() {
+		return recoveryHistory;
+	}
+
+	public void setRecoveryHistory(byte[] recoveryHistory) {
+		this.recoveryHistory = recoveryHistory;
+	}
+
+	public boolean isZm() {
+		return isZm;
+	}
+
+	public void setZm(boolean zm) {
+		isZm = zm;
+	}
+
+	public String getTargetUser() {
+		return targetUser;
+	}
+
+	public void setTargetUser(String targetUser) {
+		this.targetUser = targetUser;
 	}
 }

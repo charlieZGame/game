@@ -32,6 +32,11 @@ cc.Class({
 
     // use this for initialization
     onLoad: function () {
+      // let self = this;
+      // this.node.on('touchstart', function(event) {
+      //   console.log("场景中的鼠标点击事件--touchstart---------");
+      // }, self);
+
         if(!cc.sys.isNative && cc.sys.isMobile){
             var canvas = this.node.getComponent(cc.Canvas);
             canvas.fitHeight = true;

@@ -2,22 +2,12 @@ cc.Class({
   extends: cc.Component,
 
   properties: {
-    // foo: {
-    //    default: null,      // The default value will be used only when the component attaching
-    //                           to a node for the first time
-    //    url: cc.Texture2D,  // optional, default is typeof default
-    //    serializable: true, // optional, default is true
-    //    visible: true,      // optional, default is true
-    //    displayName: 'Foo', // optional
-    //    readonly: false,    // optional, default is false
-    // },
-    // ...
-
   },
 
   // use this for initialization
   onLoad: function() {
     cc.beimi.room_callback = null; //加入房间回调函数
+    this.isStartHearbeat = false;
   },
   ready: function() {
     var check = false;
@@ -31,6 +21,11 @@ cc.Class({
   connect: function() {
     let self = this;
     cc.beimi.isConnect = false;
+    self.loadding();
+    if (cc.beimi.isConnecting) {
+      return;
+    }
+    cc.beimi.isConnecting = true;
     /**
          * 登录成功后，创建 Socket链接，
          */
@@ -38,12 +33,21 @@ cc.Class({
       cc.beimi.socket.disconnect();
       cc.beimi.socket = null;
     }
-    cc.beimi.socket = window.io.connect(cc.beimi.http.wsURL + '/bm/game', {"reconnection": true});
+
     var param = {
       token: cc.beimi.authorization,
       orgi: cc.beimi.user.orgi
     };
 
+    var opts = {
+              'reconnection':true,
+              'query':{
+                token: cc.beimi.authorization,
+                orgi: cc.beimi.user.orgi
+              }
+          }
+
+    cc.beimi.socket = window.io.connect(cc.beimi.http.wsURL + '/bm/game?token='+cc.beimi.authorization,opts);
     cc.game.on(cc.game.EVENT_HIDE, function(event) {
       console.log("游戏在后台运行");
       //self.alert("HIDE TRUE");
@@ -51,25 +55,43 @@ cc.Class({
     cc.game.on(cc.game.EVENT_SHOW, function(event) {
       console.log("游戏在前台运行");
       //self.alert("SHOW TRUE");
+      this.lastRecordTime = 0;
+      this.lastRecieveTime = 0;
+      this.isPing = false;
+      if(!cc.beimi.isConnect && cc.beimi.authorization != null) {
+        self.connect();
+      }
     });
-
     cc.beimi.socket.on('connect', function(data) {
       console.log("已经连接服务器");
+
       cc.beimi.isConnect = true;
+      self.lastRecieveTime = Date.now();
+      self.isPing = true;
+      cc.beimi.socket.emit("heartbeat", cc.beimi.authorization);
       //self.alert("connected to server");
+      self.startHearbeat();
+      //每次连接就获取最新游戏状态
+      cc.beimi.socket.emit("gamestatus", JSON.stringify(param));
+      self.closeloadding();
     });
 
     cc.beimi.socket.on('disconnect', function(data) {
       console.log("与服务器连接中断");
       cc.beimi.isConnect = false;
-      if (cc.find("Canvas/loadding")) {
-        self.alert("网络繁忙，请稍后再试");
+      // cc.beimi.socket.open();
+
+      // if (cc.find("Canvas/loadding")) {
+      //   self.alert("网络繁忙，请稍后再试");
+      // }
+      if(cc.beimi.authorization != null) {
+        self.connect();
       }
     });
 
-    cc.beimi.socket.emit("gamestatus", JSON.stringify(param));
     cc.beimi.socket.on("gamestatus", function(result) {
-
+        console.log("收到gamestatus消息",result);
+        console.log("cc.beimi.extparams------------>",JSON.stringify(cc.beimi.extparams));
       if (result != null) {
         var data = self.parse(result);
         if (cc.beimi.extparams != null) {
@@ -95,17 +117,46 @@ cc.Class({
             cc.beimi.sessiontimeout = true;
             self.alert("登录已过期，请重新登录");
           } else {
-            if (cc.beimi.extparams.gametype == "koudajiang") {
-              //我添加的
-              self.scene("majiang", self);
-            } else {
-              self.scene(cc.beimi.extparams.gametype, self);
+            console.error("cc.beimi.joinroom---->",cc.beimi.joinroom);
+            console.error("cc.beimi.extparams---->",cc.beimi.extparams);
+            if (cc.beimi.joinroom) {
+              //创建房间，检查房卡
+
+              // if (cc.beimi.extparams.gametype == "koudajiang") {
+              //   self.scene("majiang", self);
+              // } else {
+              //   self.scene(cc.beimi.extparams.gametype, self);
+              // }
+              var param = {
+                token: cc.beimi.authorization,
+                playway: cc.beimi.extparams.playway,
+                orgi: cc.beimi.user.orgi,
+                extparams: cc.beimi.extparams
+              };
+              cc.beimi.socket.on("cardCheck", cc.beimi.cardCheck7788);
+              cc.beimi.socket.emit("cardCheck", JSON.stringify(param));
             }
           }
         }
         cc.beimi.gamestatus = data.gamestatus;
       }
     });
+
+    cc.beimi.cardCheck7788 = function(result) {
+      var resultObj = self.parse(result);
+      //房卡不够
+      console.log("resultObj==cardCheck=>",resultObj.status);
+      if(resultObj.status==-1){
+         self.alert(resultObj.msg || '房间创建失败，请联系管理员');
+      }else {
+        if (cc.beimi.extparams.gametype == "koudajiang") {
+          self.scene("majiang", self);
+        } else {
+          self.scene(cc.beimi.extparams.gametype, self);
+        }
+      }
+    };
+    cc.beimi.socket.on("cardCheck", cc.beimi.cardCheck7788);
 
     /**
          * 加入房卡模式的游戏类型 ， 需要校验是否是服务端发送的消息
@@ -117,8 +168,51 @@ cc.Class({
       }
     });
 
+
+
+    // if(!this.isStartHearbeat){
+    //   this.lastRecordTime = 0;
+    //   this.lastRecieveTime = 0;
+    //   this.isPing = false;
+    //   this.startHearbeat();
+    // }
+    cc.beimi.isConnecting = false;
     return cc.beimi.socket;
   },
+
+  startHearbeat:function(){
+      let self = this;
+      this.isStartHearbeat = true;
+      cc.beimi.socket.on('heartbeat',function(){
+          console.log('--------------Recieve heartbeat------------');
+          self.lastRecieveTime = Date.now();
+          self.isPing = false;
+      });
+      setInterval(function(){
+          if(Date.now() - self.lastRecordTime < 2000){
+              return
+          }
+          if(cc.beimi.authorization == null){
+              clearInterval();
+              return
+          }
+          if(!self.isPing && (Date.now() - self.lastRecordTime > 11000 ||
+              Date.now() - self.lastRecieveTime > 15000)){
+              console.log('--------------Send heartbeat------------');
+              console.error('-----------'+new Date()+'----------');
+              self.isPing = true;
+              self.lastRecieveTime = Date.now();
+              cc.beimi.socket.emit("heartbeat", cc.beimi.authorization);
+          } else if(self.isPing && Date.now() - self.lastRecieveTime > 11000){
+              cc.beimi.isConnect = false;
+              self.isPing = false;
+              console.log('--------------connect------------');
+              self.connect();
+          }
+          self.lastRecordTime = Date.now();
+      },5000);
+  },
+
   disconnect: function() {
     if (cc.beimi.socket != null) {
       cc.beimi.socket.disconnect();
@@ -214,7 +308,7 @@ cc.Class({
 
   scene: function(name, self) {
     cc.director.preloadScene(name, function() {
-      if (cc.beimi) {
+      if (cc.beimi&&self.loaddingDialog) {
         self.closeloadding(self.loaddingDialog);
       }
       cc.director.loadScene(name);
@@ -222,9 +316,11 @@ cc.Class({
   },
 
   preload: function(extparams, self) {
-
     if (!cc.beimi.isConnect) {
       self.alert("网络繁忙，请稍后再试");
+      if(cc.beimi.authorization != null) {
+        self.connect();
+      }
       return
     }
 
@@ -233,8 +329,9 @@ cc.Class({
          *切换游戏场景之前，需要先检查是否 是在游戏中，如果是在游戏中，则直接进入该游戏，如果不在游戏中，则执行 新场景游戏
          */
     cc.beimi.extparams = extparams;
+    cc.beimi.joinroom =  true;
     /**
-         * 发送状态查询请求，如果玩家当前在游戏中，则直接进入游戏回复状态，如果玩家不在游戏中，则创建新游戏场景
+         * 发送状态查询请求，如果玩家当前在游戏中，则直接进入游戏恢复状态，如果玩家不在游戏中，则创建新游戏场景
          */
     var param = {
       token: cc.beimi.authorization,
@@ -242,6 +339,7 @@ cc.Class({
     };
     var req = cc.beimi.socket.emit("gamestatus", JSON.stringify(param));
   },
+
   root: function() {
     return cc.find("Canvas");
   },
@@ -284,248 +382,18 @@ cc.Class({
   reset: function(data, result) {
     //放在全局变量
     cc.beimi.authorization = data.token.id;
-    cc.beimi.user = data.data;
+    if(cc.beimi.user == null) {
+        cc.beimi.user = data.data;
+    } else {
+        var u = cc.beimi.user;
+        cc.beimi.user = data.data;
+        cc.beimi.user.nickname = u.nickname;
+        cc.beimi.user.avatar = u.avatar;
+        cc.beimi.user.sex = u.sex;
+        cc.beimi.user.openId = u.openId;
+        cc.beimi.user.password = u.password;
+    }
     cc.beimi.games = data.games;
-
-    // //添加的数据
-    // cc.beimi.games = [
-    //   {
-    //     "id": "402888815fe3f44a015feba097ce0000",
-    //     "code": "createroom",
-    //     "name": "房卡",
-    //     "types": [
-    //       {
-    //         "id": "402888815fe3f44a015feba50c940001",
-    //         "name": "房卡模式",
-    //         "code": "createroom",
-    //         "playways": [
-    //           {
-    //             "id": "402888815fe3f44a015feba86a330003",
-    //             "name": "涞源麻将(混子)",
-    //             "code": "majiang",
-    //             "score": 2,
-    //             "mincoins": 0,
-    //             "maxcoins": 0,
-    //             "changecard": true,
-    //             "onlineusers": 0,
-    //             "shuffle": true,
-    //             "level": "3",
-    //             "skin": "1",
-    //             "memo": "麻将玩法简介，河北麻将河北麻将河北麻将河北麻将河北麻将河北麻",
-    //             "free": false,
-    //             "groups": [
-    //               {
-    //                 "id": "402888816045059b016045b2d3de0006",
-    //                 "name": "局数",
-    //                 "code": "jun",
-    //                 "title": "局数",
-    //                 "parentid": null,
-    //                 "memo": null,
-    //                 "playwayid": "402888815fe3f44a015feba86a330003",
-    //                 "game": "402888815fe3f44a015feba097ce0000",
-    //                 "orgi": "beimi",
-    //                 "type": "radio",
-    //                 "sortindex": 1,
-    //                 "status": null,
-    //                 "creater": "297e8c7b455798280145579c73e501c1",
-    //                 "createtime": 1512998068000,
-    //                 "updatetime": 1512998068000,
-    //                 "style": "three"
-    //               }, {
-    //                 "id": "402888816045059b016045b5691c000a",
-    //                 "name": "混子",
-    //                 "code": "hun",
-    //                 "title": "混子",
-    //                 "parentid": null,
-    //                 "memo": null,
-    //                 "playwayid": "402888815fe3f44a015feba86a330003",
-    //                 "game": "402888815fe3f44a015feba097ce0000",
-    //                 "orgi": "beimi",
-    //                 "type": "radio",
-    //                 "sortindex": 2,
-    //                 "status": null,
-    //                 "creater": "297e8c7b455798280145579c73e501c1",
-    //                 "createtime": 1512997836000,
-    //                 "updatetime": 1512997836000,
-    //                 "style": "four"
-    //               }
-    //             ],
-    //             "items": [
-    //               {
-    //                 "id": "402888816045059b016045b356500008",
-    //                 "name": "4局",
-    //                 "code": "ju1",
-    //                 "title": null,
-    //                 "groupid": "402888816045059b016045b2d3de0006",
-    //                 "memo": null,
-    //                 "playwayid": "402888815fe3f44a015feba86a330003",
-    //                 "game": "402888815fe3f44a015feba097ce0000",
-    //                 "orgi": "beimi",
-    //                 "status": null,
-    //                 "type": null,
-    //                 "defaultvalue": true,
-    //                 "value": "4",
-    //                 "creater": "297e8c7b455798280145579c73e501c1",
-    //                 "createtime": 1512997869000,
-    //                 "updatetime": 1512997869000,
-    //                 "sortindex": 1
-    //               }, {
-    //                 "id": "402888816045059b016045b4c6ce0009",
-    //                 "name": "8局",
-    //                 "code": "ju2",
-    //                 "title": null,
-    //                 "groupid": "402888816045059b016045b2d3de0006",
-    //                 "memo": null,
-    //                 "playwayid": "402888815fe3f44a015feba86a330003",
-    //                 "game": "402888815fe3f44a015feba097ce0000",
-    //                 "orgi": "beimi",
-    //                 "status": null,
-    //                 "type": null,
-    //                 "defaultvalue": false,
-    //                 "value": "8",
-    //                 "creater": "297e8c7b455798280145579c73e501c1",
-    //                 "createtime": 1512997963000,
-    //                 "updatetime": 1512997963000,
-    //                 "sortindex": 2
-    //               }, {
-    //                 "id": "402888816045059b016045b5fb3c000b",
-    //                 "name": "12局",
-    //                 "code": "ju3",
-    //                 "title": null,
-    //                 "groupid": "402888816045059b016045b2d3de0006",
-    //                 "memo": null,
-    //                 "playwayid": "402888815fe3f44a015feba86a330003",
-    //                 "game": "402888815fe3f44a015feba097ce0000",
-    //                 "orgi": "beimi",
-    //                 "status": null,
-    //                 "type": null,
-    //                 "defaultvalue": false,
-    //                 "value": "12",
-    //                 "creater": "297e8c7b455798280145579c73e501c1",
-    //                 "createtime": 1512998042000,
-    //                 "updatetime": 1512998042000,
-    //                 "sortindex": 3
-    //               }, {
-    //                 "id": "402888816045059b016045b622a1000c",
-    //                 "name": "单混(上)",
-    //                 "code": "hun1",
-    //                 "title": null,
-    //                 "groupid": "402888816045059b016045b5691c000a",
-    //                 "memo": null,
-    //                 "playwayid": "402888815fe3f44a015feba86a330003",
-    //                 "game": "402888815fe3f44a015feba097ce0000",
-    //                 "orgi": "beimi",
-    //                 "status": null,
-    //                 "type": null,
-    //                 "defaultvalue": true,
-    //                 "value": "1",
-    //                 "creater": "297e8c7b455798280145579c73e501c1",
-    //                 "createtime": 1513006714000,
-    //                 "updatetime": 1513006720000,
-    //                 "sortindex": 4
-    //               }, {
-    //                 "id": "402888816045059b016045b647e6000b",
-    //                 "name": "2混(上下)",
-    //                 "code": "hun2",
-    //                 "title": null,
-    //                 "groupid": "402888816045059b016045b5691c000a",
-    //                 "memo": null,
-    //                 "playwayid": "402888815fe3f44a015feba86a330003",
-    //                 "game": "402888815fe3f44a015feba097ce0000",
-    //                 "orgi": "beimi",
-    //                 "status": null,
-    //                 "type": null,
-    //                 "defaultvalue": false,
-    //                 "value": "2",
-    //                 "creater": "297e8c7b455798280145579c73e501c1",
-    //                 "createtime": null,
-    //                 "updatetime": null,
-    //                 "sortindex": 5
-    //               }, {
-    //                 "id": "402888816045059b016045b647e6000d",
-    //                 "name": "3混(上中下)",
-    //                 "code": "hun3",
-    //                 "title": null,
-    //                 "groupid": "402888816045059b016045b5691c000a",
-    //                 "memo": null,
-    //                 "playwayid": "402888815fe3f44a015feba86a330003",
-    //                 "game": "402888815fe3f44a015feba097ce0000",
-    //                 "orgi": "beimi",
-    //                 "status": null,
-    //                 "type": null,
-    //                 "defaultvalue": false,
-    //                 "value": "3",
-    //                 "creater": "297e8c7b455798280145579c73e501c1",
-    //                 "createtime": 1512998062000,
-    //                 "updatetime": 1512998062000,
-    //                 "sortindex": 5
-    //               }
-    //             ],
-    //             "roomtitle": "房间-河北麻将",
-    //             "extpro": true
-    //           }, {
-    //             "id": "1111122",
-    //             "name": "扣大将",
-    //             "code": "koudajiang",
-    //             "score": 2,
-    //             "mincoins": 0,
-    //             "maxcoins": 0,
-    //             "changecard": true,
-    //             "onlineusers": 0,
-    //             "shuffle": true,
-    //             "level": "3",
-    //             "skin": "1",
-    //             "memo": "扣大将玩法",
-    //             "free": false,
-    //             "groups": [
-    //               {
-    //                 "id": "4444444",
-    //                 "name": "扣大将局数",
-    //                 "code": "kou",
-    //                 "title": "局数",
-    //                 "parentid": null,
-    //                 "memo": null,
-    //                 "playwayid": "1111122",
-    //                 "game": "402888815fe3f44a015feba097ce0000",
-    //                 "orgi": "beimi",
-    //                 "type": "radio",
-    //                 "sortindex": 0,
-    //                 "status": null,
-    //                 "creater": "297e8c7b455798280145579c73e501c1",
-    //                 "createtime": 1512997836000,
-    //                 "updatetime": 1512997836000,
-    //                 "style": "five"
-    //               }
-    //             ],
-    //             "items": [
-    //               {
-    //                 "id": "66666666",
-    //                 "name": "4局",
-    //                 "code": "koujun1",
-    //                 "title": null,
-    //                 "groupid": "4444444",
-    //                 "memo": null,
-    //                 "playwayid": "1111122",
-    //                 "game": "402888815fe3f44a015feba097ce0000",
-    //                 "orgi": "beimi",
-    //                 "status": null,
-    //                 "type": null,
-    //                 "defaultvalue": true,
-    //                 "value": "1",
-    //                 "creater": "297e8c7b455798280145579c73e501c1",
-    //                 "createtime": 1522590077000,
-    //                 "updatetime": 1522590080000,
-    //                 "sortindex": 1
-    //               }
-    //             ],
-    //             "roomtitle": "扣大将玩法",
-    //             "extpro": false
-    //           }
-    //         ]
-    //       }
-    //     ]
-    //   }
-    // ]
 
     cc.beimi.gametype = data.gametype;
     cc.beimi.announcement = data.announcement;
@@ -578,19 +446,97 @@ cc.Class({
     if (target != null) {
       let temp = new Array();
       let children = target.children;
-      for (var inx = 0; inx < children.length; inx++) {
-        temp.push(children[inx]);
+      children.sort(func);
+    //   for (var inx = 0; inx < children.length; inx++) {
+    //     temp.push(children[inx]);
+    //      let handcards = children[inx].getComponent("HandCards");
+    //     console.error("---children-----"+inx+"-------",handcards);
+    //   }
+    //   for (var inx = 0; inx < temp.length; inx++) {
+    //     target.removeChild(temp[inx]);
+    //   }
+    //   // console.error("---------清空了target--------");
+    //   temp.sort(func);
+    //   console.error("---------完成排序--------");
+    //   for (var inx = 0; inx < temp.length; inx++) {
+    //     temp[inx].parent = target;
+    //     let handcards1 =temp[i].getComponent("HandCards");
+    //    console.error("---temp-----"+inx+"-------",handcards1);
+    //   }
+    //   console.error("---------赋值给target--------");
+    //   temp.splice(0, temp.length);
+    //   console.error("---------清空了临时--------");
+   }
+  },
+
+  cardCheck : function(result) {
+    console.log("---------------kkk-------------");
+    var resultObj = self.parse(result);
+    //房卡不够
+    console.log("resultObj==cardCheck=>",resultObj.status);
+    if(resultObj.status==-1){
+       self.alert(resultObj.msg || '房间创建失败，请联系管理员');
+    }else {
+      console.log("---------------0000000000000000000000-------------");
+      if (cc.beimi.extparams.gametype == "koudajiang") {
+        console.log("---------------11111111111111111111-------------");
+        self.scene("majiang", self);
+      } else {
+        console.log("--------------22222222222222222222222-------------");
+        self.scene(cc.beimi.extparams.gametype, self);
       }
-      for (var inx = 0; inx < temp.length; inx++) {
-        target.removeChild(temp[inx]);
-      }
-      temp.sort(func);
-      for (var inx = 0; inx < temp.length; inx++) {
-        temp[inx].parent = target;
-      }
-      temp.splice(0, temp.length);
     }
-  }
+  },
+
+  /**
+     * 分享
+     */
+  wxShare: function(title, description, url) {
+    jsb.reflection.callStaticMethod("org/cocos2dx/javascript/AppActivity", "shareByWeiXin",
+      "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", title, description, url);
+  },
+
+  /**
+     * 登录
+     */
+  loginByWeiXin: function() {
+    jsb.reflection.callStaticMethod("org/cocos2dx/javascript/AppActivity", "loginByWeiXin", "()V");
+  },
+
+  getWxFlag: function() {
+    var flag = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getWxFlag", "()Z");
+    return flag;
+  },
+
+  getOpenId: function() {
+    var openId = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getOpenId", "()Ljava/lang/String;");
+    return openId;
+  },
+
+  getNickname: function() {
+    var name = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getNickname", "()Ljava/lang/String;");
+    return name;
+  },
+
+  getAvatar: function() {
+    var avatar = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getAvatar", "()Ljava/lang/String;");
+    return avatar;
+  },
+
+  getSex: function() {
+    var sex = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getSex", "()I");
+    return sex;
+  },
+
+  getMsg: function() {
+    var msg = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getMsg", "()Ljava/lang/String;");
+    return msg;
+  },
+
+  getPassword: function() {
+    var msg = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getPassword", "()Ljava/lang/String;");
+    return msg;
+  },
 
   // called every frame, uncomment this function to activate update callback
   // update: function (dt) {

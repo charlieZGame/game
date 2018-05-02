@@ -53,8 +53,9 @@ cc.Class({
 
   onBackClick: function() {
     console.log("------要离开房间");
-    if(cc.beimi.gamestatus != 'playing'){
+    if(cc.beimi.gamestatus == 'ready'){
        this.leaveRoomOnNoPlaying();
+       cc.beimi.joinroom=false;
        this.scene(cc.beimi.gametype, this);
     }else
     if (this.leaveDialogprefab) {
@@ -93,7 +94,7 @@ cc.Class({
       };
       socket.emit("leaveroom", JSON.stringify(param));
       this.closeOpenWin();
-      this.scene(cc.beimi.gametype, this);
+      // this.scene(cc.beimi.gametype, this);
     }
   },
 

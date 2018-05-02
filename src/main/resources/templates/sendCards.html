@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+<meta name="viewport"
+	content="width=device-width, maximum-scale=1.0, initial-scale=1.0,initial-scale=1.0,user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>涞源麻将-运营管理平台</title>
+<link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico?t=${.now?long}"/>
+	<script src="/js/jquery.min.js"></script>
+
+	<style type="text/css">
+		table
+		{
+			border-collapse:collapse;
+		}
+
+		table,th, td
+		{
+			border: 1px solid black;
+		}
+	</style>
+
+<script language="javascript">
+
+	function submitappweb() {
+		var userId1 = document.getElementById("userId1").value;
+		var card1 = document.getElementById("card1").value;
+
+		var userId2 = document.getElementById("userId2").value;
+		var card2 = document.getElementById("card2").value;
+
+		var userId3 = document.getElementById("userId3").value;
+		var card3 = document.getElementById("card3").value;
+
+		var userId4 = document.getElementById("userId4").value;
+		var card4 = document.getElementById("card4").value;
+		$.ajax({
+			url: '/appWebLoginData',
+			type: 'GET',
+			data: {
+				userId1:userId1,
+				card1:card1,
+				userId2:userId2,
+				card2:card2,
+				userId3:userId3,
+				card3:card3,
+				userId4:userId4,
+				card4:card4
+			},
+			async: false,
+			cache: false,
+			success: function (data) {
+				alert(data);
+			},
+			error: function (req) {
+				alert("error method 任务执行失败 textStatus:");
+			}
+		});
+	}
+
+	function clearData() {
+		$.ajax({
+			url: '/clearData',
+			type: 'GET',
+			data: {
+			},
+			async: false,
+			cache: false,
+			success: function (data) {
+				alert(data);
+			},
+			error: function (req) {
+				alert("error method 任务执行失败 textStatus:");
+			}
+		});
+	}
+	function getData() {
+		$.ajax({
+			url: '/getData',
+			type: 'GET',
+			data: {
+			},
+			async: false,
+			cache: false,
+			success: function (data) {
+				alert(data);
+			},
+			error: function (req) {
+				alert("error method 任务执行失败 textStatus:");
+			}
+		});
+	}
+
+
+</script>
+</head>
+
+<body>
+<input type="button" value="设置发牌数据" onclick="submitappweb()">
+<input type="button" value="清理发牌数据" onclick="clearData()">
+<input type="button" value="获取发牌数据" onclick="getData()">
+<table border="1">
+	<tr><td>用户ID1</td><td><input id="userId1" style="width: 400px;"></td></tr>
+	<tr><td>用户牌信息1(用逗号分隔)</td><td><input id="card1" style="width: 400px;"></td></tr>
+	<tr><td>用户ID2</td><td><input id="userId2"  style="width: 400px;"></td></tr>
+	<tr><td>用户牌信息2(用逗号分隔)</td><td><input id="card2"  style="width: 400px;"></td></tr>
+	<tr><td>用户ID1</td><td><input id="userId3"  style="width: 400px;"></tr>
+	<tr><td>用户牌信息3(用逗号分隔)</td><td><input id="card3"  style="width: 400px;"></td></tr>
+	<tr><td>用户ID1</td><td><input id="userId4"  style="width: 400px;"></td></tr>
+	<tr><td>用户牌信息4(用逗号分隔)</td><td><input id="card4"  style="width: 400px;"></td></tr>
+</table>
+</body>
+
+</html>

@@ -12,7 +12,8 @@
 <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico?t=${.now?long}"/>
 <link rel="stylesheet" href="/css/layui.css">
 <link rel="stylesheet" href="/css/login.css">
-<script src="/js/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.0/socket.io.js"></script>
+	<script src="/js/jquery.min.js"></script>
 <script src="/layui.js"></script>
 
 <script language="javascript">
@@ -49,6 +50,13 @@
 	layui.use('form', function(){
 		var form = layui.form;
 	});
+
+
+	var clientid = 'testclient1';
+	var targetClientId= 'testclient2';
+	var socket =  io.connect('http://localhost:9081/bm/game?clientid='+clientid);
+
+
 </script>
 </head>
 

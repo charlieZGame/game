@@ -25,7 +25,7 @@ public class QueneCache{
 	
 	private String cacheName ;
 	@Autowired
-	public HazelcastInstance hazelcastInstance;	
+	public HazelcastInstance hazelcastInstance;
 	
 	public HazelcastInstance getInstance(){
 		return hazelcastInstance ;

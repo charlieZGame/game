@@ -25,7 +25,7 @@ public class DealMJCardAction<T,S> implements Action<T, S>{
 		if(!StringUtils.isBlank(room)){
 			GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(room, BMDataContext.SYSTEM_ORGI) ; 
 			if(gameRoom!=null){
-				CacheHelper.getExpireCache().put(gameRoom.getRoomid(), new CreateDealMJCardTask(5 , gameRoom , gameRoom.getOrgi()));
+				CacheHelper.getExpireCache().put(gameRoom.getRoomid(), new CreateDealMJCardTask(10 , gameRoom , gameRoom.getOrgi()));
 			}
 		}
 	}

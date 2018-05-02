@@ -22,8 +22,14 @@ import com.beimi.util.rules.model.RoomReady;
 import com.beimi.util.server.handler.BeiMiClient;
 import com.beimi.web.model.GameRoom;
 import com.beimi.web.model.PlayUserClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ActionTaskUtils {
+
+
+	private static Logger logger = LoggerFactory.getLogger(ActionTaskUtils.class);
+
 	/**
 	 * 
 	 * @param times
@@ -43,10 +49,15 @@ public class ActionTaskUtils {
 	public static void sendEvent(String event, Message message,GameRoom gameRoom){
 		message.setCommand(event);
 		List<PlayUserClient> players = CacheHelper.getGamePlayerCacheBean().getCacheObject(gameRoom.getId(), gameRoom.getOrgi()) ;
-		for(PlayUserClient user : players){
-			BeiMiClient client = NettyClients.getInstance().getClient(user.getId()) ;
+		for(PlayUserClient user : players) {
+			BeiMiClient client = NettyClients.getInstance().getClient(user.getId());
 			if(client!=null && online(user.getId(), user.getOrgi())){
+			try {
 				client.getClient().sendEvent(BMDataContext.BEIMI_MESSAGE_EVENT, message);
+			//	client.getClient().sendEvent("joinroom", message);
+			}catch (Exception e){
+				logger.error("客户端发送消息异常2",e);
+			}
 			}
 		}
 	}
@@ -94,7 +105,11 @@ public class ActionTaskUtils {
 		BeiMiClient client = NettyClients.getInstance().getClient(userid) ;
 		if(client!=null){
 			if(online(userid , client.getOrgi())){
+			try {
 				client.getClient().sendEvent(BMDataContext.BEIMI_MESSAGE_EVENT, message);
+			}catch (Exception e){
+				logger.error("客户端发送消息异常1",e);
+			}
 			}
 		}
 	}
@@ -102,12 +117,17 @@ public class ActionTaskUtils {
 	/**
 	 * 发送消息给 玩家
 	 * @param beiMiClient
-	 * @param event
 	 * @param gameRoom
 	 */
-	public static void sendPlayers(BeiMiClient beiMiClient , GameRoom gameRoom){
-		if(online(beiMiClient.getUserid() , beiMiClient.getOrgi())){
-			beiMiClient.getClient().sendEvent(BMDataContext.BEIMI_MESSAGE_EVENT, new GamePlayers(gameRoom.getPlayers() , CacheHelper.getGamePlayerCacheBean().getCacheObject(gameRoom.getId(), beiMiClient.getOrgi()), BMDataContext.BEIMI_PLAYERS_EVENT));
+	public static void sendPlayers(BeiMiClient beiMiClient , GameRoom gameRoom) {
+		if (online(beiMiClient.getUserid(), beiMiClient.getOrgi())) {
+			//GamePlayers gamePlayers = new GamePlayers(gameRoom.getPlayers() , CacheHelper.getGamePlayerCacheBean().getCacheObject(gameRoom.getId(), beiMiClient.getOrgi()),BMDataContext.BEIMI_PLAYERS_EVENT);
+			//logger.info("userId:{}， send Players data:{}",beiMiClient.getUserid(),JSONObject.toJSONString(gamePlayers));
+			try {
+				beiMiClient.getClient().sendEvent(BMDataContext.BEIMI_MESSAGE_EVENT, new GamePlayers(gameRoom.getPlayers(), CacheHelper.getGamePlayerCacheBean().getCacheObject(gameRoom.getId(), beiMiClient.getOrgi()), BMDataContext.BEIMI_PLAYERS_EVENT));
+			} catch (Exception e) {
+				logger.error("发送客户端消息失败66", e);
+			}
 		}
 	}
 	
@@ -118,6 +138,9 @@ public class ActionTaskUtils {
 	 * @return
 	 */
 	public static boolean online(String userid,  String orgi){
+	/*	if(1==1){
+			return true;
+		}*/
 		PlayUserClient playerUserClient = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(userid, orgi) ;
 		return playerUserClient!=null && !BMDataContext.PlayerTypeEnum.OFFLINE.toString().equals(playerUserClient.getPlayertype()) && !BMDataContext.PlayerTypeEnum.LEAVE.toString().equals(playerUserClient.getPlayertype()) ;
 	}
@@ -128,11 +151,17 @@ public class ActionTaskUtils {
 	 * @param gameRoom
 	 * @param players
 	 */
-	public static void sendPlayers(GameRoom gameRoom , List<PlayUserClient> players){
-		for(PlayUserClient user : players){
-			BeiMiClient client = NettyClients.getInstance().getClient(user.getId()) ;
-			if(client!=null && online(client.getUserid() , client.getOrgi())){
-				client.getClient().sendEvent(BMDataContext.BEIMI_MESSAGE_EVENT, new GamePlayers(gameRoom.getPlayers() , CacheHelper.getGamePlayerCacheBean().getCacheObject(gameRoom.getId(), client.getOrgi()), BMDataContext.BEIMI_PLAYERS_EVENT));
+	public static void sendPlayers(GameRoom gameRoom , List<PlayUserClient> players) {
+		for (PlayUserClient user : players) {
+			BeiMiClient client = NettyClients.getInstance().getClient(user.getId());
+			if (client != null && online(client.getUserid(), client.getOrgi())) {
+
+				try {
+					client.getClient().sendEvent(BMDataContext.BEIMI_MESSAGE_EVENT, new GamePlayers(gameRoom.getPlayers(), CacheHelper.getGamePlayerCacheBean().getCacheObject(gameRoom.getId(), client.getOrgi()), BMDataContext.BEIMI_PLAYERS_EVENT));
+
+				} catch (Exception e) {
+					logger.error("发送客户端消息失败164", e);
+				}
 			}
 		}
 	}
@@ -140,9 +169,6 @@ public class ActionTaskUtils {
 	
 	/**
 	 * 发送消息给 玩家
-	 * @param beiMiClient
-	 * @param event
-	 * @param gameRoom
 	 */
 	public static void sendEvent(PlayUserClient playerUser  , Message message){
 		if(online(playerUser.getId() , playerUser.getOrgi())){
@@ -153,9 +179,6 @@ public class ActionTaskUtils {
 	
 	/**
 	 * 发送消息给 玩家
-	 * @param beiMiClient
-	 * @param event
-	 * @param gameRoom
 	 */
 	public static void sendEvent(String userid  , Message message){
 		BeiMiClient client = NettyClients.getInstance().getClient(userid) ;
@@ -214,7 +237,6 @@ public class ActionTaskUtils {
 	/**
 	 * 临时放这里，重构的时候 放到 游戏类型的 实现类里
 	 * @param board
-	 * @param player
 	 * @return
 	 */
 	public static void doBomb(Board board , boolean add){

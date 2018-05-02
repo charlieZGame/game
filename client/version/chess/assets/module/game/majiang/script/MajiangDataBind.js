@@ -32,6 +32,10 @@ cc.Class({
       default: null,
       type: cc.Node
     },
+    // test_panel: {
+    //   default: null,
+    //   type: cc.Node
+    // },
     one_card_panel: {
       default: null,
       type: cc.Node
@@ -94,14 +98,14 @@ cc.Class({
       default: null,
       type: cc.Node
     },
-    actionnode_two: { //动作节点
-      default: null,
-      type: cc.Node
-    },
-    actionnode_two_list: { //动作节点
-      default: null,
-      type: cc.Node
-    },
+    // actionnode_two: { //动作节点
+    //   default: null,
+    //   type: cc.Node
+    // },
+    // actionnode_two_list: { //动作节点
+    //   default: null,
+    //   type: cc.Node
+    // },
     actionnode_three: { //动作节点
       default: null,
       type: cc.Node
@@ -134,10 +138,21 @@ cc.Class({
       type: cc.Prefab
     },
 
+    action_hu_prefab: {
+      default: null,
+      type: cc.Prefab
+    },
+
+    action_zimo_prefab: {
+      default: null,
+      type: cc.Prefab
+    },
+
     cards_gang_ming_prefab: { //我的名杠，碰，吃
       default: null,
       type: cc.Prefab
     },
+
     cards_gang_an_prefab: { //我的暗杠
       default: null,
       type: cc.Prefab
@@ -186,15 +201,22 @@ cc.Class({
       default: null,
       type: cc.Node
     },
+
     gang_top: { //动作节点
       default: null,
       type: cc.Node
+    },
+
+    summary_total: {
+      default: null,
+      type: cc.Prefab
     },
 
     summary: {
       default: null,
       type: cc.Prefab
     },
+
     inviteplayer: {
       default: null,
       type: cc.Prefab
@@ -281,14 +303,24 @@ cc.Class({
       type: cc.Node
     },
 
-    selectkou_dialog:{
+    selectkou_dialog: {
       default: null,
       type: cc.Node
     },
 
-    desk_title:{
+    desk_title: {
       default: null,
       type: cc.Sprite
+    },
+
+    users_panel: {
+      default: null,
+      type: cc.Node
+    },
+
+    roomtype_label: {
+      default: null,
+      type: cc.Label
     }
   },
 
@@ -297,14 +329,18 @@ cc.Class({
      * 重构后，只有两个消息类型
      */
   onLoad: function() {
+    console.error("===============game=====onLoad===================");
     this.initdata(true);
     this.resize();
     this.ting_tip.active = false;
     let self = this;
-    if (cc.beimi.extparams.gametype == "koudajiang") {
+    if (cc.beimi.extparams&&cc.beimi.extparams.gametype == "koudajiang") {
       cc.loader.loadRes("images/img/game_kou", cc.SpriteFrame, function(error, spriteFrame) {
-          self.desk_title.spriteFrame = spriteFrame;
-        });
+        self.desk_title.spriteFrame = spriteFrame;
+      });
+      self.roomtype_label.string = "扣大将玩法";
+    } else {
+      self.roomtype_label.string = "涞源玩法";
     }
     if (this.mask != null) {
       this.mask.active = false;
@@ -314,28 +350,33 @@ cc.Class({
       this.chatScrollView.active = false;
     }
 
-    // this.node.on('mousedown', function(event) {
-    //   console.log("场景中的鼠标点击事件--mousedown---------", self.chatScrollView, self.chatScrollView.active);
-    //   if (self.chatScrollView && self.chatScrollView.active == true) {
-    //     self.chatScrollView.active = false
-    //   }
-    // }, self);
-
     // let testNum=0;
-    this.chatScrollView.on('mousedown', function(event) {
-      console.log("场景中的鼠标点击事件--聊天框---------");
-      //---------------------测试杠碰的
+    this.node.on('touchstart', function(event) {
+      console.log("场景中的鼠标点击事件--touchstart---------");
+      if (self.chatScrollView && self.chatScrollView.active == true) {
+        self.chatScrollView.active = false
+      }
+
+
+      //测试拖到牌
+      // let temp = self.cardpool.get();
+      // let temp_script = temp.getComponent("HandCards");
+      // self.playercards.push(temp);
+      // temp_script.init(0, []);
+      // temp.parent = self.cards_panel; //庄家的最后一张牌
+
     //   testNum++;
     //   const data={
     //     actype:'',
     //     action:testNum%2==0?'gang':'',
     //     card:5,
+    //     actype:testNum%3==0?'an':'',
     //   };
     //   let cards_gang;
     //   if (data.actype == "an") {
-    //     cards_gang = cc.instantiate(self.cards_gang_an_prefab);
+    //     cards_gang = cc.instantiate(self.cards_gang_an_top_prefab);
     //   } else {
-    //     cards_gang = cc.instantiate(self.cards_gang_ming_prefab);
+    //     cards_gang = cc.instantiate(self.cards_gang_ming_top_prefab);
     //   }
     //   let temp_script = cards_gang.getComponent("GangAction");
     //   if (data.action == "gang") {
@@ -343,40 +384,114 @@ cc.Class({
     //   } else {
     //     temp_script.init(data.card, false);
     //   }
-    //    // cards_gang.parent = self.gang_current;
+    // //    cards_gang.parent = self.gang_current;
     //     cards_gang.parent = self.gang_top;
-    // //   cards_gang.parent = self.gang_right;
+    // //  cards_gang.parent = self.gang_left;
     //   self.leftactioncards.push(cards_gang);
 
-    //   //胡牌测试
+      //  结算页面测试
+      // self.summarytotalpage = cc.instantiate(self.summary_total);
+      // self.summarytotalpage.parent = self.root();
+      // let temp = self.summarytotalpage.getComponent("MaJiangSummary");
+      // let data =
+      // {"data":{"roomIds":["855705"],"855705":[{"currentUser":false,"date":"2018-04-29 16:04:16","nickname":"Guest_0MQFp5","num":1,"photo":"","roomId":855705,"score":-4,"useCards":4,"userNo":50003125},{"currentUser":false,"date":"2018-04-29 16:04:16","nickname":"Guest_18sdZp","num":1,"photo":"","roomId":855705,"score":6,"useCards":0,"userNo":50003133},{"currentUser":false,"date":"2018-04-29 16:04:16","nickname":"Guest_1ts5g4","num":1,"photo":"","roomId":855705,"score":-1,"useCards":0,"userNo":50003132},{"currentUser":false,"date":"2018-04-29 16:04:16","nickname":"Guest_18g4JY","num":1,"photo":"","roomId":855705,"score":-1,"useCards":0,"userNo":50003124}]},"msg":"ok","returnCode":1}
+      // temp.create(self, data);
+
+    }, self);
+
+    // let testNum=0;
+    this.chatScrollView.on('touchstart', function(event) {
+      console.log("场景中的鼠标点击事件--聊天框---------");
+      //---------------------测试杠碰的
+      //   testNum++;
+      //   const data={
+      //     actype:'',
+      //     action:testNum%2==0?'gang':'',
+      //     card:5,
+      //   };
+      //   let cards_gang;
+      //   if (data.actype == "an") {
+      //     cards_gang = cc.instantiate(self.cards_gang_an_prefab);
+      //   } else {
+      //     cards_gang = cc.instantiate(self.cards_gang_ming_prefab);
+      //   }
+      //   let temp_script = cards_gang.getComponent("GangAction");
+      //   if (data.action == "gang") {
+      //     temp_script.init(data.card, true);
+      //   } else {
+      //     temp_script.init(data.card, false);
+      //   }
+      //    // cards_gang.parent = self.gang_current;
+      //     cards_gang.parent = self.gang_top;
+      // //   cards_gang.parent = self.gang_right;
+      //   self.leftactioncards.push(cards_gang);
+
+        //胡牌测试
       // for (var i = 0; i < 10; i++) {
-        // let hucards_tip;
-        // hucards_tip = cc.instantiate(self.hucards_tip);
-        // self.leftactioncards.push(hucards_tip);
-        // let temp_script = hucards_tip.getComponent("huCards");
-        // temp_script.init(89);
-        // hucards_tip.parent = self.hucards_tip_layout;
+      // let hucards_tip;
+      // hucards_tip = cc.instantiate(self.hucards_tip);
+      // self.leftactioncards.push(hucards_tip);
+      // let temp_script = hucards_tip.getComponent("huCards");
+      // temp_script.init(89);
+      // hucards_tip.parent = self.hucards_tip_layout;
       // }
 
+      //  测试扣牌
+      // self.selectkou_dialog.active = true;
+      // console.log("可扣牌张数----》", self.playercards.length);
+      //   for (var inx =self.playercards.length-4; inx>=0&&inx < self.playercards.length;inx++) {
+      //     let handcards = self.playercards[inx].getComponent("HandCards");
+      //     console.log("最后的4张牌----》",handcards);
+      //     handcards.setCardKou();
+      //     self.isCankou = true;
+      //   }
 
-    //  测试扣牌
-    // self.selectkou_dialog.active = true;
-    // console.log("可扣牌张数----》", self.playercards.length);
-    //   for (var inx =self.playercards.length-4; inx>=0&&inx < self.playercards.length;inx++) {
-    //     let handcards = self.playercards[inx].getComponent("HandCards");
-    //     console.log("最后的4张牌----》",handcards);
-    //     handcards.setCardKou();
-    //     self.isCankou = true;
-    //   }
-      //结果页面测试
+      // 结果页面测试
       // self.summarypage = cc.instantiate(self.summary);
       // self.summarypage.parent = self.root();
       // let temp = self.summarypage.getComponent("summary");
-      // let datare={"game":"d7128eb8f70b49c9ac0eedd5c4c1083b","ratio":2,"command":"allcards","finished":true,"gameRoomOver":false,"score":4,"players":[{"userid":"c178612037ac413dad4d824416961f2a","username":"Guest_11MQ5x","ratio":2,"score":4,"gameover":false,"balance":0,"win":true,"gameResultChecks":[{"pairs":"88,16","three":"92,1,5,14,17,21,23,25,31,93,80,81"},{"pairs":"88,17","three":"92,1,5,14,16,21,23,25,31,93,80,81"},{"pairs":"16,17","three":"88,1,5,92,14,21,23,25,31,93,80,81"},{"pairs":"80,81","three":"88,1,5,92,14,16,93,17,21,23,25,31"}],"dizhu":true},{"userid":"f3fa56bdf75e4bc4a1496d797d63286c","username":"Guest_1F5oVN","ratio":2,"score":4,"gameover":false,"balance":0,"win":false,"gameResultChecks":[{"others":"39,54,62,63,76,79,95,96,97,105,74,84,53"}],"dizhu":false},{"userid":"960017a406234b8784ed9bf649797089","username":"Guest_1opcw5","ratio":2,"score":4,"gameover":false,"balance":0,"win":false,"gameResultChecks":[{"pengs":"44,45,46","others":"-7,-6,51,67,68,100,101,107,47,60"}],"dizhu":false},{"userid":"140c7ea5999848b48195302fe497702b","username":"Guest_1cR94c","ratio":2,"score":4,"gameover":false,"balance":0,"win":false,"gameResultChecks":[{"pengs":"0,1,2","others":"4,11,20,26,30,49,59,64,66,99"}],"dizhu":false}],"hu":false}
+      // let datare={"game":"d7128eb8f70b49c9ac0eedd5c4c1083b","ratio":2,"command":"allcards","finished":true,"gameRoomOver":false,"score":4,"players":[{"userid":"c178612037ac413dad4d824416961f2a","desc":"我是描述","username":"Guest_11MQ5x","ratio":2,"score":4,"gameover":false,"balance":0,"win":true,"gameResultChecks":[{"pengs":"52,53,54","mgangs":"36,37,38,39,92,93,94,95","agangs":"36,37,38,39,92,93,94,95","others":"-18,-6,1,23,89"},{"pairs":"88,17","three":"92,1,5,14,16,21,23,25,31,93,80,81"},{"pairs":"16,17","three":"88,1,5,92,14,21,23,25,31,93,80,81"},{"pairs":"80,81","three":"88,1,5,92,14,16,93,17,21,23,25,31"}],"dizhu":true},{"userid":"f3fa56bdf75e4bc4a1496d797d63286c","desc":"我是描述描述描述","username":"Guest_1F5oVN","ratio":2,"score":4,"gameover":false,"balance":0,"win":false,"gameResultChecks":[{"others":"39,54,62,63,76,79,95,96,97,105,74,84,53"}],"dizhu":false},{"userid":"960017a406234b8784ed9bf649797089","desc":"我是描述","username":"Guest_1opcw5","ratio":2,"score":4,"gameover":false,"balance":0,"win":false,"gameResultChecks":[{"pengs":"44,45,46","others":"-7,-6,51,67,68,100,101,107,47,60"}],"dizhu":false},{"userid":"140c7ea5999848b48195302fe497702b","desc":"我是描述阿斯蒂芬斯蒂芬是发","username":"Guest_1cR94c","ratio":2,"score":4,"gameover":false,"balance":0,"win":false,"gameResultChecks":[{"pengs":"0,1,2","others":"4,11,20,26,30,49,59,64,66,99"}],"dizhu":false}],"hu":false}
       // temp.create(self, datare);
 
-    event.stopPropagation();
+      // this.gameover([
+      //   1, 2, 3, 4
+      // ], this);
+      event.stopPropagation();
     }, self);
+
+    // this.cardpooltest = new cc.NodePool();
+    // /**
+    //      * 初始化当前玩家的麻将牌 对象池
+    //      */
+    // for (var i = 0; i < 5; i++) {
+    //   this.cardpooltest.put(cc.instantiate(this.cards_current));
+    // }
+    //
+    // let temp = self.cardpooltest.get();
+    // let temp_script = temp.getComponent("HandCards");
+    // temp_script.init(50, []);
+    // temp.parent = self.test_panel;
+    //
+    // let temp1 = self.cardpooltest.get();
+    // let temp_script1 = temp1.getComponent("HandCards");
+    // temp_script1.init(9, []);
+    // temp1.parent = self.test_panel;
+    //
+    // let temp2 = self.cardpooltest.get();
+    // let temp_script2= temp2.getComponent("HandCards");
+    // temp_script2.init(0, []);
+    // temp2.parent = self.test_panel;
+    //
+    // self.layout(self.test_panel, function(fir, sec) {
+    //     if(fir.getComponent("HandCards").koucard == 1){
+    //         fir.zIndex = fir.getComponent("HandCards").value - 1200;
+    //     }
+    //     if(sec.getComponent("HandCards").koucard == 1){
+    //         sec.zIndex = sec.getComponent("HandCards").value - 1200;
+    //     }
+    //     return 0;
+    //   });
+
 
     if (this.ready()) {
       let socket = this.socket();
@@ -412,6 +527,10 @@ cc.Class({
       this.centertimer = null;
 
       this.summarypage = null;
+      this.summarytotalpage = null;
+
+      this.currentnum = 0;
+      this.numofgames = 0;
 
       this.exchange_state("init", this);
 
@@ -477,33 +596,20 @@ cc.Class({
       });
 
       this.node.on("bukou", function(event) {
-        socket.emit("answerKou","0");
-        self.isCankou = false;
-        self.selectkou_dialog.active = false;
-        self.canceltimer(self);
+        socket.emit("answerKou", "0");
+        event.stopPropagation();
+      });
+
+      this.node.on("share", function(event) {
+        self.wxShare("房间号：" + self.roomid.string, "房间已经开好，快来保定三缺一跟我嗨到爆！", "https://fir.im/bd3q1");
         event.stopPropagation();
       });
 
       this.node.on("koupai", function(event) {
-        socket.emit("answerKou","1");
-        //---------------------测试
-          console.log("可扣牌张数----》", self.playercards.length);
-          for (var inx =self.playercards.length-4; inx>=0&&inx < self.playercards.length;inx++) {
-            let handcards = self.playercards[inx].getComponent("HandCards");
-            console.log("最后的4张牌----》",handcards);
-            handcards.setCardKou();
-            self.isCankou = true;
-
-            //是扣的牌
-            if(handcards.koucard){
-              self.playercards[inx].zIndex = handcards.value - 1000;
-            }
-
-          }
-        self.selectkou_dialog.active = false;
-        self.canceltimer(self)
+        socket.emit("answerKou", "1");
         event.stopPropagation();
       });
+
 
       if (cc.beimi != null) {
         if (cc.beimi.gamestatus != null && cc.beimi.gamestatus == "playing") {
@@ -519,14 +625,20 @@ cc.Class({
                      */
           this.invite = cc.instantiate(this.inviteplayer);
           this.invite.active = false;
+          this.initgame();
         }
-        this.initgame();
+
       }
       this.addComponent("Voice");
       cc.beimi.audio.playBGM("bgFight.mp3");
     }
-
   },
+
+  start: function () {
+  },
+
+  update: function (dt) {
+ },
 
   settingChatDialog(self) {
     if (self) {
@@ -545,9 +657,11 @@ cc.Class({
   },
 
   initgame: function() {
+    console.error("========initgame=========================");
     let self = this;
     if (this.ready()) {
       let socket = this.socket();
+
       /**
              * 接受指令
              */
@@ -591,12 +705,44 @@ cc.Class({
         }
       });
 
+
       this.map("chat", this.chat_event); //接收了聊天信息
       socket.on("chat", function(result) {
         if (self.inited == true) {
           var data = self.parse(result);
           self.route("chat")(data, self);
         }
+      });
+
+      socket.on("answerKou", function(result) {
+        console.log("收到answerKou====》",result, "------",self.inited == true);
+        if (self.inited == true) {
+          console.log("=================");
+          if(result==1||result=="1"||result=="\"1\""){
+              console.log("=========1========");
+            for (var inx = self.playercards.length - 4; inx >= 0 && inx < self.playercards.length; inx++) {
+             let handcards = self.playercards[inx].getComponent("HandCards");
+             handcards.setCardKou();
+             self.isCankou = true;
+             //是扣的牌
+             if (handcards.koucard) {
+               self.playercards[inx].zIndex = handcards.value - 1000;
+             }
+           }
+           self.selectkou_dialog.active = false;
+           self.canceltimer(self)
+         }else {
+           console.log("=========0=======");
+           self.isCankou = false;
+           self.selectkou_dialog.active = false;
+           self.canceltimer(self);
+         }
+        }
+      });
+
+      socket.on("recovery", function(result) {
+          var data = self.parse(result);
+          self.recovery_event(data, self);
       });
 
       var param = {
@@ -612,14 +758,38 @@ cc.Class({
       if (this.applyLeaveNode) {
         self.applyLeaveNode.active = false;
       }
+
+      socket.on("cardCheck", function(result) {
+          var resultObj = self.parse(result);
+          //房卡不够
+          if(resultObj.status==-1){
+             self.alert(resultObj.msg || '房间创建失败，请联系管理员');
+
+             self.scene(cc.beimi.gametype, this);
+          }
+      });
+
+
+      // socket.on("gameOverSummary", function(result) {
+      //     var data = self.parse(result);
+      //     self.gameover_event(data,self);
+      // });
+
+      //结算界面
+      socket.on("gameSummaryExist", function(result) {
+          var data = JSON.parse(result);
+          self.gameover_event(data,self);
+      });
+
       //玩家手动离开房间指令接收
       if (this.ready()) {
         socket.on("leaveroom", function(result) {
           console.log("接收到离开房间指令===result=====>", result);
           let resultObj = self.parse(result);
-          if (cc.beimi.user.id == result.srcUserId) {
-            return;
-          } else if (resultObj.type == 3 || resultObj.type == "3") {
+         if (resultObj.type == 3 || resultObj.type == "3") {
+           if (cc.beimi.user.id == result.srcUserId) {
+             return;
+           }
             self.applyLeaveNode.active = true;
             self.doneNode.active = false;
             self.leaveTipLabel.string = resultObj.msg;
@@ -627,16 +797,28 @@ cc.Class({
             self.agreeNode.active = true;
             self.refusedNode.active = true;
           } else if (resultObj != null && (resultObj.type == 5 || resultObj.type == "5")) {
-            if (resultObj.isAgree == 1) {
+            if (resultObj.isHaveSummary && resultObj.isHaveSummary!="false") {
+              cc.beimi.isLeaveroom = false;
+            }else {
               cc.beimi.isLeaveroom = true;
             }
+            console.log("cc.beimi.isLeaveroom====>",cc.beimi.isLeaveroom);
             cc.beimi.leaveUserId = "";
             self.alert(resultObj.msg || '有人离场，房间解散');
+            self.endGame();
           } else if (result != null && (resultObj.type == 6 || resultObj.type == "6")) {
-            cc.beimi.isLeaveroom = true;
+            if (resultObj.isHaveSummary&& resultObj.isHaveSummary!="false") {
+              cc.beimi.isLeaveroom = false;
+            }else {
+              cc.beimi.isLeaveroom = true;
+            }
+            console.log("cc.beimi.isLeaveroom====>",cc.beimi.isLeaveroom);
             self.alert(resultObj.msg || '有人强制离场，房间解散');
+            self.endGame();
           } else {}
         });
+
+
       }
     }
   },
@@ -645,7 +827,8 @@ cc.Class({
     /**
          * 适配屏幕尺寸
          */
-
+    this.players_event_ing=false;
+    this.recovery_event_ing=false;
     if (initplayer == true) {
       /**
              * 预制的 对象池
@@ -681,7 +864,7 @@ cc.Class({
     /**
       * 初始化赖子的 对象池
       */
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < 3; i++) {
       this.laizicardpool.put(cc.instantiate(this.cards_current));
     }
   },
@@ -692,9 +875,11 @@ cc.Class({
      */
   joinroom_event: function(data, context) {
     if (data.cardroom == true && context.inviteplayer != null) {
-      let script = context.invite.getComponent("BeiMiQR")
-      script.init(data.roomid);
-      context.invite.parent = context.root();
+      if (context.invite) {
+        let script = context.invite.getComponent("BeiMiQR")
+        script.init(data.roomid);
+        context.invite.parent = context.root();
+      }
 
       if (context.roomid != null) {
         context.roomid.string = data.roomid;
@@ -705,8 +890,11 @@ cc.Class({
       }
     }
 
-    var player = context.playerspool.get();
+    if(data.player.id != cc.beimi.user.id && context.playerexist(data.player, context)){
+        return;
+    }
 
+    var player = context.playerspool.get();
     //新添加的代码
     if (player == null) {
       /**
@@ -725,7 +913,6 @@ cc.Class({
     }
 
     var playerscript = player.getComponent("MaJiangPlayer");
-    //var playerscript = player.getComponent("MaJiangPlayer");
     var inx = null,
       tablepos = "";
     if (data.player.id == cc.beimi.user.id) {
@@ -734,6 +921,7 @@ cc.Class({
       context.index = data.index;
     } else {
       inx = data.index - context.index;
+      console.log("加入房间的玩家的inx====》",inx);
       if (inx == 1) {
         //var playerscript = player.getComponent("MaJiangPlayer");
         player.setPosition(570, 50);
@@ -750,7 +938,7 @@ cc.Class({
     }
 
     playerscript.init(data.player, inx, tablepos);
-    player.parent = context.root();
+    player.parent = context.users_panel;
     context.playersarray.push(player);
     /**
          * 初始化状态，首个玩家加入，然后开始等待其他玩家 ， 如果是 恢复数据， 则不会进入
@@ -789,13 +977,11 @@ cc.Class({
       for (var inx = 0; inx < context.playercards.length;) {
         let handcards = context.playercards[inx].getComponent("HandCards");
         if (data.card == handcards.value) {
-
           context.playercards[inx].zIndex = 0;
           /**
                      * 从数组中移除
                      */
           context.playercards[inx].parent = null;
-
           handcards.reinit();
           /**
                      * 还回 对象池
@@ -813,7 +999,6 @@ cc.Class({
           let desk_card = cc.instantiate(context.takecards_one);
           let temp = desk_card.getComponent("DeskCards");
           temp.init(handcards.value);
-
           context.deskcards.push(desk_card);
           desk_card.parent = context.deskcards_current_panel;
         } else {
@@ -825,20 +1010,15 @@ cc.Class({
               context.playercards[inx].zIndex = handcards.value - 800;
             }
           } else {
-            if (handcards.selectcolor == true) {
-              context.playercards[inx].zIndex = 1000 + handcards.value;
+            // if (handcards.selectcolor == true) {
+            //   context.playercards[inx].zIndex = 1000 + handcards.value;
+            // } else {
+            if (handcards.value >= 0) {
+              context.playercards[inx].zIndex = handcards.value;
             } else {
-              if(handcards.koucard){
-                context.playercards[inx].zIndex = handcards.value - 1000;
-              }else {
-                if (handcards.value >= 0) {
-                  context.playercards[inx].zIndex = handcards.value;
-                } else {
-                  context.playercards[inx].zIndex = 200 + handcards.value;
-                }
-              }
-
+              context.playercards[inx].zIndex = 200 + handcards.value;
             }
+            // }
           }
           inx = inx + 1; //遍历 ++,不处理移除的 牌
         }
@@ -847,12 +1027,23 @@ cc.Class({
              * 重新排序
              */
       context.layout(context.cards_panel, function(fir, sec) {
-        return fir.zIndex - sec.zIndex;
+        if(fir.getComponent("HandCards").koucard == 1){
+            fir.zIndex = fir.getComponent("HandCards").value - 1200;
+        }
+        if(sec.getComponent("HandCards").koucard == 1){
+            sec.zIndex = sec.getComponent("HandCards").value - 1200;
+        }
+        return 0;
+        // var index = sec.getComponent("HandCards").koucard - fir.getComponent("HandCards").koucard;
+        // if(index == 0){
+        //   return fir.zIndex - sec.zIndex;
+        // } else {
+        //   return index;
+        // }
       });
       context.exchange_state("takecard", context); //隐藏 提示状态
     } else {
       //其他玩家出牌
-
       let temp = context.player(data.userid, context);
       let cardpanel,
         cardprefab,
@@ -886,6 +1077,7 @@ cc.Class({
         cardprefab = context.takecards_one;
         deskcardpanel = context.deskcards_top_panel;
       }
+
       /**
              * 销毁其中一个对象
              */
@@ -896,10 +1088,10 @@ cc.Class({
       let desk_script = desk_card.getComponent("DeskCards");
       desk_script.init(data.card);
       desk_card.parent = deskcardpanel;
-
       context.deskcards.push(desk_card);
     }
   },
+
   recover_desk_cards: function(userid, card, context) {
     if (userid == cc.beimi.user.id) {
       /**
@@ -908,7 +1100,6 @@ cc.Class({
       let desk_card = cc.instantiate(context.takecards_one);
       let temp = desk_card.getComponent("DeskCards");
       temp.init(card);
-
       context.deskcards.push(desk_card);
       desk_card.parent = context.deskcards_current_panel;
     } else {
@@ -918,18 +1109,14 @@ cc.Class({
         cardprefab,
         deskcardpanel;
       if (temp.tablepos == "right") {
-
         cardpanel = context.right_panel;
         cardprefab = context.takecards_right;
         deskcardpanel = context.deskcards_right_panel;
-
       } else if (temp.tablepos == "left") {
-
         cardpanel = context.left_panel;
         cardprefab = context.takecards_left;
         deskcardpanel = context.deskcards_left_panel;
       } else if (temp.tablepos == "top") {
-
         cardpanel = context.top_panel;
         cardprefab = context.takecards_one;
         deskcardpanel = context.deskcards_top_panel;
@@ -937,6 +1124,7 @@ cc.Class({
       let desk_card = cc.instantiate(cardprefab);
       let desk_script = desk_card.getComponent("DeskCards");
       desk_script.init(card);
+      context.deskcards.push(desk_card);
       desk_card.parent = deskcardpanel;
     }
   },
@@ -951,7 +1139,7 @@ cc.Class({
     context.select_action_searchlight(data, context, player);
     if (data.userid == cc.beimi.user.id) {
       context.initDealHandCards(context, data);
-      console.log("我出牌了");
+      console.log("我揭牌牌了");
       context.cleanTingTip(context);
     } else {
       let inx = 0;
@@ -977,7 +1165,8 @@ cc.Class({
   },
 
   allcards_event: function(data, context) {
-    console.log("收到allcards_event",data);
+    console.log("收到allcards_event", data);
+    context.dealActionProcess(context);
     cc.beimi.gamestatus = "notready";
     //结算界面，
     context.gameover = false;
@@ -985,49 +1174,89 @@ cc.Class({
       context.summarypage = cc.instantiate(context.summary);
       context.summarypage.parent = context.root();
       let temp = context.summarypage.getComponent("summary");
-      temp.create(context, data,context.laiziValues );
+      let isNext = context.currentnum<context.numofgames;
+      temp.create(context, data, context.laiziValues, isNext);
 
       if (data.gameRoomOver == true) { //房间解散
         context.gameover = true;
       }
-    }, 2000);
-    /**
-         */
+    }, 4000);
     context.exchange_state("allcards", context);
   },
-  /**
-     * 恢复牌局数据， 等待服务端推送 Players数据后进行恢复
-     */
-  recoverboard: function(data, context) {
-    //this.statebtn.active = false ;
+
+  gameover_event: function(data, context) {
+    console.log("收到gameover-1111111--", data);
+    if (context.summarypage) {
+      context.summarypage.destroy();
+    }
+    cc.beimi.gamestatus = "notready";
+    context.dealActionProcess(context);
+    //结算界面，
+    context.gameover = true;
+    setTimeout(function() {
+      context.summarytotalpage = cc.instantiate(context.summary_total);
+      context.summarytotalpage.parent = context.root();
+      let temp = context.summarytotalpage.getComponent("MaJiangSummary");
+      console.log("收到gameover-22222--", data.data);
+      temp.create(context, data);
+    }, 1000);
+
+    // context.exchange_state("allcards", context);
   },
+
+
   setAction: function(action, context) {
     context.action = action;
   },
+
   /**
      * 接收到服务端的 推送的 玩家数据，根据玩家数据 恢复牌局
      * @param data
      * @param context
      */
+
   players_event: function(data, context) {
+    console.error("获取了渲染玩家头像等数据===============players_event===========");
+    if(context.players_event_ing){
+      return;
+    }
+    if (cc.beimi.gamestatus == "playing" && data.player.length != 4) {
+      return;
+    }
+    console.error("开始渲染玩家头像等数据===============players_event===========");
+    context.players_event_ing = true;
     context.collect(context); //先回收资源，然后再初始化
-    var inx = 0;
+    var myindex = -1;
     for (var i = 0; i < data.player.length; i++) {
       let temp = data.player[i];
       if (temp.id == cc.beimi.user.id) {
-        context.index = i;
+        myindex = i;
         break;
       }
     }
-    if (data.player.length > 1 && inx >= 0) {
-      var pos = inx + 1;
-      while (true) {
-        if (pos == data.player.length) {
-          pos = 0;
-        }
+    if(myindex == -1){
+      context.players_event_ing = false;
+      console.error("==============没有自己的数据===========");
+      return;
+    } else {;
+      console.error("==============有了自己的数据===========");
+      context.index = myindex;
+    }
+
+    if (data.player.length > 1) {
+      var pos = 0;
+      while (pos < data.player.length) {
+        console.error("获取当前已经渲染了几个玩家 context.playersarray",  context.playersarray.length);
+        console.error("获取当前渲染的玩家",  data.player[pos]);
         if (context.playerexist(data.player[pos], context) == false) {
+          console.error("该玩家不在列表");
           var player = context.playerspool.get();
-          var playerscript = player.getComponent("MaJiangPlayer");
+          var playerscript;
+          // if(player ==null){
+          //   context.playerspool.put(cc.instantiate(context.playerprefab));
+          //   player = context.playerspool.get();
+          // }
+          playerscript = player.getComponent("MaJiangPlayer");
           var tablepos = "";
           var temp = pos - context.index;
           if (temp == 1 || temp == -3) {
@@ -1043,17 +1272,15 @@ cc.Class({
             player.setPosition(-570, 50);
             tablepos = "left";
           }
-
-          playerscript.init(data.player[pos], inx, tablepos);
-          player.parent = context.root();
+         console.error("渲染当前玩家位置---》", tablepos);
+          playerscript.init(data.player[pos], 0, tablepos);
+          player.parent = context.users_panel;
           context.playersarray.push(player);
-        }
-        if (pos == inx) {
-          break;
         }
         pos = pos + 1;
       }
     }
+    context.players_event_ing = false;
   },
 
   playerexist: function(player, context) {
@@ -1111,12 +1338,20 @@ cc.Class({
      * @param context
      */
   recovery_event: function(data, context) {
-    var mycards = context.decode(data.player.cards);
+    if (context.recovery_event_ing) {
+      return;
+    }
+    context.recovery_event_ing= true;
+    //我注释了不需要了，userboard里面有数据了
+    //var mycards = context.decode(data.player.cards);
+
     //context.exchange_state("begin" , context);  //隐藏 提示状态
     /**
          * 恢复玩家数据
          */
-    context.play_event(data.userboard, context,true);
+    context.collectRecycleData(context);
+    console.error("获取恢复的recovery_event数据===》",data);
+    context.play_event(data.userboard, context, true);
 
     /**
          * 恢复庄家数据
@@ -1127,44 +1362,159 @@ cc.Class({
          *
          * 恢复定缺数据
          */
-    context.selectresult_event(data.selectcolor, context);
+    // context.selectresult_event(data.selectcolor, context);
+
+     /**
+         *恢复其他玩家定缺数据
+         */
+
+    // for (var i = 0; i < data.cardsnum.length; i++) {
+    //   let temp = data.cardsnum[i];
+    //   context.selectresult_event(temp.selectcolor, context);
+    //
+    //   //这里有个错误
+    //   var hiscards = context.decode(temp.hiscards);
+    //   for (var j = 0; j < hiscards.length; j++) {
+    //     context.recover_desk_cards(temp.userid, hiscards[j], context);
+    //   }
+    // }
 
     /**
-         * 恢复其他玩家定缺数据
+         * 恢复当前玩家们 已出的牌
          */
-    for (var i = 0; i < data.cardsnum.length; i++) {
-      let temp = data.cardsnum[i];
-      context.selectresult_event(temp.selectcolor, context);
+    // var hiscards = context.decode(data.hiscards);
+    // for (var j = 0; j < hiscards.length; j++) {
+    //   context.recover_desk_cards(data.userid, hiscards[j], context);
+    // }
 
-      //这里有个错误
-      var hiscards = context.decode(temp.hiscards);
-      for (var j = 0; j < hiscards.length; j++) {
-        context.recover_desk_cards(temp.userid, hiscards[j], context);
+    //恢复自己桌面牌
+    if (data.player.recoveryHistory&&data.player.recoveryHistory.length>0) {
+      console.error("获取我的桌面牌====》",data.player.recoveryHistory,);
+      var mydeskcards = context.decode(data.player.recoveryHistory);
+      if(mydeskcards&&mydeskcards.length>0){
+        for (var i = 0; i < mydeskcards.length; i++) {
+          context.recover_desk_cards(data.userid, mydeskcards[i], context);
+        }
       }
     }
-    /**
-         * 恢复当前玩家 已出的牌
-         */
-    var hiscards = context.decode(data.hiscards);
-    for (var j = 0; j < hiscards.length; j++) {
-      context.recover_desk_cards(data.userid, hiscards[j], context);
+
+    //恢复其他玩家桌面牌
+    for (var j = 0; j < data.userboard.players.length; j++) {
+      if(data.userboard.players[j].recoveryHistory&&data.userboard.players[j].recoveryHistory.length>0){
+        const hisDeskCards = context.decode(data.userboard.players[j].recoveryHistory)
+        console.error("获取其他的桌面牌====》",hisDeskCards);
+        if (hisDeskCards&&hisDeskCards.length) {
+          for (var i = 0; i < hisDeskCards.length; i++) {
+            context.recover_desk_cards(data.userboard.players[j].playuser, hisDeskCards[i], context);
+          }
+        }
+      }
     }
+
+    //恢复探照灯指向
+    let player = context.player(data.nextplayer, context);
+    console.error("恢复牌局获取下一家",player);
+    context.select_action_searchlight(data, context, player);
+    context.recovery_event_ing= false;
+
+    //恢复我的action牌
+    if (data.userboard.player.actions&&data.userboard.player.actions.length>0) {
+      for (var i = 0; i < data.userboard.player.actions.length; i++) {
+          const actionModel = data.userboard.player.actions[i];
+          let mycards_gang;
+          if (actionModel.type&&actionModel.type == "an") {
+            mycards_gang = cc.instantiate(context.cards_gang_an_prefab);
+          } else {
+            mycards_gang = cc.instantiate(context.cards_gang_ming_prefab);
+          }
+          let temp_script = mycards_gang.getComponent("GangAction");
+          if (actionModel.action == "gang") {
+            temp_script.init(actionModel.card, true);
+          } else {
+            temp_script.init(actionModel.card, false);
+          }
+            mycards_gang.parent = context.gang_current;
+          //  cards_gang.parent = self.gang_top;
+        //  cards_gang.parent = self.gang_left;
+          context.actioncards.push(mycards_gang);
+      }
+    }
+
+    //恢复其他家actions牌
+    if (data.userboard.players&&data.userboard.players.length>0) {
+      for(var j=0; j < data.userboard.players.length; j++){
+        if (data.userboard.players[j].actions==null||data.userboard.players[j].actions.length<1) {
+             continue;
+        }
+        for (var i = 0; i < data.userboard.players[j].actions.length; i++) {
+            const actionModel = data.userboard.players[j].actions[i];
+            let actionPlayer = context.player(data.userboard.players[j].playuser, context);
+            console.error("准备渲染action牌的玩家",actionPlayer);
+            let cards_gang;
+            if (actionPlayer.tablepos == "right") {
+              if (actionModel.type == "an") {
+                cards_gang = cc.instantiate(context.cards_gang_an_right_prefab);
+              } else {
+                cards_gang = cc.instantiate(context.cards_gang_ming_right_prefab);
+              }
+              let temp_script = cards_gang.getComponent("GangAction");
+              if (actionModel.action == "gang") {
+                temp_script.init(actionModel.card, true);
+              } else {
+                temp_script.init(actionModel.card, false);
+              }
+              cards_gang.parent = context.gang_right;
+              context.rightactioncards.push(cards_gang);
+           } else if (actionPlayer.tablepos == "top") {
+             if (actionModel.type == "an") {
+               cards_gang = cc.instantiate(context.cards_gang_an_top_prefab);
+             } else {
+               cards_gang = cc.instantiate(context.cards_gang_ming_top_prefab);
+             }
+             let temp_script = cards_gang.getComponent("GangAction");
+             if (actionModel.action == "gang") {
+               temp_script.init(actionModel.card, true);
+             } else {
+               temp_script.init(actionModel.card, false);
+             }
+             cards_gang.parent = context.gang_top;
+             context.topactioncards.push(cards_gang);
+           }else if (actionPlayer.tablepos == "left") {
+             if (actionModel.type == "an") {
+               cards_gang = cc.instantiate(context.cards_gang_an_left_prefab);
+             } else {
+               cards_gang = cc.instantiate(context.cards_gang_ming_left_prefab);
+             }
+             let temp_script = cards_gang.getComponent("GangAction");
+             if (actionModel.action == "gang") {
+               temp_script.init(actionModel.card, true);
+             } else {
+               temp_script.init(actionModel.card, false);
+             }
+             cards_gang.parent = context.gang_left;
+             context.topactioncards.push(cards_gang);
+           }
+        }
+      }
+
+    }
+
+
   },
 
-
   //听牌通知
-  ting_event:function(data, context) {
-    if (data.recommendCards&&data.recommendCards.length>0&&data.userid==cc.beimi.user.id) {
+  ting_event: function(data, context) {
+    if (data.recommendCards && data.recommendCards.length > 0 && data.userid == cc.beimi.user.id) {
       context.ting_tip.active = true;
       let recommendCardsValue = context.decode(data.recommendCards);
       console.log("收到胡牌提醒---》");
       for (var i = 0; i < recommendCardsValue.length; i++) {
         let hucards_tip;
-         hucards_tip = cc.instantiate(context.hucards_tip);
-         context.huactioncardstip.push(hucards_tip);
-         let temp_script = hucards_tip.getComponent("huCards");
-         temp_script.init(recommendCardsValue[i]);
-         hucards_tip.parent = context.hucards_tip_layout;
+        hucards_tip = cc.instantiate(context.hucards_tip);
+        context.huactioncardstip.push(hucards_tip);
+        let temp_script = hucards_tip.getComponent("huCards");
+        temp_script.init(recommendCardsValue[i]);
+        hucards_tip.parent = context.hucards_tip_layout;
       }
     }
   },
@@ -1175,8 +1525,9 @@ cc.Class({
      * @param context
      */
   action_event: function(data, context) {
-    console.error("接受服务器通知的杠碰、吃胡等动作--------》");
     context.setAction("take", context);
+    let player = context.player(data.userid, context);
+    context.exchange_searchlight(player.tablepos, context);
     if (cc.beimi.user.id == data.userid) {
       /**
              * 隐藏其他动作
@@ -1202,19 +1553,26 @@ cc.Class({
           if (temp.name == "hu") {
             hu = temp;
           }
+          if (temp.name == "guo") {
+            guo = temp;
+          }
           temp.active = false;
         }
         if (data.gang) {
           gang.active = true;
+          guo.active = true;
         }
         if (data.peng) {
           peng.active = true;
+          guo.active = true;
         }
         if (data.chi) {
           chi.active = true;
+          guo.active = true;
         }
         if (data.hu) {
           hu.active = true;
+          guo.active = true;
         }
         context.actionnode_deal.active = true;
         context.setAction("deal", context);
@@ -1222,6 +1580,7 @@ cc.Class({
         var actionNum = 0;
         if (data.gang == true || data.peng == true || data.chi == true || data.hu == true) {
           let desk_script = context.actionnode_three.getComponent("DeskCards");
+          console.log("====提示碰的牌=========", data.card);
           desk_script.init(data.card);
           for (var inx = 0; inx < context.actionnode_three_list.children.length; inx++) {
             let temp = context.actionnode_three_list.children[inx];
@@ -1242,6 +1601,8 @@ cc.Class({
             }
             temp.active = false;
           }
+
+          console.error("actionNum===0000==>",actionNum);
           if (data.gang) {
             gang.active = true;
             actionNum = actionNum + 1;
@@ -1262,23 +1623,26 @@ cc.Class({
             guo.active = true;
             actionNum = actionNum + 1;
           }
+
+          console.error("actionNum===11111==>",actionNum);
           var posx = 1080 - (actionNum + 1) * 124;
           var actionevent = cc.moveTo(0.5, posx, -147);
+          console.error("posx===11111==>",posx);
           actionevent.easing(cc.easeIn(3.0));
+          context.actionnode_three.stopAllActions();
           context.actionnode_three.runAction(actionevent);
-
-          setTimeout(function() {
-            if (context.action != null) {
-              context.dealActionProcess(context);
-            }
-          }, 5000);
+          //
+          // setTimeout(function() {
+          //   if (context.action != null) {
+          //     context.dealActionProcess(context);
+          //   }
+          // }, 5000);
         }
       }
     }
   },
 
   selectaction_event: function(data, context) {
-    console.error("-----有人碰杠吃--selectaction_event--------", data);
     cc.beimi.audio.playActionSound(data.action);
     let player = context.player(data.userid, context);
     /**
@@ -1294,38 +1658,55 @@ cc.Class({
              * 杠，显示杠的动画，杠分为：明杠，暗杠，弯杠，每种动画效果不同，明杠/暗杠需要扣三家分，弯杠需要扣一家分
              * 胡，根据玩法不同，推倒胡和血流/血战
              */
-      //碰的特效
       context.select_action_searchlight(data, context, player);
-
       if (data.action == "hu") {
         //胡牌了，把胡的牌放入到胡牌列表里，然后 ， 把当前的玩家的牌局置为不可点击
         let hu_card = cc.instantiate(context.takecards_one);
         let temp = hu_card.getComponent("DeskCards");
         temp.init(data.card);
-
         context.deskcards.push(hu_card);
         hu_card.setScale(0.5, 0.5);
         hu_card.parent = context.hu_cards_current;
         context.mask.active = true; //遮罩，不让操作了
-        console.error("-------我自己胡了---");
       } else {
         /**
          * 杠后移除当前手牌，进入到 杠 列表里
          */
-        for (var inx = 0; inx < context.playercards.length;) {
-          let temp = context.playercards[inx].getComponent("HandCards");
-          if (data.cardtype == temp.mjtype && data.cardvalue == temp.mjvalue) {
-            context.cardpool.put(context.playercards[inx]);
-            context.playercards.splice(inx, 1);
-          } else {
-            inx++;
-          }
-        }
+         let sameValueNum=0;
+         if(data.action == "peng"){
+           for (var inx = 0; inx < context.playercards.length;) {
+             let temp = context.playercards[inx].getComponent("HandCards");
+             console.error("碰了牌移除手牌遍历手里牌==inx===》",inx);
+             if (data.cardtype == temp.mjtype && data.cardvalue == temp.mjvalue) {
+               context.cardpool.put(context.playercards[inx]);
+               context.playercards.splice(inx, 1);
+               sameValueNum++;
+               console.error("移除手牌里面跟碰的相同牌=====sameValueNum===》",sameValueNum);
+               if (sameValueNum==2) {
+                 break;
+               }
+             } else {
+               inx++;
+             }
+           }
+         }else {
+           for (var inx = 0; inx < context.playercards.length;) {
+             let temp = context.playercards[inx].getComponent("HandCards");
+             console.error("碰了牌移除手牌遍历手里牌==inx===》",inx);
+             if (data.cardtype == temp.mjtype && data.cardvalue == temp.mjvalue) {
+               context.cardpool.put(context.playercards[inx]);
+               context.playercards.splice(inx, 1);
+               sameValueNum++;
+               console.error("移除手牌里面跟杠的相同牌==sameValueNum===》",sameValueNum);
+             } else {
+               inx++;
+             }
+           }
+         }
+
 
         let cards_gang;
-        /**
-         * 刚和碰共用一个 Prefab，都是来自于 cards_gang_ming_prefab ，显示方式也相同， 区别在于：刚显示四张牌，碰显示两张牌
-         */
+
         if (data.actype == "an") {
           cards_gang = cc.instantiate(context.cards_gang_an_prefab);
         } else {
@@ -1333,7 +1714,22 @@ cc.Class({
         }
         let temp_script = cards_gang.getComponent("GangAction");
         if (data.action == "gang") {
-          temp_script.init(data.card, true);
+          if (data.actype == "an") {
+            temp_script.init(data.card, true);
+          }else {
+            //监测碰的牌里面有没有
+            for (var i = 0; i < context.actioncards.length; i++) {
+              let temp = context.actioncards[i].getComponent("GangAction");
+                console.error("===遍历碰的牌里面有这牌的=========>",temp.mjvalue);
+              if (data.cardtype == temp.mjtype && data.cardvalue == temp.mjvalue) {
+                  console.error("===碰的牌里面有这牌的====移除=====>");
+                 context.actioncards[i].destroy();
+                 context.actioncards.splice(i, 1);
+                break;
+              }
+            }
+            temp_script.init(data.card, true);
+          }
         } else {
           temp_script.init(data.card, false);
         }
@@ -1343,27 +1739,51 @@ cc.Class({
                      *
                      * 碰了以后的
                      */
-          let temp = context.cards_panel.children[context.cards_panel.children.length - 1];
-          if (temp != null) {
-            let script = temp.getComponent("HandCards");
-            if (script != null) {
-              script.lastone();
-            }
-          }
+          // let temp = context.cards_panel.children[context.cards_panel.children.length - 1];
+          // if (temp != null) {
+          //   let script = temp.getComponent("HandCards");
+          //   if (script != null) {
+          //     script.lastone();
+          //   }
+          // }
         }
 
         cards_gang.parent = context.gang_current;
         context.actioncards.push(cards_gang);
 
-        for (var inx = 0; inx < context.deskcards.length; inx++) {
-          var temp = context.deskcards[inx];
-          if (temp != null) {
-            var script = temp.getComponent("DeskCards");
-            if (script != null && script.value == data.card) {
-              temp.destroy();
-              context.deskcards.splice(inx, inx + 1);
-              break;
-            }
+        // if (context.deskcards) {
+        //   console.log("桌牌-----",context.deskcards.length);
+        //   for (var inx = 0; inx < context.deskcards.length; inx++) {
+        //     var temp = context.deskcards[inx];
+        //     if (temp != null) {
+        //       var script = temp.getComponent("DeskCards");
+        //       if (script != null && script.value == data.card) {
+        //         console.log("--------获取自己桌面牌与碰的一样的牌--------",inx);
+        //         temp.destroy();
+        //         context.deskcards.splice(inx, inx + 1);
+        //         break;
+        //       }
+        //     }
+        //   }
+        // }
+
+
+        if (data.target != 'all') { //暗杠
+          let temp = context.player(data.target, context),
+            deskcardpanel;
+            console.log("-------移除碰的那家的桌牌--------",temp.tablepos);
+          if (temp.tablepos == "right") {
+            deskcardpanel = context.deskcards_right_panel;
+          } else if (temp.tablepos == "left") {
+            deskcardpanel = context.deskcards_left_panel;
+          } else if (temp.tablepos == "top") {
+            deskcardpanel = context.deskcards_top_panel;
+          } else {
+            deskcardpanel = context.deskcards_current_panel;
+          }
+           console.log("-------移除碰的那家的桌牌--------",temp.tablepos);
+          if (deskcardpanel && deskcardpanel.children.length > 0) {
+            deskcardpanel.children[deskcardpanel.children.length - 1].destroy();
           }
         }
       }
@@ -1375,9 +1795,9 @@ cc.Class({
              */
       context.exchange_state("action", context);
     } else {
-      console.log("-------有其他玩家碰杠吃胡-------");
+      console.log("-------有其他玩家碰杠吃胡-------",data);
       //以下代码是用于找到 杠/碰/吃/胡牌的 目标牌  ， 然后将此牌 从 桌面牌中移除
-      if (data.target!='all') {  //暗杠
+      if (data.target != 'all') { //暗杠
         let temp = context.player(data.target, context),
           deskcardpanel;
         if (temp.tablepos == "right") {
@@ -1386,41 +1806,66 @@ cc.Class({
           deskcardpanel = context.deskcards_left_panel;
         } else if (temp.tablepos == "top") {
           deskcardpanel = context.deskcards_top_panel;
-        }else {
+        } else {
           deskcardpanel = context.deskcards_current_panel;
         }
         if (deskcardpanel && deskcardpanel.children.length > 0) {
           deskcardpanel.children[deskcardpanel.children.length - 1].destroy();
         }
-
       }
 
       //提示当前玩家有人杠/碰/吃/胡牌
       let actionPlayer = context.player(data.userid, context);
-      context.exchange_searchlight(actionPlayer.tablepos,context);
-      console.log("点击了碰杠吃的玩家---》",actionPlayer);
+      context.exchange_searchlight(actionPlayer.tablepos, context);
+      console.log("点击了碰杠吃的玩家---》", actionPlayer);
       let cards_gang;
-      let  actionPlayerDeskcardpanel;
+      let actionPlayerpanel;
       if (actionPlayer.tablepos == "right") {
-
         let rightpre;
-        if (data.action=="peng") {
+        actionPlayerpanel = context.right_panel;
+        if (data.action == "peng") {
           rightpre = cc.instantiate(context.action_peng_prefab);
-
-          if (deskcardpanel && deskcardpanel.children.length > 0) {
-            deskcardpanel.children[deskcardpanel.children.length - 1].destroy();
+          if (actionPlayerpanel && actionPlayerpanel.children.length > 1) {
+            actionPlayerpanel.children[actionPlayerpanel.children.length - 1].destroy();
+            actionPlayerpanel.children[actionPlayerpanel.children.length - 2].destroy();
           }
-
-        }else if (data.action=="chi") {
-          rightpre = cc.instantiate(context.action_chi_prefab);
-        }else if(data.action == "gang") {
-          if (data.actype=="an") {
-          rightpre =  cc.instantiate(context.action_gang_ming_prefab);
+        }else if (data.action == "hu") {
+          if (data.zm) {
+              rightpre = cc.instantiate(context.action_zimo_prefab);
           }else {
-            rightpre =  cc.instantiate(context.action_gang_an_prefab);
+              rightpre = cc.instantiate(context.action_hu_prefab);
+          }
+        } else if (data.action == "chi") {
+          rightpre = cc.instantiate(context.action_chi_prefab);
+        } else if (data.action == "gang") {
+          if (data.actype == "an") {
+            if (actionPlayerpanel && actionPlayerpanel.children.length > 3) {
+              actionPlayerpanel.children[actionPlayerpanel.children.length - 1].destroy();
+              actionPlayerpanel.children[actionPlayerpanel.children.length - 2].destroy();
+              actionPlayerpanel.children[actionPlayerpanel.children.length - 3].destroy();
+              actionPlayerpanel.children[actionPlayerpanel.children.length - 4].destroy();
+            }
+            rightpre = cc.instantiate(context.action_gang_an_prefab);
+          } else {
+            console.error("右边明杠移除张数",data.removeCardNum);
+            if(data.removeCardNum==1||data.removeCardNum=="1"){
+              if (actionPlayerpanel && actionPlayerpanel.children.length > 1) {
+                actionPlayerpanel.children[actionPlayerpanel.children.length - 1].destroy();
+              }
+            }else {
+              if (actionPlayerpanel && actionPlayerpanel.children.length > 2) {
+                actionPlayerpanel.children[actionPlayerpanel.children.length - 1].destroy();
+                actionPlayerpanel.children[actionPlayerpanel.children.length - 2].destroy();
+                actionPlayerpanel.children[actionPlayerpanel.children.length - 3].destroy();
+              }
+            }
+            rightpre = cc.instantiate(context.action_gang_ming_prefab);
           }
         }
-        rightpre.parent = context.deskcards_right_panel.parent;
+
+        if (rightpre) {
+            rightpre.parent = context.deskcards_right_panel.parent;
+        }
 
         if (data.actype == "an") {
           cards_gang = cc.instantiate(context.cards_gang_an_right_prefab);
@@ -1429,7 +1874,22 @@ cc.Class({
         }
         let temp_script = cards_gang.getComponent("GangAction");
         if (data.action == "gang") {
-          temp_script.init(data.card, true);
+          if (data.actype == "an") {
+              temp_script.init(data.card, true);
+          }else {
+            //监测碰的牌里面有没有
+            for (var i = 0; i < context.actioncards.length; i++) {
+              let temp = context.rightactioncards[i].getComponent("GangAction");
+                console.error("===遍历右边碰的牌里面有这牌的=========>",temp.mjvalue);
+              if (data.cardtype == temp.mjtype && data.cardvalue == temp.mjvalue) {
+                  console.error("===碰的牌里面有这牌的====移除=====>");
+                 context.rightactioncards[i].destroy();
+                 context.rightactioncards.splice(i, 1);
+                break;
+              }
+            }
+            temp_script.init(data.card, true);
+          }
         } else {
           temp_script.init(data.card, false);
         }
@@ -1437,18 +1897,52 @@ cc.Class({
         context.rightactioncards.push(cards_gang);
       } else if (actionPlayer.tablepos == "left") {
         let leftpre;
-        if (data.action=="peng") {
+        actionPlayerpanel = context.left_panel;
+        if (data.action == "peng") {
+          if (actionPlayerpanel && actionPlayerpanel.children.length > 1) {
+            actionPlayerpanel.children[actionPlayerpanel.children.length - 1].destroy();
+            actionPlayerpanel.children[actionPlayerpanel.children.length - 2].destroy();
+          }
           leftpre = cc.instantiate(context.action_peng_prefab);
-        }else if (data.action=="chi") {
-          leftpre = cc.instantiate(context.action_chi_prefab);
-        }else if(data.action == "gang") {
-          if (data.actype=="an") {
-          leftpre =  cc.instantiate(context.action_gang_ming_prefab);
+        }else if(data.action == "hu"){
+          if (data.zm) {
+              leftpre = cc.instantiate(context.action_zimo_prefab);
           }else {
-            leftpre =  cc.instantiate(context.action_gang_an_prefab);
+              leftpre = cc.instantiate(context.action_hu_prefab);
+          }
+
+        }else if(data.action == "zimo"){
+          leftpre = cc.instantiate(context.action_zimo_prefab);
+        } else if (data.action == "chi") {
+          leftpre = cc.instantiate(context.action_chi_prefab);
+        } else if (data.action == "gang") {
+          if (data.actype == "an") {
+            if (actionPlayerpanel && actionPlayerpanel.children.length > 3) {
+              actionPlayerpanel.children[actionPlayerpanel.children.length - 1].destroy();
+              actionPlayerpanel.children[actionPlayerpanel.children.length - 2].destroy();
+              actionPlayerpanel.children[actionPlayerpanel.children.length - 3].destroy();
+              actionPlayerpanel.children[actionPlayerpanel.children.length - 4].destroy();
+            }
+            leftpre = cc.instantiate(context.action_gang_an_prefab);
+          } else {
+            console.error("左边明杠移除张数",data.removeCardNum);
+            if(data.removeCardNum==1||data.removeCardNum=="1"){
+              if (actionPlayerpanel && actionPlayerpanel.children.length > 1) {
+                actionPlayerpanel.children[actionPlayerpanel.children.length - 1].destroy();
+              }
+            }else {
+              if (actionPlayerpanel && actionPlayerpanel.children.length > 2) {
+                actionPlayerpanel.children[actionPlayerpanel.children.length - 1].destroy();
+                actionPlayerpanel.children[actionPlayerpanel.children.length - 2].destroy();
+                actionPlayerpanel.children[actionPlayerpanel.children.length - 3].destroy();
+              }
+            }
+            leftpre = cc.instantiate(context.action_gang_ming_prefab);
           }
         }
-        leftpre.parent = context.deskcards_left_panel.parent;
+        if(leftpre){
+          leftpre.parent = context.deskcards_left_panel.parent;
+        }
         if (data.actype == "an") {
           cards_gang = cc.instantiate(context.cards_gang_an_left_prefab);
         } else {
@@ -1456,7 +1950,22 @@ cc.Class({
         }
         let temp_script = cards_gang.getComponent("GangAction");
         if (data.action == "gang") {
-          temp_script.init(data.card, true);
+          if(data.actype == "an"){
+            temp_script.init(data.card, true);
+          }else {
+            //监测碰的牌里面有没有
+            for (var i = 0; i < context.actioncards.length; i++) {
+              let temp = context.leftactioncards[i].getComponent("GangAction");
+                console.error("===遍历左边碰的牌里面有这牌的=========>",temp.mjvalue);
+              if (data.cardtype == temp.mjtype && data.cardvalue == temp.mjvalue) {
+                  console.error("===左边碰的牌里面有这牌的====移除=====>");
+                  context.leftactioncards[i].destroy();
+                  context.leftactioncards.splice(i, 1);
+                break;
+              }
+            }
+            temp_script.init(data.card, true);
+          }
         } else {
           temp_script.init(data.card, false);
         }
@@ -1464,19 +1973,49 @@ cc.Class({
         context.leftactioncards.push(cards_gang);
       } else if (actionPlayer.tablepos == "top") {
         let toppre;
-        if (data.action=="peng") {
+        actionPlayerpanel = context.top_panel;
+        if (data.action == "peng") {
+          if (actionPlayerpanel && actionPlayerpanel.children.length > 1) {
+            actionPlayerpanel.children[actionPlayerpanel.children.length - 1].destroy();
+            actionPlayerpanel.children[actionPlayerpanel.children.length - 2].destroy();
+          }
           toppre = cc.instantiate(context.action_peng_prefab);
-        }else if (data.action=="chi") {
-          toppre = cc.instantiate(context.action_chi_prefab);
-        }else if(data.action == "gang") {
-          if (data.actype=="an") {
-          toppre =  cc.instantiate(context.action_gang_ming_prefab);
+        } else if (data.action == "hu") {
+          if (data.zm) {
+              toppre = cc.instantiate(context.action_zimo_prefab);
           }else {
-            toppre =  cc.instantiate(context.action_gang_an_prefab);
+              toppre = cc.instantiate(context.action_hu_prefab);
+          }
+        }  else if (data.action == "chi") {
+          toppre = cc.instantiate(context.action_chi_prefab);
+        } else if (data.action == "gang") {
+          if (data.actype == "an") {
+            if (actionPlayerpanel && actionPlayerpanel.children.length > 3) {
+              actionPlayerpanel.children[actionPlayerpanel.children.length - 1].destroy();
+              actionPlayerpanel.children[actionPlayerpanel.children.length - 2].destroy();
+              actionPlayerpanel.children[actionPlayerpanel.children.length - 3].destroy();
+              actionPlayerpanel.children[actionPlayerpanel.children.length - 4].destroy();
+            }
+            toppre = cc.instantiate(context.action_gang_an_prefab);
+          } else {
+            console.error("上边明杠移除张数",data.removeCardNum);
+            if(data.removeCardNum==1||data.removeCardNum=="1"){
+              if (actionPlayerpanel && actionPlayerpanel.children.length > 1) {
+                actionPlayerpanel.children[actionPlayerpanel.children.length - 1].destroy();
+              }
+            }else {
+              if (actionPlayerpanel && actionPlayerpanel.children.length > 2) {
+                actionPlayerpanel.children[actionPlayerpanel.children.length - 1].destroy();
+                actionPlayerpanel.children[actionPlayerpanel.children.length - 2].destroy();
+                actionPlayerpanel.children[actionPlayerpanel.children.length - 3].destroy();
+              }
+            }
+            toppre = cc.instantiate(context.action_gang_ming_prefab);
           }
         }
-        toppre.parent = context.deskcards_top_panel.parent;
-
+        if (toppre) {
+          toppre.parent = context.deskcards_top_panel.parent;
+        }
 
         if (data.actype == "an") {
           cards_gang = cc.instantiate(context.cards_gang_an_top_prefab);
@@ -1485,7 +2024,22 @@ cc.Class({
         }
         let temp_script = cards_gang.getComponent("GangAction");
         if (data.action == "gang") {
-          temp_script.init(data.card, true);
+          if(data.actype == "an"){
+            temp_script.init(data.card, true);
+          }else {
+            //监测碰的牌里面有没有
+            for (var i = 0; i < context.actioncards.length; i++) {
+              let temp = context.topactioncards[i].getComponent("GangAction");
+                console.error("===遍历上边碰的牌里面有这牌的=========>",temp.mjvalue);
+              if (data.cardtype == temp.mjtype && data.cardvalue == temp.mjvalue) {
+                  console.error("===上边碰的牌里面有这牌的====移除=====>");
+                  context.topactioncards[i].destroy();
+                  context.topactioncards.splice(i, 1);
+                break;
+              }
+            }
+            temp_script.init(data.card, true);
+          }
         } else {
           temp_script.init(data.card, false);
         }
@@ -1500,7 +2054,7 @@ cc.Class({
      * @param data
      * @param context
      */
-  play_event: function(data, context,isRecovery) {
+  play_event: function(data, context, isRecovery) {
     cc.beimi.gamestatus = "playing";
     //改变状态，开始发牌
     context.exchange_state("begin", context);
@@ -1514,23 +2068,65 @@ cc.Class({
     }
     context.laiziValues = laizis;
     //显示剩余牌数
-    setTimeout(function() {
-      context.calcdesc_cards(context, 136, data.deskcards);
-      context.ju.string = data.currentnum + "/" + data.numofgames + "局"
-    }, 0);
-
+    if (isRecovery) {
+      context.desk_cards.string =  data.deskcards;
+    }else {
+      setTimeout(function() {
+        context.calcdesc_cards(context, 136, data.deskcards);
+      }, 0);
+    }
+    context.ju.string = data.currentnum + "/" + data.numofgames + "局"
+    context.currentnum = data.currentnum;
+    context.numofgames = data.numofgames;
     var groupNums = 0;
     for (var times = 0; times < 4; times++) {
-      //初始化当前玩家数据
+      //初始化当前玩家扣牌
+      if(temp_player.coverCards&&temp_player.coverCards.length>0&&isRecovery){
+        context.initMjKouCards(groupNums, context, temp_player.coverCards, temp_player.banker, laizis); //庄家banker
+      }
+        //初始化当前玩家数据
       context.initMjCards(groupNums, context, cards, temp_player.banker, laizis); //庄家banker
-      //初始化其他玩家数据》》
-      var inx = 0;
-      for (var i = 0; i < data.players.length; i++) {
-        if (data.players[i].playuser != cc.beimi.user.id) {
-          context.initPlayerHandCards(groupNums, data.players[inx++].deskcards, inx, context, false);
+
+      groupNums = groupNums + 1;
+    }
+
+    //初始化其他玩家数据》》
+    var inx = 0;
+    for (var i = 0; i < data.players.length; i++) {
+      if (data.players[i].playuser != cc.beimi.user.id) {
+          let player = context.player(data.players[i].playuser, context);
+          let inx = 0;
+          if (player.tablepos == "top") {
+            //context.right_panel ;
+            inx = 1;
+          } else if (player.tablepos == "left") {
+            inx = 2;
+          }
+        //根据当前玩家收到的牌数计算其他显示的张数
+        if (data.playway == "2" || data.playway == 2) {
+          //扣大将玩法根据当前玩家收到的牌数计算其他玩家显示的张数
+          if (cards && cards.length == 4) {
+            context.initMyPlayerHandCards(4, inx, context, false);
+          } else if (cards && cards.length == 2) {
+            context.initMyPlayerHandCards( 1, inx, context, false);
+            context.exchange_state("play", context);
+          } else if (cards && cards.length == 1) {
+            if (data.players[i].banker) {
+              context.initMyPlayerHandCards( 2, inx, context, false); //data.players[inx++].deskcards
+            } else {
+              context.initMyPlayerHandCards( 1, inx, context, false);
+            }
+            context.exchange_state("play", context);
+          }else {
+            context.initMyPlayerHandCards( data.players[i].deskcards, inx, context, false);
+            context.exchange_state("play", context);
+
+          }
+        } else {
+          context.initMyPlayerHandCards( data.players[i].deskcards, inx, context, false);
+          context.exchange_state("play", context);
         }
       }
-      groupNums = groupNums + 1;
     }
 
     let ani = context.cards_panel.getComponent(cc.Animation);
@@ -1551,7 +2147,7 @@ cc.Class({
       }
 
       //是扣的牌
-      if(temp_script.koucard){
+      if (temp_script.koucard) {
         context.playercards[i].zIndex = temp_script.value - 1000;
       }
 
@@ -1560,11 +2156,19 @@ cc.Class({
         maxvalluecard = context.playercards[i];
       }
     }
+
     /**
          * 重新排序
          */
     context.layout(context.cards_panel, function(fir, sec) {
-      return fir.zIndex - sec.zIndex;
+
+      if(fir.getComponent("HandCards").koucard == 1){
+          fir.zIndex = fir.getComponent("HandCards").value - 1200;
+      }
+      if(sec.getComponent("HandCards").koucard == 1){
+          sec.zIndex = sec.getComponent("HandCards").value - 1200;
+      }
+      return 0;
     });
 
     setTimeout(function() {
@@ -1572,8 +2176,6 @@ cc.Class({
         maxvalluecard.getComponent("HandCards").lastone();
       }
     }, 200);
-
-    context.exchange_state("play", context);
 
     /**
          * 统一处理排序 的动画
@@ -1587,12 +2189,12 @@ cc.Class({
     context.showLaizi(context, laizis);
 
     //提示扣牌
-    if (context.isCankou&&(data.playway=="2"||data.playway==2)&&!isRecovery&&cards.length==4) {
+    if (context.isCankou && (data.playway == "2" || data.playway == 2) && cards.length == 4) {
       context.selectkou_dialog.active = true;
       context.timer(context, 30, true);
-    }else if ((!context.isCankou||cards.length!=4 )&&(data.playway=="2"||data.playway==2)&&!isRecovery) {
-      let socket = context.socket();
-      socket.emit("answerKou","0");
+    } else if ((!context.isCankou || cards.length != 4) && (data.playway == "2" || data.playway == 2) && !isRecovery) {
+       //let socket = context.socket();
+      // socket.emit("answerKou", "0");
     }
   },
   /**
@@ -1636,6 +2238,7 @@ cc.Class({
      * @param context
      */
   lasthands_event: function(data, context) {
+    console.error("==============开始打牌标记==============");
     if (data.userid == cc.beimi.user.id) { //该我出牌 , 庄家出牌，可以不用判断是否庄家了 ，不过，庄家数据已经传过来了
       context.exchange_state("lasthands", context);
       context.exchange_searchlight("current", context);
@@ -1672,7 +2275,13 @@ cc.Class({
          * 重新排序
          */
     context.layout(context.cards_panel, function(fir, sec) {
-      return fir.zIndex - sec.zIndex;
+      if(fir.getComponent("HandCards").koucard == 1){
+          fir.zIndex = fir.getComponent("HandCards").value - 1200;
+      }
+      if(sec.getComponent("HandCards").koucard == 1){
+          sec.zIndex = sec.getComponent("HandCards").value - 1200;
+      }
+      return 0;
     });
 
     if (data.banker == cc.beimi.user.id && lastcard != null) {
@@ -1725,6 +2334,7 @@ cc.Class({
     let cardarray = context.rightcards;
     let prefab = context.cards_right;
 
+    console.log("inx====>", inx);
     if (inx == 1) {
       parent = context.top_panel;
       cardarray = context.topcards;
@@ -1737,8 +2347,38 @@ cc.Class({
     context.initOtherCards(groupNums, context, deskcards, prefab, cardarray, parent, spec, inx); //左侧，
   },
 
+  initMyPlayerHandCards: function(deskcards, inx, context, spec) {
+    let parent = context.right_panel;
+    let cardarray = context.rightcards;
+    let prefab = context.cards_right;
+
+    console.log("inx====>", inx);
+    if (inx == 1) {
+      parent = context.top_panel;
+      cardarray = context.topcards;
+      prefab = context.cards_top;
+    } else if (inx == 2) {
+      parent = context.left_panel;
+      cardarray = context.leftcards;
+      prefab = context.cards_left;
+    }
+    context.initMyOtherCards(context, deskcards, prefab, cardarray, parent, spec, inx); //左侧，
+  },
+
+  initMyOtherCards: function(context, cards, prefab, cardsarray, parent, spec, inx) {
+    for (var i = 0; i < cards; i++) {
+      console.error("==初始化其他玩家牌==initMyOtherCards========",i);
+      let temp = cc.instantiate(prefab);
+      let temp_script = temp.getComponent("SpecCards");
+      temp_script.init(spec, inx);
+      temp.parent = parent;
+      cardsarray.push(temp);
+    }
+  },
+
   initOtherCards: function(group, context, cards, prefab, cardsarray, parent, spec, inx) {
     for (var i = group * 4; i < cards && i < (group + 1) * 4; i++) {
+      console.error("==初始化其他玩家牌==initOtherCards========",i);
       //let temp = context.cardpool.get();
       //temp.parent = parent ;
       let temp = cc.instantiate(prefab);
@@ -1750,9 +2390,28 @@ cc.Class({
     }
   },
 
+  initMjKouCards: function(group, context, cards, banker, laizis) {
+    for (var i = group * 4; i < cards.length && i < (group + 1) * 4; i++) {
+      let temp = context.cardpool.get();
+      if (temp==null) {
+         context.cardpool.put(cc.instantiate(this.cards_current));
+        temp = context.cardpool.get();
+      }
+      let temp_script = temp.getComponent("HandCards");
+      context.playercards.push(temp);
+      // context.playercards[i].zIndex =  temp_script.value - 1000;
+      temp_script.init(cards[i], laizis,true);
+      temp.parent = context.cards_panel;
+    }
+  },
+
   initMjCards: function(group, context, cards, banker, laizis) {
     for (var i = group * 4; i < cards.length && i < (group + 1) * 4; i++) {
       let temp = context.cardpool.get();
+      if (temp==null) {
+         context.cardpool.put(cc.instantiate(this.cards_current));
+        temp = context.cardpool.get();
+      }
       let temp_script = temp.getComponent("HandCards");
       context.playercards.push(temp);
       temp_script.init(cards[i], laizis);
@@ -1766,9 +2425,10 @@ cc.Class({
         temp.parent = context.cards_panel;
       }, 200);
     }
+
   },
 
-//左上角赖子展示
+  //左上角赖子展示
   showLaizi: function(context, cards) {
     context.laiziNode.active = true;
     for (var i = 0; i < cards.length; i++) {
@@ -1776,10 +2436,10 @@ cc.Class({
       if (context.laizicardpool.size() > 0) { // 通过 size 接口判断对象池中是否有空闲的对象
         temp = context.laizicardpool.get();
       } else { // 如果没有空闲对象，也就是对象池中备用对象不够时，我们就用 cc.instantiate 重新创建
-        temp = cc.instantiate(this.enemyPrefab);
+        temp = cc.instantiate(context.cards_current);
       }
       let temp_script = temp.getComponent("HandCards");
-      temp_script.init(cards[i]);
+      temp_script.init(cards[i],cards);
       context.laizicards.push(temp);
       temp.parent = context.laiziNode;
     }
@@ -1787,21 +2447,164 @@ cc.Class({
     ani.play("laizi_to_top");
   },
 
+  collectRecycleData(context){
+      //清理我的手牌
+    // for (var i = 0; i < context.playercards.length;) {
+    //   let temp = context.playercards[i].getComponent("HandCards");
+    //   context.cardpool.put(context.playercards[i]);
+    //   context.playercards.splice(i, 1);
+    //   i++;
+    // }
+    //
+    // //清理赖子
+    // for (var i = 0; i < context.laizicards.length;) {
+    //   let temp = context.laizicards[i].getComponent("HandCards");
+    //   context.laizicardpool.put(context.laizicards[i]);
+    //   context.playercards.splice(i, 1);
+    //   i++;
+    // }
+
+    for (var i = 0; i < this.playercards.length; i++) {
+      this.playercards[i].destroy();
+    }
+    this.playercards.splice(0, this.playercards.length);
+
+    //销毁赖子牌
+    for (var i = 0; i < this.laizicards.length; i++) {
+      this.laizicards[i].destroy();
+    }
+    this.laizicards.splice(0, this.laizicards.length);
+
+    /**
+         * 销毁桌面上已打出的牌
+         */
+    for (var i = 0; i < this.deskcards.length; i++) {
+      this.deskcards[i].destroy();
+    }
+    this.deskcards.splice(0, this.deskcards.length);
+    /**
+         * 销毁左侧玩家的手牌
+         */
+    for (var i = 0; i < this.leftcards.length; i++) {
+      this.leftcards[i].destroy();
+    }
+    this.leftcards.splice(0, this.leftcards.length);
+    /**
+         * 销毁右侧玩家的手牌
+         */
+    for (var i = 0; i < this.rightcards.length; i++) {
+      this.rightcards[i].destroy();
+    }
+    this.rightcards.splice(0, this.rightcards.length);
+    /**
+         * 销毁对家的手牌
+         */
+    for (var i = 0; i < this.topcards.length; i++) {
+      this.topcards[i].destroy();
+    }
+    this.topcards.splice(0, this.topcards.length);
+
+    //销毁碰杠吃的牌
+    for (var i = 0; i < this.actioncards.length; i++) {
+      this.actioncards[i].destroy();
+    }
+    this.actioncards.splice(0, this.actioncards.length);
+
+    //销毁左边玩家碰杠吃的牌
+    for (var i = 0; i < this.leftactioncards.length; i++) {
+      this.leftactioncards[i].destroy();
+    }
+    this.leftactioncards.splice(0, this.leftactioncards.length);
+
+    //销毁右边玩家碰杠吃的牌
+    for (var i = 0; i < this.rightactioncards.length; i++) {
+      this.rightactioncards[i].destroy();
+    }
+    this.rightactioncards.splice(0, this.rightactioncards.length);
+
+    //销毁上边玩家碰杠吃的牌
+    for (var i = 0; i < this.topactioncards.length; i++) {
+      this.topactioncards[i].destroy();
+    }
+    this.topactioncards.splice(0, this.topactioncards.length);
+
+
+  },
   /**
      * 回收系统资源，用于清理资源
      * @param context
      */
   collect: function(context) {
+    var skip = false;
+    console.error("---------------组件数量："+context.playersarray.length+"--------------");
     for (var i = 0; i < context.playersarray.length;) {
       let player = context.playersarray[i];
       var playerscript = player.getComponent("MaJiangPlayer");
-      if (playerscript.data.id != cc.beimi.user.id) { //当前 玩家不回收，最终 Destroy 的时候会被回收
+      if (skip || playerscript.data.id != cc.beimi.user.id) { //当前 玩家不回收，最终 Destroy 的时候会被回收
         context.playerspool.put(player);
         context.playersarray.splice(i, 1);
       } else {
         i++;
+        skip = true;
       }
     }
+    console.error("---------------剩余组件数量："+context.playersarray.length+"--------------");
+
+    //
+    //
+    // /**
+    //      * 销毁桌面上已打出的牌
+    //      */
+    // for (var i = 0; i < context.deskcards.length; i++) {
+    //   context.deskcards[i].destroy();
+    // }
+    // context.deskcards.splice(0, this.deskcards.length);
+    // /**
+    //      * 销毁左侧玩家的手牌
+    //      */
+    // for (var i = 0; i < context.leftcards.length; i++) {
+    //   context.leftcards[i].destroy();
+    // }
+    // context.leftcards.splice(0, context.leftcards.length);
+    // /**
+    //      * 销毁右侧玩家的手牌
+    //      */
+    // for (var i = 0; i < context.rightcards.length; i++) {
+    //   context.rightcards[i].destroy();
+    // }
+    // context.rightcards.splice(0, context.rightcards.length);
+    // /**
+    //      * 销毁对家的手牌
+    //      */
+    // for (var i = 0; i < context.topcards.length; i++) {
+    //   context.topcards[i].destroy();
+    // }
+    // context.topcards.splice(0, context.topcards.length);
+    //
+    // //销毁碰杠吃的牌
+    // for (var i = 0; i < context.actioncards.length; i++) {
+    //   context.actioncards[i].destroy();
+    // }
+    // context.actioncards.splice(0, context.actioncards.length);
+    //
+    // //销毁左边玩家碰杠吃的牌
+    // for (var i = 0; i < context.leftactioncards.length; i++) {
+    //   context.leftactioncards[i].destroy();
+    // }
+    // context.leftactioncards.splice(0, context.leftactioncards.length);
+    //
+    // //销毁右边玩家碰杠吃的牌
+    // for (var i = 0; i < context.rightactioncards.length; i++) {
+    //   context.rightactioncards[i].destroy();
+    // }
+    // context.rightactioncards.splice(0, context.rightactioncards.length);
+    //
+    // //销毁上边玩家碰杠吃的牌
+    // for (var i = 0; i < context.topactioncards.length; i++) {
+    //   context.topactioncards[i].destroy();
+    // }
+    // context.topactioncards.splice(0, context.topactioncards.length);
+
   },
 
   /**
@@ -1982,9 +2785,9 @@ cc.Class({
     console.log("-------dealActionProcess--------");
     var actionevent = cc.moveTo(0.5, 1080, -147);
     actionevent.easing(cc.easeIn(3.0));
-
-    object.actionnode_three.runAction(actionevent);
-
+    if(object.actionnode_three){
+        object.actionnode_three.runAction(actionevent);
+    }
     if (object.action == "deal") {
       object.actionnode_deal.active = false;
     }
@@ -1997,8 +2800,12 @@ cc.Class({
   },
 
   recovery: function() {
-    //this.initgame();
+    this.initgame();
+    // let socket = this.socket();
+    // socket.emit("getCurrentCards", "1");
+    // console.error("给服务器发送---getCurrentCards--的命令---------------");
   },
+
   timer: function(object, times, isCancelKouCard) {
     if (times > 9) {
       object.mjtimer.string = times;
@@ -2015,11 +2822,11 @@ cc.Class({
         }
         object.mjtimer.string = text;
       }
-      if (isCancelKouCard&&times==0) {
+      if (isCancelKouCard && times == 0) {
         console.log("发送不扣的通知");
         object.selectkou_dialog.active = false;
         let socket = this.socket();
-        socket.emit("answerKou","0");
+        // socket.emit("answerKou", "0");
         object.isCankou = false;
       }
     }
@@ -2030,82 +2837,117 @@ cc.Class({
     object.schedule(object.callback, 1, times, 0);
   },
 
+
+
+
   clean: function() {
+    //隐藏碰吃等布局
+    this.actionnode_deal.active = false;
+    this.desk_tip.active = false;
+
     /**
          * 销毁玩家数据
          */
-    for (var i = 0; i < this.playercards.length; i++) {
-      this.playercards[i].destroy();
+    if(this.playercards&&this.playercards.length>0){
+      for (var i = 0; i < this.playercards.length; i++) {
+        this.playercards[i].destroy();
+      }
+      this.playercards.splice(0, this.playercards.length);
     }
-    this.playercards.splice(0, this.playercards.length);
+
 
     //销毁赖子牌
-    for (var i = 0; i < this.laizicards.length; i++) {
-      this.laizicards[i].destroy();
+    if (this.laizicards&&this.laizicards.length>0) {
+      for (var i = 0; i < this.laizicards.length; i++) {
+        this.laizicards[i].destroy();
+      }
+      this.laizicards.splice(0, this.laizicards.length);
     }
-
-    this.laizicards.splice(0, this.laizicards.length);
 
     /**
          * 销毁桌面上已打出的牌
          */
-    for (var i = 0; i < this.deskcards.length; i++) {
-      this.deskcards[i].destroy();
+    if (this.deskcards&&this.deskcards.length>0) {
+      for (var i = 0; i < this.deskcards.length; i++) {
+        this.deskcards[i].destroy();
+      }
+      this.deskcards.splice(0, this.deskcards.length);
     }
-    this.deskcards.splice(0, this.deskcards.length);
+
     /**
          * 销毁左侧玩家的手牌
          */
-    for (var i = 0; i < this.leftcards.length; i++) {
-      this.leftcards[i].destroy();
-    }
-    this.leftcards.splice(0, this.leftcards.length);
+         if (this.leftcards&&this.leftcards.length>0) {
+           for (var i = 0; i < this.leftcards.length; i++) {
+             this.leftcards[i].destroy();
+           }
+           this.leftcards.splice(0, this.leftcards.length);
+         }
+
     /**
          * 销毁右侧玩家的手牌
          */
-    for (var i = 0; i < this.rightcards.length; i++) {
-      this.rightcards[i].destroy();
-    }
-    this.rightcards.splice(0, this.rightcards.length);
+         if (this.rightcards&&this.rightcards.length>0) {
+           for (var i = 0; i < this.rightcards.length; i++) {
+             this.rightcards[i].destroy();
+           }
+           this.rightcards.splice(0, this.rightcards.length);
+         }
+
     /**
          * 销毁对家的手牌
          */
-    for (var i = 0; i < this.topcards.length; i++) {
-      this.topcards[i].destroy();
-    }
-    this.topcards.splice(0, this.topcards.length);
+         if (this.topcards&&this.topcards.length>0) {
+           for (var i = 0; i < this.topcards.length; i++) {
+             this.topcards[i].destroy();
+           }
+           this.topcards.splice(0, this.topcards.length);
+         }
+
 
     //销毁碰杠吃的牌
-    for (var i = 0; i < this.actioncards.length; i++) {
-      this.actioncards[i].destroy();
-    }
-    this.actioncards.splice(0, this.actioncards.length);
+      if (this.actioncards&&this.actioncards.length>0) {
+        for (var i = 0; i < this.actioncards.length; i++) {
+          this.actioncards[i].destroy();
+        }
+        this.actioncards.splice(0, this.actioncards.length);
+      }
 
     //销毁左边玩家碰杠吃的牌
-    for (var i = 0; i < this.leftactioncards.length; i++) {
-      this.leftactioncards[i].destroy();
+    if (this.leftactioncards&&this.leftactioncards.length>0) {
+      for (var i = 0; i < this.leftactioncards.length; i++) {
+        this.leftactioncards[i].destroy();
+      }
+      this.leftactioncards.splice(0, this.leftactioncards.length);
     }
-    this.leftactioncards.splice(0, this.leftactioncards.length);
 
     //销毁右边玩家碰杠吃的牌
-    for (var i = 0; i < this.rightactioncards.length; i++) {
-      this.rightactioncards[i].destroy();
+    if (this.rightactioncards&&this.rightactioncards.length>0) {
+      for (var i = 0; i < this.rightactioncards.length; i++) {
+        this.rightactioncards[i].destroy();
+      }
+      this.rightactioncards.splice(0, this.rightactioncards.length);
     }
-    this.rightactioncards.splice(0, this.rightactioncards.length);
+
 
     //销毁上边玩家碰杠吃的牌
-    for (var i = 0; i < this.topactioncards.length; i++) {
-      this.topactioncards[i].destroy();
+    if (this.topactioncards&&this.topactioncards.length>0) {
+      for (var i = 0; i < this.topactioncards.length; i++) {
+        this.topactioncards[i].destroy();
+      }
+      this.topactioncards.splice(0, this.topactioncards.length);
     }
-    this.topactioncards.splice(0, this.topactioncards.length);
 
     /**
          * 玩家数据销毁条件（房间解散，或者有玩家退出房价的时候，所有玩家数据销毁后冲洗排序）
          */
     this.mask.active = false;
-
     if (this.summarypage) {
       this.summarypage.destroy();
+    }
+
+    if (this.summarytotalpage) {
+      this.summarytotalpage.destroy();
     }
 
   },
@@ -2118,6 +2960,11 @@ cc.Class({
     /**
          * 初始化桌面
          */
+     this.isCankou=true;
+    if (this.currentnum >= 0 && this.currentnum <= this.numofgames) {
+      this.ju.string = (this.currentnum + 1) + "/" + this.numofgames + "局"
+    }
+
     if (this.gameover == true) {
       for (var inx = 0; inx < this.player.length; inx++) {
         this.player[inx].destroy();
@@ -2138,6 +2985,16 @@ cc.Class({
       socket.emit("restart", "restart");
     }
   },
+
+
+  getGameOverSummary(){
+    let socket = this.socket();
+    socket.emit("gameOverSummary",this.roomid.string);
+  },
+
+  endGame: function() {
+
+  },
   /**
      * 开始游戏
      */
@@ -2156,6 +3013,7 @@ cc.Class({
     //     socket.disconnect();
     // }
     this.inited = false;
+    //cc.beimi.extparams=null;
     this.cleanmap();
     this.cleanTingTip(this);
     if (this.ready()) {
@@ -2168,14 +3026,18 @@ cc.Class({
 
   // },
 
-  cleanTingTip: function(context){
+  cleanTingTip: function(context) {
+    console.log("--0000---清理听牌ui");
     if (context.ting_tip.active) {
+      console.log("--11111---清理听牌ui");
       context.ting_tip.active = false;
-      if (context.huactioncardstip&&context.huactioncardstip.length>0) {
+      if (context.huactioncardstip && context.huactioncardstip.length > 0) {
         for (var inx = 0; inx < context.huactioncardstip.length; inx++) {
           context.huactioncardstip[inx].destroy();
         }
       }
     }
-  }
+  },
+
+
 });

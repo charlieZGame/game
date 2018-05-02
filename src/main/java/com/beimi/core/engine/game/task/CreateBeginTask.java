@@ -6,8 +6,15 @@ import java.util.List;
 import java.util.Map;
 
 import com.alibaba.fastjson.JSONObject;
+import com.beimi.core.engine.game.impl.MaJiangGameUserDefined;
+import com.beimi.model.DefineMap;
+import com.beimi.util.UserCardsUtil;
+import com.beimi.util.client.NettyClients;
+import com.beimi.util.rules.model.CardRecoverUtil;
 import com.beimi.util.rules.model.MaJiangBoard;
 import com.beimi.util.rules.model.Player;
+import com.beimi.util.server.handler.BeiMiClient;
+import com.beimi.util.server.handler.GameEventHandler;
 import com.beimi.web.model.GamePlayway;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -74,18 +81,42 @@ public class CreateBeginTask extends AbstractTask implements ValueWithExpiryTime
 		if(!"koudajiang".equals(gamePlayway.getCode())) {
 			ActionTaskUtils.sendEvent("banker", new Banker(gameRoom.getLastwinner()), gameRoom);
 		}
-
-		Board board = GameUtils.playGame(playerList, gameRoom, gameRoom.getLastwinner(), gameRoom.getCardsnum()) ;
+		Board board = null;
+		if(UserCardsUtil.getCardsData() == null || UserCardsUtil.getCardsData().isEmpty()) {
+			board = GameUtils.playGame(playerList, gameRoom, gameRoom.getLastwinner(), gameRoom.getCardsnum());
+		}else{
+			GamePlayway gamePlayWay = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), gameRoom.getOrgi()) ;
+			MaJiangGameUserDefined maJiangGameUserDefined = new MaJiangGameUserDefined();
+			maJiangGameUserDefined.setCards(UserCardsUtil.getCardsInfo());
+			board = maJiangGameUserDefined.process(playerList, gameRoom,gamePlayWay, gameRoom.getLastwinner(), gameRoom.getCardsnum());
+		}
 		CacheHelper.getBoardCacheBean().put(gameRoom.getId(), board, gameRoom.getOrgi());
 		if ("koudajiang".equals(gamePlayway.getCode())) {
+
 			new Thread(new Runnable() {
+				private Board board;
+				public Runnable setBoard(Board board) {
+					this.board = board;
+					return this;
+				}
 				@Override
 				public void run() {
 					if (!koudajiangHandler(board, playerList)) {
 						logger.error("发牌失败");
+						List<PlayUserClient> playerList = CacheHelper.getGamePlayerCacheBean().getCacheObject(gameRoom.getRoomid(), gameRoom.getOrgi());
+						if (playerList == null || playerList.size() == 0) {
+							return ;
+						}
+						logger.info("玩家强制离场 playerList:{}", playerList.size());
+						for (PlayUserClient playUserClient : playerList) {
+							logger.info("tid:{} 玩家强制离场 userId:{}", playUserClient.getId());
+							BeiMiClient tmpClient = NettyClients.getInstance().getClient(playUserClient.getId());
+							//todo 影响正常测试 在扣回应问题没有解决前暂时屏蔽
+							//tmpClient.getClient().sendEvent(BMDataContext.APPLY_LEAVE_ROOM, new DefineMap<String, String>().putData("type", "6"));
+							//GameUtils.updatePlayerClientStatus(playerList.get(0).getId(), gameRoom.getOrgi(), null, true);
+						}
 					}
-				}
-			}).start();
+			}}.setBoard(board)).start();
 		}else {
 			for (Object temp : playerList) {
 				PlayUserClient playerUser = (PlayUserClient) temp;
@@ -126,8 +157,9 @@ public class CreateBeginTask extends AbstractTask implements ValueWithExpiryTime
 		}
 
 
-		MaJiangBoard tempBoard = generateTempBoard((MaJiangBoard) board);
+		MaJiangBoard tempBoard = CardRecoverUtil.generateTempBoard((MaJiangBoard) board);
 		for(int i = 0;i<4;i++) {
+			((MaJiangBoard) board).setNumber(i+1);
 			Map<String,byte[]> tempMap = new HashMap<String,byte[]>();
 			for (int j = 0;j< playerList.size();j++) {
 				PlayUserClient playerUser = playerList.get(j);
@@ -149,7 +181,7 @@ public class CreateBeginTask extends AbstractTask implements ValueWithExpiryTime
 				ActionTaskUtils.sendEvent(playerUser, userBoard);
 			}
 			long startTime = System.currentTimeMillis();
-			while(true) {
+			while(true && i < 3) {
 
 				if((System.currentTimeMillis() - startTime)/1000 > 600){
 					return false;
@@ -160,34 +192,44 @@ public class CreateBeginTask extends AbstractTask implements ValueWithExpiryTime
 				}else {
 
 					for (Map.Entry<String, Integer> entry : ((MaJiangBoard) board).getAnswer().entrySet()) {
-						if(entry.getValue() == (i+1)){
-							if(!tempMap.containsKey(entry.getKey())){
-								continue;
-							}
-							for(Player player : ((MaJiangBoard) board).getPlayers()){
-								if(!player.getPlayuser().equals(entry.getKey())){
-									continue;
-								}
-								for(byte _b : tempMap.get(entry.getKey())){
-									if(player.getCoverCards() == null){
-										player.setCoverCards(new ArrayList<Byte>());
+						if(entry.getValue() == (i+1)) {
+							//根据扣不扣将牌分堆
+							if (tempMap.containsKey(entry.getKey())) {
+
+								for (Player player : ((MaJiangBoard) board).getPlayers()) {
+									if (!player.getPlayuser().equals(entry.getKey())) {
+										continue;
 									}
-									player.getCoverCards().add(_b);
-									tempMap.remove(entry.getKey());
+									for (byte _b : tempMap.get(entry.getKey())) {
+										if (player.getCoverCards() == null) {
+											player.setCoverCards(new ArrayList<Byte>());
+										}
+										player.getCoverCards().add(_b);
+										tempMap.remove(entry.getKey());
+									}
 								}
 							}
 						}
-						if ((entry.getValue() != (i + 1) || entry.getValue() > 4 || entry.getValue() <= 0)&& entry.getValue() != -1) {
+
+						if((entry.getValue() >= 0 && entry.getValue() < (i+1)) && entry.getValue() != -1){
 							isQi = false;
 						}
+
+						/*if ((entry.getValue() != (i+1) || entry.getValue() > 3 || entry.getValue() <= 0)&& entry.getValue() != -1) {
+							if(entry.getValue() >= 3){
+								isQi = true;
+							}else {
+								isQi = false;
+							}
+						}*/
 					}
 				}
-				if(System.currentTimeMillis()%2 == 0) {
+				if(System.currentTimeMillis()%5 == 0) {
 					logger.info("tid:{}校验客户端相应信息 isQi:{},answer:{}", startTime, isQi, JSONObject.toJSONString(((MaJiangBoard) board).getAnswer()));
 				}
 				if(!isQi){
 					try {
-						Thread.sleep(500);
+						Thread.sleep(200);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
@@ -217,7 +259,7 @@ public class CreateBeginTask extends AbstractTask implements ValueWithExpiryTime
 	 * @param board
 	 * @return
      */
-	private MaJiangBoard generateTempBoard(MaJiangBoard board){
+	/*private MaJiangBoard generateTempBoard(MaJiangBoard board){
 
 		MaJiangBoard temp = new MaJiangBoard();
 		temp.setCommand(board.getCommand());
@@ -240,7 +282,7 @@ public class CreateBeginTask extends AbstractTask implements ValueWithExpiryTime
 		temp.setRoom(board.getRoom());
 		temp.setWinner(board.getWinner());
 		return temp;
-	}
+	}*/
 
 
 }

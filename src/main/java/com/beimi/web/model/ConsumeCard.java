@@ -69,10 +69,16 @@ public class ConsumeCard implements Serializable {
     }
 
     public Integer getEffectiveNum() {
+        if(effectiveNum == null){
+            return 0;
+        }
         return effectiveNum;
     }
 
     public void setEffectiveNum(Integer effectiveNum) {
+        if(effectiveNum == null){
+            this.effectiveNum = 0;
+        }
         this.effectiveNum = effectiveNum;
     }
 

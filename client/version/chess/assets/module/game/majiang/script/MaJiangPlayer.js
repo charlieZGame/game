@@ -8,6 +8,10 @@ cc.Class({
             default:null ,
             type:cc.Label
         },
+        useravatar: {
+          default: null,
+          type: cc.Sprite
+        },
         goldcoins:{
             default:null ,
             type:cc.Label
@@ -81,8 +85,17 @@ cc.Class({
             this.selectcards.parent.x = this.selectcards.parent.x * -1 ;
         }
 
-        this.username.string = playerdata.username ;
-        this.goldcoins.string = playerdata.goldcoins ;
+        if(playerdata.nickname == null) {
+            this.username.string = playerdata.username;
+        } else {
+            this.username.string = playerdata.nickname;
+            if (playerdata.photo) {
+              cc.loader.load(playerdata.photo, function(error, res) {
+                this.useravatar.spriteFrame = new cc.SpriteFrame(res);
+              }.bind(this));
+            }
+        }
+        this.goldcoins.string = playerdata.goldcoins + " " + playerdata.playerlevel;
     },
     banker:function(){
         this.creator.active = true ;
@@ -113,7 +126,6 @@ cc.Class({
     },
 
     setChatMessage:function(sound){
-         console.log("self.tablepos------>",this.tablepos,sound);
          let message = '';
          if (sound=="sound1") {
            message ='快点吧，我等的花都谢啦';
@@ -143,8 +155,6 @@ cc.Class({
            message ='不要吵啦，不要吵啦，专心打游戏吧';
             cc.beimi.audio.playCharSound(9);
          }
-
-          console.log("setChatMessage----message->",message);
 
          if (this.tablepos == "left") {
            this.chatbgld.active = true;

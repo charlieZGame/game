@@ -1,17 +1,16 @@
 package com.beimi.util.rules.model;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-
 import com.alibaba.fastjson.JSONObject;
+import com.beimi.backManager.HouseCardHandlerService;
 import com.beimi.model.GameResultSummary;
+import com.beimi.rule.HuValidate;
+import com.beimi.rule.ReturnResult;
 import com.beimi.util.GameWinCheck;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-
 import com.beimi.core.BMDataContext;
 import com.beimi.core.engine.game.ActionTaskUtils;
 import com.beimi.core.engine.game.BeiMiGameEvent;
@@ -25,6 +24,9 @@ import com.beimi.web.model.GameRoom;
 import com.beimi.web.model.PlayUserClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.WebApplicationContext;
 
 /**
  * 牌局，用于描述当前牌局的内容 ， 
@@ -51,6 +53,14 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 	private Map<String,Integer> answer = new ConcurrentHashMap<String,Integer>();
 
 	private boolean isFPEnd;
+	private int number; //扣的打法发到第几轮了
+	//控制循环吃碰胡
+	private Map<String,MJCardMessage> huController = new HashMap<String,MJCardMessage>();
+
+	//控制 能糊不糊 这一轮都不能糊
+	private Map<String,Boolean> cycleController = new HashMap<String,Boolean>();
+
+	private boolean handlerDoIt;
 
 	/**
 	 * 翻底牌 ， 斗地主
@@ -184,14 +194,14 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 	}
 
 	@Override
-	public TakeCards takeCardsRequest(GameRoom gameRoom, Board board, Player player, String orgi, boolean auto, byte[] playCards) {
+	public TakeCards takeCardsRequest(GameRoom gameRoom, Board board, Player player, String orgi, boolean autoa, byte[] playCards) {
 		/**
 		 * 第一步就是先移除 计时器 ， 玩家通过点击页面上 牌面出牌的 需要移除计时器，并根据 状态 进行下一个节点
 		 */
 		CacheHelper.getExpireCache().remove(gameRoom.getRoomid());
 
 		TakeCards takeCards = null;
-		if (board.getDeskcards().size() == 0) {//出完了
+		if (board.getDeskcards().size() <= 14) {//出完了
 			logger.info("出完糊的方式");
 			GameUtils.getGame(gameRoom.getPlayway(), orgi).change(gameRoom, BeiMiGameEvent.ALLCARDS.toString(), 0);    //通知结算
 		} else {
@@ -212,7 +222,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 				}
 				ActionTaskUtils.sendEvent("takecards", takeCards, gameRoom);
 
-				player.setHistory(ArrayUtils.add(player.getHistory(), takeCards.getCard()));
+				player.setHistory(ArrayUtils.add(player.getHistoryArray(), takeCards.getCard()));
 
 				/**
 				 * 判断是否胡牌 / 杠牌 / 碰 / 吃 ， 如果有，则发送响应的通知给其他玩家，如果没，下一个玩家 抓牌
@@ -221,34 +231,86 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 				 *
 				 */
 				boolean hasAction = false;
-				for (Player temp : board.getPlayers()) {
+				Player[] playersTemp = new Player[board.getPlayers().length-1];
+				int n = 0;
+				for (int i = 0;i<board.getPlayers().length ; i++){
+					if(player.getPlayuser().equals(board.getPlayers()[i].getPlayuser())){
+						for(int j = (i==3 ? 0 : i + 1); j != i ; j = (j == 3 ? 0 : j + 1) ){
+							playersTemp[n] = board.getPlayers()[j];
+							n++;
+						}
+					}
+				}
+
+				for (Player temp : playersTemp) {
 					/**
 					 * 玩法要求， 如果当前玩家有定缺，则当前出牌在和 缺门 的花色相同的情况下，禁止 杠碰吃胡
 					 */
-				//// TODO: 2018/3/26 ZCL 这个在涞源麻将中规则不成立
+					//// TODO: 2018/3/26 ZCL 这个在涞源麻将中规则不成立
 				/*	if (temp.getColor() == takeCards.getCard() / 36) {
 						continue;
 					}*/
-					GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), orgi) ;
+					GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), orgi);
 
 					/**
-					 * 检查是否有 杠碰吃胡的 状况
+					 * 检查是否有 杠碰吃胡的 状况 如果这轮有没有糊 则不允许糊
 					 */
+
+
 					if (!temp.getPlayuser().equals(player.getPlayuser())) {
 
-						logger.info("参与校验的牌为 card:{}",takeCards.getCard());
-						MJCardMessage mjCard = checkMJCard(temp, takeCards.getCard(),false,gamePlayway.getCode());
-						logger.info("whether having gang chi hu mjCard:{}",mjCard);
+						logger.info("参与校验的牌为 card:{}", takeCards.getCard());
+						MJCardMessage mjCard = checkMJCard(temp, takeCards.getCard(), false, gamePlayway.getCode());
+						logger.info("whether having gang chi hu mjCard:{}", mjCard);
 						if (mjCard.isGang() || mjCard.isPeng() || mjCard.isChi() || mjCard.isHu()) {
 							/**
 							 * 通知客户端 有杠碰吃胡了
 							 */
-							logger.info("通知客户端吃碰胡 peng:{}",mjCard.isPeng());
-							hasAction = true;
-							ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
-						}else{
+							logger.info("通知客户端吃碰胡 peng:{}", mjCard.isPeng());
+
+							try {
+								if(((MaJiangBoard)board).getCycleController().containsKey(temp.getPlayuser()) &&
+										((MaJiangBoard)board).getCycleController().get(temp.getPlayuser()) && mjCard.isHu()){
+									logger.info("userId:{},mjCard:{},cycleController 存在未处理cycleController:{}",temp.getPlayuser(),mjCard,cycleController);
+
+									//此处不应该break,应该continue 校验其他的用户
+									//break;
+									continue;
+
+								}
+
+								hasAction = true;
+								logger.info("userId:{} 继续",temp.getPlayuser());
+								synchronized (huController) {
+									huController.put(temp.getPlayuser(),mjCard);
+									logger.info("huController 添加 userId:{},data:{}，huController:{}",temp.getPlayuser(),mjCard,huController);
+									if (huController.size() >= 2) {
+										huController.wait();
+										if (handlerDoIt) {
+											break;
+										}
+										handlerDoIt = false;
+										ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
+									} else {
+										handlerDoIt = false;
+										ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
+									}
+								}
+								if (handlerDoIt) {
+									huController.clear();
+									break;
+								}
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+							//} else {
+							//ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
+							//}
+						} else {
+							player.setRecoveryHistory(ArrayUtils.add(player.getHistoryArray(), takeCards.getCard()));
 							mjCard.setCommand("ting");
-							mjCard.setRecommendCards(GameUtils.recommandCards(temp, temp.getCardsArray(),gamePlayway.getCode()));
+							//提示胡牌暂时去掉
+							//mjCard.setRecommendCards(GameUtils.recommandCards(temp, temp.getCardsArray(),gamePlayway.getCode()));
 							ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
 						}
 					}
@@ -261,7 +323,8 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 				if (hasAction == false) {
 					board.dealRequest(gameRoom, board, orgi, false, null);
 				} else {
-					GameUtils.getGame(gameRoom.getPlayway(), orgi).change(gameRoom, BeiMiGameEvent.DEAL.toString(), 5);    //有杠碰吃，等待5秒后发牌
+					// 如果有吃碰杠，需要用户主动去打牌,不需要叫状态机处理
+					//GameUtils.getGame(gameRoom.getPlayway(), orgi).change(gameRoom, BeiMiGameEvent.DEAL.toString(), 5);    //有杠碰吃，等待5秒后发牌
 				}
 			} else {
 				takeCards = new TakeMaJiangCards();
@@ -307,6 +370,10 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 			} else {
 				newCard = board.getDeskcards().remove(0);
 			}
+			if(((MaJiangBoard)board).getCycleController().containsKey(next.getPlayuser()) && ((MaJiangBoard)board).getCycleController().get(next.getPlayuser())){
+				logger.info("userId:{} 存在糊控制",next.getPlayuser());
+				((MaJiangBoard)board).getCycleController().remove(next.getPlayuser());
+			}
 			logger.info("new card:{}", newCard);
 			GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), orgi) ;
 			MJCardMessage mjCard = checkMJCard(next, newCard, true,gamePlayway.getCode());
@@ -315,6 +382,8 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 				/**
 				 * 通知客户端 有杠碰吃胡了
 				 */
+
+			logger.info("userd:{} 自己取牌吃碰胡 mjCard:{}",next.getPlayuser(),mjCard);
 				hasAction = true;
 				ActionTaskUtils.sendEvent(next.getPlayuser(), mjCard);
 			}
@@ -349,6 +418,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 		/**
 		 * 牌出完了就算赢了
 		 */
+		logger.info("roomId:{},userId:{}",gameRoom.getId(), player.getPlayuser());
 		PlayUserClient nextPlayUserClient = ActionTaskUtils.getPlayUserClient(gameRoom.getId(), player.getPlayuser(), orgi);
 		logger.info("下一个玩家出牌， 玩家的信息为 player:{}", nextPlayUserClient == null ? null : nextPlayUserClient.getUsername());
 		if (BMDataContext.PlayerTypeEnum.NORMAL.toString().equals(nextPlayUserClient.getPlayertype()) && !player.isHu()) {
@@ -373,18 +443,37 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 		boolean gameRoomOver = false;    //解散房间
 		if("1".equals(playway.getCode())){
 			logger.info("走涞源混");
-			laiYuanHunSummary(board,players,summary,playway,gameRoomOver);
+			laiYuanHunSummary(gameRoom,board,players,summary,playway,gameRoomOver);
 		}else if("2".equals(playway.getCode())){
 			logger.info("走扣大将");
 			laiYuanKouSummary(board,players,summary,playway);
 		}else{
 			logger.info("走默认路径判断糊");
-			laiYuanHunSummary(board,players,summary,playway,gameRoomOver);
+			laiYuanHunSummary(gameRoom,board,players,summary,playway,gameRoomOver);
 			//defaultSummary(board,players,summary,playway,gameRoomOver);
 		}
 
 		return summary;
 	}
+
+
+	@Transactional
+	public void houseCardHandler(GameRoom gameRoom, GamePlayway playway,Board board,List<PlayUserClient> players,List<ReturnResult> returnResults){
+
+		try {
+			if (gameRoom == null || playway == null) {
+				return;
+			}
+			HouseCardHandlerService cardHandlerService = BMDataContext.getContext().getBean("houseCardHandlerService", HouseCardHandlerService.class);
+			cardHandlerService.cardHandler(gameRoom,players,returnResults);
+			cardHandlerService.saveUserFlow(gameRoom, board, players,returnResults);
+		}catch (Exception e){
+			logger.error("保存历史数据异常 returnResults:{}",returnResults,e);
+		}
+	}
+
+
+
 
 	private byte cardConvert(byte[]src,byte[] b){
 		for(int i = 0 ;i<src.length-1 ; i++){
@@ -393,41 +482,111 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 		return src[src.length - 1];
 	}
 
-	private void laiYuanHunSummary(Board board, List<PlayUserClient> players,Summary summary,GamePlayway playway,boolean gameRoomOver){
+	private void laiYuanHunSummary(GameRoom gameRoom,Board board, List<PlayUserClient> players,Summary summary,GamePlayway playway,boolean gameRoomOver) {
+
+		List<ReturnResult> returnResults = null;
 		for (Player player : board.getPlayers()) {
 			PlayUserClient playUser = getPlayerClient(players, player.getPlayuser());
-			SummaryPlayer summaryPlayer = new SummaryPlayer(player.getPlayuser(), playUser.getUsername()+"", board.getRatio(), board.getRatio() * playway.getScore(), false, player.getPlayuser().equals(board.getBanker()));
+			SummaryPlayer summaryPlayer = new SummaryPlayer(player.getPlayuser(), playUser.getUsername() + "", board.getRatio(), board.getRatio() * playway.getScore(), false, player.getPlayuser().equals(board.getBanker()));
+
 			logger.info("汇总结果");
 			logger.info("player:{} 牌数 size:{}", player.getPlayuser(), player.getCardsArray().length);
-
-			//	MJCardMessage mjCard = GameUtils.processLaiyuanMJCard(player, b, card, false,null);
 			if (!player.isWin()) {
 				logger.info("roomId:{} 整理棋牌为没赢", board.getRoom());
-				List<GameResultSummary> gameResultChecks = GameWinCheck.playerSunmary(player,player.getCollections());
-				if(CollectionUtils.isEmpty(gameResultChecks)){
+				List<GameResultSummary> gameResultChecks = GameWinCheck.playerSummary(player, null);
+				if (CollectionUtils.isEmpty(gameResultChecks)) {
 					GameResultSummary gameResultSummary = new GameResultSummary();
 					gameResultChecks.add(gameResultSummary);
+				}
+				if (player.getCardsArray() != null) {
+					for (int i = 0; i < player.getCardsArray().length - 1; i++) {
+						for (int j = i + 1; j < player.getCardsArray().length; j++) {
+							if (player.getCardsArray()[i] > player.getCardsArray()[j]) {
+								byte temp = player.getCardsArray()[i];
+								player.getCardsArray()[i] = player.getCardsArray()[j];
+								player.getCardsArray()[j] = temp;
+							}
+						}
+					}
 				}
 				gameResultChecks.get(0).setOthers(player.getCardsArray()); //未出完的牌
 				summaryPlayer.setGameResultChecks(gameResultChecks);
 			} else {
-				logger.info("roomId:{} 整理棋牌为赢", board.getRoom());
-				List<GameResultSummary> gameResultChecks = GameWinCheck.playerSunmary(player, player.getCollections());
+				gameRoom.setLastwinner(player.getPlayuser());
+				logger.info("userId:{},roomId:{} 整理棋牌为赢", board.getRoom());
+				byte[] cardsTemp = new byte[player.getCardsArray().length - 1];
+				System.arraycopy(player.getCardsArray(), 0, cardsTemp, 0, cardsTemp.length);
+				GameUtils.processLaiyuanMJCardResult(player, cardsTemp, player.getCardsArray()[cardsTemp.length], false, player.getCollections(), playway.getCode());
+				for (List<Byte> cards : player.getCollections()) {
+					System.out.println("赢家的牌信息start");
+					for (Byte b : cards) {
+						System.out.print(b + ",");
+					}
+					System.out.println("赢家的牌信息end");
+				}
+				returnResults = scoreSummary(board.getPlayers(), summary, gameRoom, board.getBanker());
+				ReturnResult returnResult = null;
+				for (ReturnResult rr : returnResults) {
+					if (rr.isWin()) {
+						returnResult = rr;
+					}
+				}
+				List<GameResultSummary> gameResultChecks = GameWinCheck.playerSummary(player, returnResult.getCollections());
 				summaryPlayer.setGameResultChecks(gameResultChecks);
-			}
 
+				summaryPlayer.setScore(returnResult.getScore());
+				summaryPlayer.setDesc(returnResult.getDesc());
+			}
 			summaryPlayer.setWin(player.isWin());
 			summary.getPlayers().add(summaryPlayer);
-			player.setWin(false);
-			player.setCollections(null);
+			if (((MaJiangBoard) board).getAnswer() != null) {
+				((MaJiangBoard) board).getAnswer().clear();
+			}
 		}
+
+		for (SummaryPlayer splayer : summary.getPlayers()) {
+			for(ReturnResult returnResult : returnResults) {
+				if (splayer.getUserid().equals(returnResult.getUserId())){
+					splayer.setScore(returnResult.getScore());
+					splayer.setDesc(returnResult.getDesc());
+				}
+			}
+		}
+
+		houseCardHandler(gameRoom, playway, board, players,returnResults);
 		summary.setGameRoomOver(gameRoomOver);    //有玩家破产，房间解散
 		logger.info("发送总结信息为 summary:{}", JSONObject.toJSONString(summary));
 		/**
 		 * 上面的 Player的 金币变更需要保持 数据库的日志记录 , 机器人的 金币扣完了就出局了
 		 */
-
 	}
+
+	private List<ReturnResult> scoreSummary(Player[] players,Summary summarys,GameRoom gameRoom,String bank) {
+		logger.info("tid:{}开始算分操作");
+
+		if (players == null || players.length == 0 ) {
+			logger.info("tid:{} 信息不全1");
+			return null;
+		}
+		List<ReturnResult> returnResults = HuValidate.validateHu(players,gameRoom,bank);
+		if (CollectionUtils.isEmpty(returnResults)) {
+			logger.info("tid:{} 信息不全2");
+			return null;
+		}
+
+		for (SummaryPlayer summary : summarys.getPlayers()) {
+			for (ReturnResult returnResult : returnResults) {
+				if (summary.getUserid().equals(returnResult.getUserId())) {
+					summary.setDesc(returnResult.getDesc());
+				}
+			}
+		}
+		logger.info("tid:{} 算分完成");
+		return returnResults;
+	}
+
+
+
 
 	private void laiYuanKouSummary(Board board,List<PlayUserClient> players,Summary summary,GamePlayway playway){
 
@@ -477,4 +636,58 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 	public void setFPEnd(boolean FPEnd) {
 		isFPEnd = FPEnd;
 	}
+
+	public int getNumber() {
+		return number;
+	}
+
+	public void setNumber(int number) {
+		this.number = number;
+	}
+
+	public boolean isHandlerDoIt() {
+		return handlerDoIt;
+	}
+
+	public void setHandlerDoIt(boolean handlerDoIt) {
+		this.handlerDoIt = handlerDoIt;
+	}
+
+	public Map<String, MJCardMessage> getHuController() {
+		return huController;
+	}
+
+	public void setHuController(Map<String, MJCardMessage> huController) {
+		this.huController = huController;
+	}
+
+	public Map<String, Boolean> getCycleController() {
+		return cycleController;
+	}
+
+	public void setCycleController(Map<String, Boolean> cycleController) {
+		this.cycleController = cycleController;
+	}
+
+
+	public static void main(String[] args) {
+		Player tempPlayer = new Player("2");
+		Player[] players = new Player[4];
+		players[0] = new Player("0");
+		players[1] = new Player("1");
+		players[2] = new Player("2");
+		players[3] = new Player("3");
+		Player[] playersTemp = new Player[3];
+		int n = 0;
+		for (int i = 0;i<4 ; i++){
+			if(tempPlayer.getPlayuser().equals(players[i].getPlayuser())){
+				for(int j = (i==3 ? 0 : i + 1); j != i ; j = (j == 3 ? 0 : j + 1) ){
+					playersTemp[n] = players[j];
+					n++;
+				}
+			}
+		}
+		System.out.println(playersTemp);
+	}
+
 }

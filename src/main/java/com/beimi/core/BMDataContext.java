@@ -37,7 +37,9 @@ public class BMDataContext {
 	public static final String BEIMI_SYSTEM_ROOM = "room" ;
 
 	public static final String APPLY_LEAVE_ROOM = "leaveroom";
-	
+
+	public static final String CARD_CHECK = "cardCheck";
+
 	
 	public static String SYSTEM_ORGI = "beimi" ;
 	

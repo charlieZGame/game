@@ -8,9 +8,17 @@ import java.util.Map;
 import javax.annotation.Resource;
 
 import com.alibaba.fastjson.JSONObject;
+import com.beimi.core.engine.game.impl.UserBoard;
+import com.beimi.core.engine.game.model.MJCardMessage;
+import com.beimi.core.engine.game.model.Playway;
+import com.beimi.util.rules.model.*;
+import com.beimi.web.model.PlayUser;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.kie.api.runtime.KieSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,17 +30,6 @@ import com.beimi.util.RandomCharUtil;
 import com.beimi.util.UKTools;
 import com.beimi.util.cache.CacheHelper;
 import com.beimi.util.client.NettyClients;
-import com.beimi.util.rules.model.Action;
-import com.beimi.util.rules.model.ActionEvent;
-import com.beimi.util.rules.model.Board;
-import com.beimi.util.rules.model.DuZhuBoard;
-import com.beimi.util.rules.model.JoinRoom;
-import com.beimi.util.rules.model.NextPlayer;
-import com.beimi.util.rules.model.Player;
-import com.beimi.util.rules.model.Playeready;
-import com.beimi.util.rules.model.RecoveryData;
-import com.beimi.util.rules.model.SelectColor;
-import com.beimi.util.rules.model.TakeCards;
 import com.beimi.util.server.handler.BeiMiClient;
 import com.beimi.web.model.GamePlayway;
 import com.beimi.web.model.GameRoom;
@@ -49,14 +46,17 @@ public class GameEngine {
 
 	@Resource
 	private KieSession kieSession;
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	
-	public void gameRequest(String userid ,String playway , String room , String orgi , PlayUserClient userClient , BeiMiClient beiMiClient,String data ){
-		GameEvent gameEvent = gameRequest(userClient.getId(), beiMiClient.getPlayway(), beiMiClient, beiMiClient.getOrgi(), userClient,data) ; //如果是新玩家，创建房间，加入队列等待
-		if(gameEvent != null){
+	public void gameRequest(String userid ,String playway , String room , String orgi , PlayUserClient userClient , BeiMiClient beiMiClient,String data ) {
+		long tid = System.currentTimeMillis();
+		GameEvent gameEvent = gameRequest(userClient.getId(), beiMiClient.getPlayway(), beiMiClient, beiMiClient.getOrgi(), userClient, data); //如果是新玩家，创建房间，加入队列等待
+		if (gameEvent != null) {
+
 			/**
 			 * 举手了，表示游戏可以开始了
 			 */
-			if(userClient!=null){
+			if (userClient != null) {
 				userClient.setGamestatus(BMDataContext.GameStatusEnum.READY.toString());
 			}
 
@@ -65,7 +65,10 @@ public class GameEngine {
 			 * 1、有新的玩家加入
 			 * 2、给当前新加入的玩家发送房间中所有玩家信息（不包含隐私信息，根据业务需求，修改PlayUserClient的字段，剔除掉隐私信息后发送）
 			 */
-			ActionTaskUtils.sendEvent("joinroom", new JoinRoom(userClient, gameEvent.getIndex(), gameEvent.getGameRoom().getPlayers() , gameEvent.getGameRoom()) , gameEvent.getGameRoom());
+			//JoinRoom joinRoom = new JoinRoom(userClient, gameEvent.getIndex(), gameEvent.getGameRoom().getPlayers(), gameEvent.getGameRoom());
+			//logger.info("tid:{},userId:{} send JoinRoom data:{} ",tid,beiMiClient.getUserid(),JSONObject.toJSONString(joinRoom));
+			ActionTaskUtils.sendEvent("joinroom", new JoinRoom(userClient, gameEvent.getIndex(), gameEvent.getGameRoom().getPlayers(), gameEvent.getGameRoom()), gameEvent.getGameRoom());
+			//ActionTaskUtils.sendEvent("joinroom", joinRoom);
 			/**
 			 * 发送给单一玩家的消息
 			 */
@@ -74,28 +77,148 @@ public class GameEngine {
 			 * 当前是在游戏中还是 未开始
 			 */
 			Board board = (Board) CacheHelper.getBoardCacheBean().getCacheObject(gameEvent.getRoomid(), gameEvent.getOrgi());
-			if(board !=null){
+			if (board != null) {
 				Player currentPlayer = null;
-				for(Player player : board.getPlayers()){
-					if(player.getPlayuser().equals(userClient.getId())){
-						currentPlayer = player ; break ;
+				for (Player player : board.getPlayers()) {
+					if (player.getPlayuser().equals(userClient.getId())) {
+						currentPlayer = player;
+						break;
 					}
 				}
-				if(currentPlayer!=null){
-					boolean automic = false ;
-					if((board.getLast()!=null && board.getLast().getUserid().equals(currentPlayer.getPlayuser())) || (board.getLast() == null && board.getBanker().equals(currentPlayer.getPlayuser()))){
+				if (currentPlayer != null) {
+					boolean automic = false;
+					// 停掉机器人操作
+					/*if((board.getLast()!=null && board.getLast().getUserid().equals(currentPlayer.getPlayuser())) || (board.getLast() == null && board.getBanker().equals(currentPlayer.getPlayuser()))){
 						automic = true ;
+					}*/
+					// 这个回复逻辑有问题，取牌有可能取错
+					//ActionTaskUtils.sendEvent("recovery", new RecoveryData(currentPlayer, board.getLasthands(), board.getNextplayer() != null ? board.getNextplayer().getNextplayer() : null, 25, automic, board), gameEvent.getGameRoom());
+
+
+					//暂时不需要，从getCurentCards 里取牌
+					logger.info("tid:{} 恢复用户信息(JOINROOM) currentPlayer:{}",tid, currentPlayer.getPlayuser());
+					String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(userid, orgi);
+					GameRoom gameRoom  = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, orgi);        //直接加入到 系统缓存 （只有一个地方对GameRoom进行二次写入，避免分布式锁）
+					List<PlayUserClient> playerList = CacheHelper.getGamePlayerCacheBean().getCacheObject(gameRoom.getId(), orgi) ;
+					GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), orgi) ;
+
+					if("koudajiang".equals(gamePlayway.getCode())){
+						koudajiangHandler(tid,playerList,(MaJiangBoard)board,currentPlayer,beiMiClient,gameEvent);
+					}else{
+						RecoveryData recoveryData = CardRecoverUtil.hunHandler(tid,(MaJiangBoard)board,currentPlayer,gameEvent.getGameRoom());
+						logger.info("tid:{} 恢复hun牌面信息发牌完成 cards:{}", tid, JSONObject.toJSONString(recoveryData));
+						//beiMiClient.getClient().sendEvent("recovery",recoveryData, gameEvent.getGameRoom());
+						beiMiClient.getClient().sendEvent("recovery",recoveryData);
 					}
-/*
-					ActionTaskUtils.sendEvent("recovery", new RecoveryData(currentPlayer , board.getLasthands() , board.getNextplayer()!=null ? board.getNextplayer().getNextplayer() : null , 25 , automic , board) , gameEvent.getGameRoom());
-*/
+					if(CollectionUtils.isEmpty(currentPlayer.getActions()) && currentPlayer.getCardsArray().length == 14) {
+						sendHandleMessage((MaJiangBoard) board, gamePlayway, currentPlayer, true);
+					}else if(currentPlayer.getActions().size() * 3 + currentPlayer.getCardsArray().length == 14) {
+						sendHandleMessage((MaJiangBoard) board, gamePlayway, currentPlayer, true);
+					}else{
+						sendHandleMessage((MaJiangBoard) board, gamePlayway, currentPlayer, false);
+					}
 				}
-			}else{
+			} else {
 				//通知状态 开局
-				GameUtils.getGame(beiMiClient.getPlayway() , gameEvent.getOrgi()).change(gameEvent);	//通知状态机 , 此处应由状态机处理异步执行
+				GameUtils.getGame(beiMiClient.getPlayway(), gameEvent.getOrgi()).change(gameEvent);    //通知状态机 , 此处应由状态机处理异步执行
 			}
 		}
 	}
+
+
+	private void sendHandleMessage(MaJiangBoard board,GamePlayway gamePlayway,Player player,boolean isCurrentTurn){
+
+		if(isCurrentTurn) {
+			byte card = player.getCardsArray()[player.getCardsArray().length - 1];
+			byte[] tempB = new byte[player.getCardsArray().length - 1];
+			System.arraycopy(player.getCardsArray(), 0, tempB, 0, tempB.length);
+			player.setCards(tempB);
+			MJCardMessage mjCard = board.checkMJCard(player, card, true, gamePlayway.getCode());
+			logger.info("恢复指令14 data:{}",mjCard);
+			boolean hasAction = false;
+			if (mjCard.isGang() || mjCard.isPeng() || mjCard.isChi() || mjCard.isHu()) {
+				/**
+				 * 通知客户端 有杠碰吃胡了
+				 */
+				hasAction = true;
+				ActionTaskUtils.sendEvent(player.getPlayuser(), mjCard);
+			}
+			player.setCards(ArrayUtils.add(player.getCardsArray(), card));
+			/**
+			 * 抓牌 , 下一个玩家收到的牌里会包含 牌面，其他玩家的则不包含牌面  //todo ZCL主要是更新牌面
+			 */
+			for (Player temp : board.getPlayers()) {
+				if (temp.getPlayuser().equals(player.getPlayuser())) {
+					ActionTaskUtils.sendEvent("dealcard", temp.getPlayuser(), new DealCard(player.getPlayuser(), board.getDeskcards().size(), temp.getColor(), card, hasAction));
+				} else {
+					ActionTaskUtils.sendEvent("dealcard", temp.getPlayuser(), new DealCard(player.getPlayuser(), board.getDeskcards().size()));
+				}
+			}
+		}else{
+
+			if(board == null || board.getLast() == null || player.getPlayuser().equals(board.getNextplayer())){
+				return;
+			}
+
+			MJCardMessage mjCard = board.checkMJCard(player, board.getLast().getCard(), false, gamePlayway.getCode());
+			logger.info("恢复指令13 data:{}",mjCard);
+			if (mjCard.isGang() || mjCard.isPeng() || mjCard.isChi() || mjCard.isHu()) {
+				/**
+				 * 通知客户端 有杠碰吃胡了
+				 */
+				ActionTaskUtils.sendEvent(player.getPlayuser(), mjCard);
+			}
+		}
+	}
+
+	/**
+	 *
+	 * @param tid
+	 * @param playerList
+	 * @param board
+	 * @param currentPlayer
+	 * @param beiMiClient
+     * @param gameEvent
+     */
+	private void koudajiangHandler(long tid,List<PlayUserClient> playerList,MaJiangBoard board,Player currentPlayer,BeiMiClient beiMiClient,GameEvent gameEvent){
+
+		for (PlayUserClient player : playerList) {
+			if (!currentPlayer.getPlayuser().equals(player.getId())) {
+				continue;
+			}
+			RecoveryData recoveryData = null;
+			if(board.isFPEnd()) {
+				recoveryData = CardRecoverUtil.kouRecoverHandler(currentPlayer,board,gameEvent.getGameRoom());
+				logger.info("tid:{},恢复kou牌面信息发牌完成 deskinfo:{}",tid,JSONObject.toJSONString(recoveryData));
+			}else{
+				recoveryData = CardRecoverUtil.kouRecoverHandler(currentPlayer,board,gameEvent.getGameRoom());
+				logger.info("tid:{},恢复kou牌面信息发牌未完成 deskinfo:{}",tid,JSONObject.toJSONString(recoveryData));
+			}
+			//beiMiClient.getClient().sendEvent("recovery",recoveryData, gameEvent.getGameRoom());
+			beiMiClient.getClient().sendEvent("recovery",recoveryData);
+		}
+	}
+
+
+	/**
+	 *
+	 * @param tid
+	 * @param playerList
+	 * @param board
+	 * @param currentPlayer
+	 * @param beiMiClient
+     * @param gameEvent
+     */
+/*	private void hunHandler(long tid,List<PlayUserClient> playerList,MaJiangBoard board,Player currentPlayer,BeiMiClient beiMiClient,GameEvent gameEvent) {
+		for (PlayUserClient player : playerList) {
+			if (!currentPlayer.getPlayuser().equals(player.getId())) {
+				continue;
+			}
+			logger.info("tid:{} 恢复hun牌面信息发牌完成 cards:{}", tid, player.getCards());
+			RecoveryData recoveryData = new RecoveryData(currentPlayer, board.getLasthands(), board.getNextplayer() != null ? board.getNextplayer().getNextplayer() : null, 25, false, board);
+			beiMiClient.getClient().sendEvent("recovery", recoveryData, gameEvent.getGameRoom());
+		}
+	}*/
 	
 	/**
 	 * 玩家房间选择， 新请求，游戏撮合， 如果当前玩家是断线重连， 或者是 退出后进入的，则第一步检查是否已在房间
@@ -108,6 +231,7 @@ public class GameEngine {
 		GameEvent gameEvent = null ;
 
 		String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(userid, orgi) ;
+		logger.info("userId:{}获取roomid:{}",userid,roomid);
 		//String roomid = ((GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(userid, orgi)).getRoomid() ;
 		GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(playway, orgi) ;
 		boolean needtakequene = false;
@@ -151,24 +275,8 @@ public class GameEngine {
 				/**
 				 * 设置游戏当前已经进行的局数
 				 */
-				gameRoom.setCurrentnum(0);
-
+				setGameParam(data,gameRoom);
 				// 更新混子
-				if(StringUtils.isNotEmpty(data)) {
-					Map<String, Object> map = JSONObject.parseObject(data, Map.class);
-					if(map != null && !map.isEmpty() && map.containsKey("extparams")){
-						JSONObject jsonObject = (JSONObject)map.get("extparams");
-						if(jsonObject != null && StringUtils.isNotEmpty((String)jsonObject.get("hun"))){
-							gameRoom.setPowerfulsize(Integer.parseInt(jsonObject.get("hun").toString()));
-						}
-						if(jsonObject != null && StringUtils.isNotEmpty((String)jsonObject.get("jun"))){
-							gameRoom.setNumofgames(Integer.parseInt(jsonObject.get("jun").toString()));
-						}
-						if(jsonObject != null && StringUtils.isNotEmpty((String)jsonObject.get("koujun"))){
-							gameRoom.setNumofgames(Integer.parseInt(jsonObject.get("koujun").toString()));
-						}
-					}
-				}
 
 				/**
 				 * 更新缓存
@@ -210,6 +318,53 @@ public class GameEngine {
 		}
 		return gameEvent;
 	}
+
+
+	/**
+	 *
+	 * @param data
+	 * @param gameRoom
+     */
+	private void setGameParam(String data,GameRoom gameRoom) {
+
+		if (StringUtils.isNotEmpty(data)) {
+			Map<String, Object> map = JSONObject.parseObject(data, Map.class);
+			if (map != null && !map.isEmpty() && map.containsKey("extparams")) {
+				JSONObject jsonObject = (JSONObject) map.get("extparams");
+				if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("hun"))) {
+					gameRoom.setPowerfulsize(Integer.parseInt(jsonObject.get("hun").toString()));
+				}
+				if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("jun"))) {
+					gameRoom.setNumofgames(Integer.parseInt(jsonObject.get("jun").toString()));
+				}
+				if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("koujun"))) {
+					gameRoom.setNumofgames(Integer.parseInt(jsonObject.get("koujun").toString()));
+				}
+				if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("hunfeng"))) {
+					gameRoom.setWindow(Boolean.parseBoolean(jsonObject.get("hunfeng").toString()));
+				}
+				if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("koufeng"))) {
+					gameRoom.setWindow(Boolean.parseBoolean(jsonObject.get("koufeng").toString()));
+				}
+				if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("hunpiao"))) {
+					gameRoom.setPiao(Integer.parseInt(jsonObject.get("hunpiao").toString()));
+				}
+				if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("koupiao"))) {
+					gameRoom.setPiao(Integer.parseInt(jsonObject.get("koupiao").toString()));
+				}
+				if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("koupiao"))) {
+					gameRoom.setPiao(Integer.parseInt(jsonObject.get("koupiao").toString()));
+				}
+			}
+		}
+	}
+
+
+	public static void main(String[] args) {
+		System.out.println(Boolean.parseBoolean("false"));
+	}
+
+
 	/**
 	 * 
 	 * 玩家加入房间
@@ -363,6 +518,8 @@ public class GameEngine {
 	 * @return
 	 */
 	public void restartRequest(String roomid , PlayUserClient playerUser, BeiMiClient beiMiClient , boolean opendeal){
+		long tid = System.nanoTime();
+		logger.info("tid:{} restartRequest handler",tid);
 		boolean notReady = false ;
 		List<PlayUserClient> playerList = null ;
 		GameRoom gameRoom = null ;
@@ -465,152 +622,281 @@ public class GameEngine {
 	 * @param orgi
 	 * @return
 	 */
-	public ActionEvent actionEventRequest(String roomid, String userid, String orgi , String action){
-		ActionEvent actionEvent = null ;
-		GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, orgi) ;
-		if(gameRoom!=null){
+	public ActionEvent actionEventRequest(String roomid, String userid, String orgi , String action) {
+		ActionEvent actionEvent = null;
+		GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, orgi);
+		if (gameRoom != null) {
 			Board board = (Board) CacheHelper.getBoardCacheBean().getCacheObject(gameRoom.getId(), gameRoom.getOrgi());
-			if(board!=null){
-				Player player = board.player(userid) ;
-				byte card = board.getLast().getCard() ;
-				actionEvent = new ActionEvent(board.getBanker() , userid , card , action);
-				if(!StringUtils.isBlank(action) && action.equals(BMDataContext.PlayerAction.GUO.toString())){
+			if (board != null) {
+				Player player = board.player(userid);
+				byte card = board.getLast().getCard();
+				actionEvent = new ActionEvent(board.getBanker(), userid, card, action);
+				if (!StringUtils.isBlank(action) && action.equals(BMDataContext.PlayerAction.GUO.toString())) {
 					/**
 					 * 用户动作，选择 了 过， 下一个玩家直接开始抓牌 
 					 * bug，待修复：如果有多个玩家可以碰，则一个碰了，其他玩家就无法操作了
+					 *
+					 * 点过 如果是当前用户就不出发下一个用户取牌，还是当前用户出牌，但是得通知其他用户当前用户过了
 					 */
-					board.dealRequest(gameRoom, board, orgi , false , null);
-				}else if(!StringUtils.isBlank(action) && action.equals(BMDataContext.PlayerAction.PENG.toString()) && allowAction(card, player.getActions() , BMDataContext.PlayerAction.PENG.toString())){
-					Action playerAction = new Action(userid , action , card);
-
-					int color = card / 36 ;
-					int value = card % 36 / 4 ;
-					List<Byte> otherCardList = new ArrayList<Byte>();
-					for(int i=0 ; i<player.getCardsArray().length ; i++){
-						if(player.getCardsArray()[i]/36 == color && (player.getCardsArray()[i]%36) / 4 == value){
-							continue ;
+					if (!board.getNextplayer().getNextplayer().equals(userid)) {
+						if (((MaJiangBoard) board).getHuController().size() > 0) {
+							if (board instanceof MaJiangBoard) {
+								synchronized (((MaJiangBoard) board).getHuController()) {
+									MJCardMessage mjCardMessage = ((MaJiangBoard) board).getHuController().remove(board.getLast().getUserid());
+									logger.info("userId:{} 过移除 mjCardMessage:{}",board.getLast().getUserid(),mjCardMessage);
+									if(mjCardMessage.isHu()){
+										((MaJiangBoard) board).getCycleController().put(player.getPlayuser(),true);
+									}
+									((MaJiangBoard) board).getHuController().notifyAll();
+								}
+								logger.info("用户放弃杠碰胡牌1 userId:{}", userid);
+							}
 						}
-						otherCardList.add(player.getCardsArray()[i]) ;
+						logger.info("userId:{} getHuController:{}",player.getPlayuser(),((MaJiangBoard) board).getHuController().size());
+						if (((MaJiangBoard) board).getHuController().size() == 0) {
+							//处理完上次的吃碰胡才能进行取牌操作
+							board.dealRequest(gameRoom, board, orgi, false, null);
+						}
+					} else {
+
+						// 如果是下一个用户是当前用户，说明 是自己取牌，这样的话就不用 通知下一个用户 取牌，必须自己先打出一张牌，同时也没有notify的情况
 					}
-					byte[] otherCards = new byte[otherCardList.size()] ;
-					for(int i=0 ; i<otherCardList.size() ; i++){
-						otherCards[i] = otherCardList.get(i) ;
+				}else if (!StringUtils.isBlank(action) && action.equals(BMDataContext.PlayerAction.PENG.toString()) && allowAction(card, player.getActions(), BMDataContext.PlayerAction.PENG.toString())) {
+					Action playerAction = new Action(userid, action, card);
+					playerAction.setSrcUserId(board.getLast().getUserid());
+					int color = card / 36;
+					int value = card % 36 / 4;
+					List<Byte> otherCardList = new ArrayList<Byte>();
+					int size = 0;
+					for (int i = 0; i < player.getCardsArray().length; i++) {
+						if (player.getCardsArray()[i] / 36 == color && (player.getCardsArray()[i] % 36) / 4 == value && size < 2) {
+							logger.info("size:{}",size);
+							size ++;
+							continue;
+						}
+						otherCardList.add(player.getCardsArray()[i]);
+					}
+					byte[] otherCards = new byte[otherCardList.size()];
+					for (int i = 0; i < otherCardList.size(); i++) {
+						otherCards[i] = otherCardList.get(i);
 					}
 
-					coverCardsHandler(player,color,value);
+					coverCardsHandler(player, color, value);
 					player.setCards(otherCards);
-					player.getActions().add(playerAction) ;
+					player.getActions().add(playerAction);
+					for (Player per : board.getPlayers()) {
+						if (board.getLast().getUserid().equals(per.getPlayuser()) && per.getRecoveryHistoryArray() != null && per.getRecoveryHistoryArray().length > 0) {
+							byte[] b = new byte[per.getRecoveryHistoryArray().length - 1];
+							System.arraycopy(per.getRecoveryHistoryArray(), 0, b, 0, b.length);
+							per.setRecoveryHistory(b);
+						}
+					}
+					board.setNextplayer(new NextPlayer(userid, false));
 
-					board.setNextplayer(new NextPlayer(userid , false));
+					if (((MaJiangBoard) board).getHuController().size() > 0) {
+						if (board instanceof MaJiangBoard) {
+							synchronized (((MaJiangBoard) board).getHuController()) {
+								MJCardMessage mjCardMessage = ((MaJiangBoard) board).getHuController().remove(board.getLast().getUserid());
+								logger.info("userId:{} 碰移除 ",board.getLast().getUserid(),mjCardMessage);
+								((MaJiangBoard) board).getHuController().notifyAll();
+								//((MaJiangBoard) board).setHandlerDoIt(true);
+							}
+							logger.info("用户碰 userId:{}", userid);
+						}
+					}
 
 					//actionEvent.setTarget(board.getLast().getUserid());
 					actionEvent.setTarget(board.getLast().getUserid());
-					ActionTaskUtils.sendEvent("selectaction", actionEvent , gameRoom);
+					ActionTaskUtils.sendEvent("selectaction", actionEvent, gameRoom);
 
-					CacheHelper.getBoardCacheBean().put(gameRoom.getId() , board, gameRoom.getOrgi());	//更新缓存数据
+					CacheHelper.getBoardCacheBean().put(gameRoom.getId(), board, gameRoom.getOrgi());    //更新缓存数据
 
 					board.playcards(board, gameRoom, player, orgi);
 
-				}else if(!StringUtils.isBlank(action) && action.equals(BMDataContext.PlayerAction.GANG.toString()) &&
-						allowAction(card, player.getActions() , BMDataContext.PlayerAction.GANG.toString())){
-					Action playerAction = new Action(userid , action , card);
-					if(board.getNextplayer().getNextplayer().equals(userid)){
-						card = GameUtils.getGangCard(player.getCardsArray()) ;
-						actionEvent = new ActionEvent(board.getBanker() , userid , card , action);
-						actionEvent.setActype(BMDataContext.PlayerGangAction.AN.toString());
-						playerAction.setType(BMDataContext.PlayerGangAction.AN.toString());
-					}else{
-						actionEvent.setActype(BMDataContext.PlayerGangAction.MING.toString());	//还需要进一步区分一下是否 弯杠
+				} else if (!StringUtils.isBlank(action) && action.equals(BMDataContext.PlayerAction.GANG.toString()) &&
+						allowAction(card, player.getActions(), BMDataContext.PlayerAction.GANG.toString())) {
+					Action playerAction = new Action(userid, action, card);
+					if (board.getNextplayer().getNextplayer().equals(userid)) {
+						Map<Integer, Object> map = GameUtils.getGangCard(player.getCardsArray(), player.getActions());
+						card = (Byte) map.get(2);
+						if (!(Boolean) map.get(1)) {
+							actionEvent = new ActionEvent(board.getBanker(), userid, card, action);
+							actionEvent.setActype(BMDataContext.PlayerGangAction.MING.toString());
+							playerAction.setType(BMDataContext.PlayerGangAction.MING.toString());
+							playerAction.setSrcUserId((String) map.get(6));
+							actionEvent.setRemoveCardNum(1);
+						} else {
+							actionEvent = new ActionEvent(board.getBanker(), userid, card, action);
+							actionEvent.setActype(BMDataContext.PlayerGangAction.AN.toString());
+							playerAction.setType(BMDataContext.PlayerGangAction.AN.toString());
+							actionEvent.setRemoveCardNum(4);
+						}
+						playerAction.setCard(card);
+						actionEvent.setCard(card);
+					} else {
+						for (Player per : board.getPlayers()) {
+							if (board.getLast().getUserid().equals(per.getPlayuser()) && per.getRecoveryHistoryArray() != null && per.getRecoveryHistoryArray().length > 0) {
+								byte[] b = new byte[per.getRecoveryHistoryArray().length - 1];
+								System.arraycopy(per.getRecoveryHistoryArray(), 0, b, 0, b.length);
+								per.setRecoveryHistory(b);
+							}
+						}
+						actionEvent.setActype(BMDataContext.PlayerGangAction.MING.toString());    //还需要进一步区分一下是否 弯杠
 						playerAction.setType(BMDataContext.PlayerGangAction.MING.toString());
+						playerAction.setSrcUserId(board.getLast().getUserid());
+						actionEvent.setRemoveCardNum(3);
 					}
-					/**
-					 * 检查是否有弯杠
-					 */
-					for(Action ac : player.getActions()){
-						if(ac.getCard() == card && ac.getAction().equals(BMDataContext.PlayerAction.PENG.toString())){
-							ac.setGang(true);
-							ac.setType(BMDataContext.PlayerGangAction.WAN.toString());
-							playerAction = ac ;
-							break ;
-						}
-					}
-					int color = card / 36 ;
-					int value = card % 36 / 4 ;
-					List<Byte> otherCardList = new ArrayList<Byte>(); 
-					for(int i=0 ; i<player.getCardsArray().length ; i++){
-						if(player.getCardsArray()[i]/36 == color && (player.getCardsArray()[i]%36) / 4 == value){
-							continue ;
-						}
-						otherCardList.add(player.getCardsArray()[i]) ;
-					}
-					byte[] otherCards = new byte[otherCardList.size()] ;
-					for(int i=0 ; i<otherCardList.size() ; i++){
-						otherCards[i] = otherCardList.get(i) ;
-					}
-					coverCardsHandler(player,color,value);
-					player.setCards(otherCards);
-					player.getActions().add(playerAction) ;
 
-					if(BMDataContext.PlayerGangAction.MING.toString().equals(actionEvent.getActype())) {
+					int color = card / 36;
+					int value = card % 36 / 4;
+					List<Byte> otherCardList = new ArrayList<Byte>();
+
+					boolean isBegin = true;
+					//查看碰的里边有杠的没有
+
+					Action tempAction = null;
+					String srcUser = null;
+					if (CollectionUtils.isNotEmpty(player.getActions())) {
+						for (Action at : player.getActions()) {
+							if (BMDataContext.PlayerAction.PENG.toString().equals(at.getAction())) {
+								if (at.getCard() / 4 == card / 4) {
+									tempAction = at;
+									srcUser = at.getSrcUserId();
+								}
+							}
+						}
+					}
+
+					if (tempAction != null) {
+						player.getActions().remove(tempAction);
+						Action newAction = new Action(player.getPlayuser(), BMDataContext.PlayerAction.GANG.toString(),
+								BMDataContext.PlayerGangAction.MING.toString(), card);
+						newAction.setSrcUserId(srcUser);
+						player.getActions().add(newAction);
+
+						for (int i = 0; i < player.getCardsArray().length; i++) {
+							if (player.getCardsArray()[i] / 36 == color && (player.getCardsArray()[i] % 36) / 4 == value) {
+								continue;
+							}
+							otherCardList.add(player.getCardsArray()[i]);
+						}
+						byte[] otherCards = new byte[otherCardList.size()];
+						for (int i = 0; i < otherCardList.size(); i++) {
+							otherCards[i] = otherCardList.get(i);
+						}
+						coverCardsHandler(player, color, value);
+						player.setCards(otherCards);
+
+					} else {
+						for (int i = 0; i < player.getCardsArray().length; i++) {
+							if (player.getCardsArray()[i] / 36 == color && (player.getCardsArray()[i] % 36) / 4 == value) {
+								continue;
+							}
+							otherCardList.add(player.getCardsArray()[i]);
+						}
+						byte[] otherCards = new byte[otherCardList.size()];
+						for (int i = 0; i < otherCardList.size(); i++) {
+							otherCards[i] = otherCardList.get(i);
+						}
+						coverCardsHandler(player, color, value);
+						player.setCards(otherCards);
+						player.getActions().add(playerAction);
+					}
+
+					if (BMDataContext.PlayerGangAction.MING.toString().equals(actionEvent.getActype())) {
 						actionEvent.setTarget(board.getLast().getUserid());
-					}else {
+					} else {
 						actionEvent.setTarget("all");    //只有明杠 是 其他人打出的 ， target 是单一对象
 					}
-					
-					ActionTaskUtils.sendEvent("selectaction", actionEvent , gameRoom);
-					
+
+					if (((MaJiangBoard) board).getHuController().size() > 0) {
+						if (board instanceof MaJiangBoard) {
+							synchronized (((MaJiangBoard) board).getHuController()) {
+								MJCardMessage mjCardMessage = ((MaJiangBoard) board).getHuController().remove(board.getLast().getUserid());
+								logger.info("userId:{} 杠移除 ",board.getLast().getUserid(),mjCardMessage);
+								((MaJiangBoard) board).getHuController().notifyAll();
+								//((MaJiangBoard) board).setHandlerDoIt(true);
+							}
+							logger.info("用户杠 userId:{}", userid);
+						}
+					}
+
+
+					ActionTaskUtils.sendEvent("selectaction", actionEvent, gameRoom);
+
 					/**
 					 * 杠了以后， 从 当前 牌的 最后一张开始抓牌
 					 */
-					board.dealRequest(gameRoom, board, orgi , true , userid);
-				}else if(!StringUtils.isBlank(action) && action.equals(BMDataContext.PlayerAction.HU.toString())){	//判断下是不是 真的胡了 ，避免外挂乱发的数据
-					Action playerAction = new Action(userid , action , card);
-					player.getActions().add(playerAction) ;
-					GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), gameRoom.getOrgi()) ;
+					board.dealRequest(gameRoom, board, orgi, true, userid);
+				} else if (!StringUtils.isBlank(action) && action.equals(BMDataContext.PlayerAction.HU.toString())) {    //判断下是不是 真的胡了 ，避免外挂乱发的数据
+					Action playerAction = new Action(userid, action, card);
+					player.getActions().add(playerAction);
+					GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), gameRoom.getOrgi());
 					/**
 					 * 不同的胡牌方式，处理流程不同，推倒胡，直接进入结束牌局 ， 血战：当前玩家结束牌局，血流：继续进行，下一个玩家
 					 */
-					if(gamePlayway.getWintype().equals(BMDataContext.MaJiangWinType.TUI.toString())){		//推倒胡
-						actionEvent = new ActionEvent(board.getBanker() , userid , card , action);
+					if (gamePlayway.getWintype().equals(BMDataContext.MaJiangWinType.TUI.toString())) {        //推倒胡
+						actionEvent = new ActionEvent(board.getBanker(), userid, card, action);
 						actionEvent.setActype(BMDataContext.PlayerAction.HU.toString());
 						actionEvent.setTarget(board.getLast().getUserid());
-						ActionTaskUtils.sendEvent("selectaction", actionEvent , gameRoom);
-						GameUtils.getGame(gameRoom.getPlayway() , orgi).change(gameRoom , BeiMiGameEvent.ALLCARDS.toString() , 0);	//打完牌了,通知结算
-					}else{ //血战到底
-						 if(gamePlayway.getWintype().equals(BMDataContext.MaJiangWinType.END.toString())){		//标记当前玩家的状态 是 已结束
-							 player.setEnd(true);
-						 }
-						 player.setHu(true); 	//标记已经胡了
-						 /**
-						  * 当前 Player打上标记，已经胡牌了，杠碰吃就不会再有了
-						  */
-						 /**
-						  * 下一个玩家出牌
-						  */
-						player = board.nextPlayer(board.index(player.getPlayuser())) ;
+						if(board instanceof MaJiangBoard) {
+							if (((MaJiangBoard) board).getHuController().size() > 0) {
+								synchronized (((MaJiangBoard) board).getHuController()) {
+									((MaJiangBoard) board).setHandlerDoIt(true);
+									MJCardMessage mjCardMessage = ((MaJiangBoard) board).getHuController().remove(board.getLast().getUserid());
+									logger.info("userId:{} 糊移除 ",board.getLast().getUserid(),mjCardMessage);
+									((MaJiangBoard) board).getHuController().notifyAll();
+									logger.info("用户胡牌 userId:{}", player.getPlayuser());
+								}
+							}
+						}
+						player.setWin(true);
+						if (board.getNextplayer().getNextplayer().equals(userid)) {
+							player.setZm(true);
+							actionEvent.setZm(true);
+						} else {
+							player.setZm(false);
+							actionEvent.setZm(false);
+						}
+						player.setTargetUser(board.getLast().getUserid());
+						ActionTaskUtils.sendEvent("selectaction", actionEvent, gameRoom);
+						player.setCards(ArrayUtils.add(player.getCardsArray(), card));
+
+						GameUtils.getGame(gameRoom.getPlayway(), orgi).change(gameRoom, BeiMiGameEvent.ALLCARDS.toString(), 0);    //打完牌了,通知结算
+					} else { //血战到底
+						if (gamePlayway.getWintype().equals(BMDataContext.MaJiangWinType.END.toString())) {        //标记当前玩家的状态 是 已结束
+							player.setEnd(true);
+						}
+						player.setHu(true);    //标记已经胡了
+						/**
+						 * 当前 Player打上标记，已经胡牌了，杠碰吃就不会再有了
+						 */
+						/**
+						 * 下一个玩家出牌
+						 */
+						player = board.nextPlayer(board.index(player.getPlayuser()));
 						/**
 						 * 记录胡牌的相关信息，推倒胡 | 血战 | 血流
 						 */
-						board.setNextplayer(new NextPlayer(player.getPlayuser() , false));
-						
+						board.setNextplayer(new NextPlayer(player.getPlayuser(), false));
+
 						actionEvent.setTarget(board.getLast().getUserid());
 						/**
 						 * 用于客户端播放 胡牌的 动画 ， 点胡 和 自摸 ，播放不同的动画效果
 						 */
-						ActionTaskUtils.sendEvent("selectaction", actionEvent , gameRoom);
-						CacheHelper.getBoardCacheBean().put(gameRoom.getId() , board, gameRoom.getOrgi());	//更新缓存数据
-						
+						ActionTaskUtils.sendEvent("selectaction", actionEvent, gameRoom);
+						CacheHelper.getBoardCacheBean().put(gameRoom.getId(), board, gameRoom.getOrgi());    //更新缓存数据
+
 						/**
 						 * 杠了以后， 从 当前 牌的 最后一张开始抓牌
 						 */
-						board.dealRequest(gameRoom, board, orgi , true , player.getPlayuser());
+						board.dealRequest(gameRoom, board, orgi, true, player.getPlayuser());
 					}
 				}
 			}
 		}
-		return actionEvent ;
+		return actionEvent;
 	}
-
 
 	private void coverCardsHandler(Player player,Integer color,Integer value){
 

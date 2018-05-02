@@ -57,7 +57,7 @@ public class ApiRegisterController extends Handler{
     		player.setUpdatetime(new Date());
     		player.setLastlogintime(new Date());
     		
-    		int users = playUserESRes.countByUsername(player.getUsername()+"") ;
+    		int users = playUserESRes.countByUsername(player.getUsername()) ;
     		if(users == 0){
     			playUserESRes.save(player) ;
     		}else{

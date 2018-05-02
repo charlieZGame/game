@@ -225,12 +225,12 @@
     },
     "_rotationX": -90,
     "_rotationY": -90,
-    "_scaleX": 0.5,
-    "_scaleY": 0.5,
+    "_scaleX": 0.4,
+    "_scaleY": 0.45,
     "_position": {
       "__type__": "cc.Vec2",
       "x": -4,
-      "y": 7.3
+      "y": 9.3
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -480,8 +480,8 @@
     },
     "_rotationX": -90,
     "_rotationY": -90,
-    "_scaleX": 0.5,
-    "_scaleY": 0.5,
+    "_scaleX": 0.4,
+    "_scaleY": 0.45,
     "_position": {
       "__type__": "cc.Vec2",
       "x": -4,
@@ -639,7 +639,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "麻将牌-自己出牌对家出牌对家碰牌",
+    "_name": "麻将牌-侧家出牌",
     "_objFlags": 0,
     "_parent": {
       "__id__": 18
@@ -676,17 +676,17 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 46,
-      "height": 72
+      "width": 49,
+      "height": 49
     },
     "_rotationX": 0,
     "_rotationY": 0,
-    "_scaleX": 1,
-    "_scaleY": 1,
+    "_scaleX": 1.25,
+    "_scaleY": 1.25,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": 0,
-      "y": 0
+      "x": 7.625,
+      "y": 8
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -697,7 +697,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "麻将牌-牌面-wan2",
+    "_name": "麻将牌-牌面-wan5",
     "_objFlags": 0,
     "_parent": {
       "__id__": 19
@@ -733,14 +733,14 @@
       "width": 79,
       "height": 111
     },
-    "_rotationX": 0,
-    "_rotationY": 0,
-    "_scaleX": 0.5,
-    "_scaleY": 0.5,
+    "_rotationX": -90,
+    "_rotationY": -90,
+    "_scaleX": 0.4,
+    "_scaleY": 0.45,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": 0,
-      "y": 11
+      "x": -4,
+      "y": 7.3
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -758,7 +758,7 @@
     },
     "_enabled": true,
     "_spriteFrame": {
-      "__uuid__": "20434c06-de33-4219-80cd-0a2a297f3930"
+      "__uuid__": "2d041342-15b1-4609-9304-e5d9cf5c5be5"
     },
     "_type": 0,
     "_sizeMode": 1,
@@ -785,7 +785,7 @@
     "asset": {
       "__uuid__": "185df337-21e6-4589-9525-a9f69d59de4f"
     },
-    "fileId": "68B71VNjFAorQMiUBTL5Xk",
+    "fileId": "644XnPBspPv6rp+hQ3gnct",
     "sync": false
   },
   {
@@ -797,7 +797,7 @@
     },
     "_enabled": true,
     "_spriteFrame": {
-      "__uuid__": "13ba2761-544f-4b24-bbb2-5846c0a43c3c"
+      "__uuid__": "2e66b60e-6af7-4cb1-985d-79e1f3d20f95"
     },
     "_type": 0,
     "_sizeMode": 1,
@@ -824,7 +824,7 @@
     "asset": {
       "__uuid__": "185df337-21e6-4589-9525-a9f69d59de4f"
     },
-    "fileId": "65bXFGl+9IPqu/jSqq39pM",
+    "fileId": "c7bDwHKW9O6KGseeFsSeTd",
     "sync": false
   },
   {
@@ -894,7 +894,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "麻将牌-自己出牌对家出牌对家碰牌",
+    "_name": "麻将牌-侧家出牌",
     "_objFlags": 0,
     "_parent": {
       "__id__": 26
@@ -931,17 +931,17 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 46,
-      "height": 72
+      "width": 49,
+      "height": 49
     },
     "_rotationX": 0,
     "_rotationY": 0,
-    "_scaleX": 1,
-    "_scaleY": 1,
+    "_scaleX": 1.25,
+    "_scaleY": 1.25,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": 0,
-      "y": 0
+      "x": -36.125,
+      "y": 60
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -952,7 +952,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "麻将牌-牌面-wan2",
+    "_name": "麻将牌-牌面-wan5",
     "_objFlags": 0,
     "_parent": {
       "__id__": 27
@@ -988,14 +988,14 @@
       "width": 79,
       "height": 111
     },
-    "_rotationX": 0,
-    "_rotationY": 0,
-    "_scaleX": 0.5,
-    "_scaleY": 0.5,
+    "_rotationX": -90,
+    "_rotationY": -90,
+    "_scaleX": 0.4,
+    "_scaleY": 0.45,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": 0,
-      "y": 11
+      "x": -4,
+      "y": 7.3
     },
     "_skewX": 0,
     "_skewY": 0,
@@ -1013,7 +1013,7 @@
     },
     "_enabled": true,
     "_spriteFrame": {
-      "__uuid__": "20434c06-de33-4219-80cd-0a2a297f3930"
+      "__uuid__": "2d041342-15b1-4609-9304-e5d9cf5c5be5"
     },
     "_type": 0,
     "_sizeMode": 1,
@@ -1040,7 +1040,7 @@
     "asset": {
       "__uuid__": "185df337-21e6-4589-9525-a9f69d59de4f"
     },
-    "fileId": "42TQJYacZOeaTqVWvNU6AM",
+    "fileId": "0bCKDZX/lD5abOzcPML5ID",
     "sync": false
   },
   {
@@ -1052,7 +1052,7 @@
     },
     "_enabled": true,
     "_spriteFrame": {
-      "__uuid__": "13ba2761-544f-4b24-bbb2-5846c0a43c3c"
+      "__uuid__": "2e66b60e-6af7-4cb1-985d-79e1f3d20f95"
     },
     "_type": 0,
     "_sizeMode": 1,
@@ -1079,7 +1079,7 @@
     "asset": {
       "__uuid__": "185df337-21e6-4589-9525-a9f69d59de4f"
     },
-    "fileId": "1bawKJRjlIu5W4OBIADjF0",
+    "fileId": "d3TGn9w2BLRpfnEwlcWDwh",
     "sync": false
   },
   {

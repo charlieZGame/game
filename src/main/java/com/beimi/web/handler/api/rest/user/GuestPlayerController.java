@@ -7,8 +7,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import com.alibaba.fastjson.JSONObject;
+import com.beimi.util.*;
 import com.beimi.web.model.*;
 import com.beimi.web.service.repository.jpa.AnnouncementRespository;
+import com.beimi.web.service.repository.jpa.PlayUserClientRepository;
+import com.beimi.web.service.repository.jpa.TokenRepository;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,12 +22,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.beimi.core.BMDataContext;
-import com.beimi.util.CacheConfigTools;
-import com.beimi.util.GameUtils;
-import com.beimi.util.IP;
-import com.beimi.util.IPTools;
-import com.beimi.util.MessageEnum;
-import com.beimi.util.UKTools;
 import com.beimi.util.cache.CacheHelper;
 import com.beimi.web.handler.Handler;
 import com.beimi.web.service.repository.es.PlayUserClientESRepository;
@@ -47,9 +44,14 @@ public class GuestPlayerController extends Handler{
 
 	@Autowired
 	private AnnouncementRespository announcementRespository;
+
+	@Autowired
+	private PlayUserClientRepository playUserClientRepository;
 	
 	@Autowired
 	private TokenESRepository tokenESRes ;
+	@Autowired
+	private TokenRepository tokenRepository;
 
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -57,7 +59,7 @@ public class GuestPlayerController extends Handler{
     public ResponseEntity<ResultData> guest(HttpServletRequest request , @Valid String token) {
 		PlayUserClient playUserClient = null ;
 		Token userToken = null ;
-		
+		long tid = System.currentTimeMillis();
 		if(!StringUtils.isBlank(token)){
 			userToken = tokenESRes.findById(token) ;
 			if(userToken != null && !StringUtils.isBlank(userToken.getUserid()) && userToken.getExptime()!=null && userToken.getExptime().after(new Date())){
@@ -75,9 +77,24 @@ public class GuestPlayerController extends Handler{
 		}
 		String ip = UKTools.getIpAddr(request);
 		IP ipdata = IPTools.getInstance().findGeography(ip);
+		boolean isNeedSave = false;
 		if(playUserClient == null){
 			try {// 构造玩家用户
-				playUserClient = register(new PlayUser() , ipdata , request) ;
+				logger.info("tid:{}构造玩家用户",tid);
+				// 构造玩家用户
+				PlayUser playUser = new PlayUser();
+				playUser.setOpenid(playUser.getId());
+				String nickName = "Guest_"+Base62.encode(UKTools.getUUID().toLowerCase());
+				playUser.setNickname(Base64Util.baseEncode(nickName));
+				playUser.setUsercategory("1");
+				playUser.setPlayerlevel("贫农");
+				playUser.setPhoto("");
+				register(playUser, ipdata, request);
+				playUserRes.save(playUser);
+				playUser.setNickname(nickName);
+				playUserClient = playUserClientRepository.findById(playUser.getId());
+				playUserClient.setNickname(nickName);
+				isNeedSave = true;
 			} catch (IllegalAccessException | InvocationTargetException e) {
 				e.printStackTrace();
 			}
@@ -88,6 +105,7 @@ public class GuestPlayerController extends Handler{
 			userToken.setRegion(ipdata.getProvince()+ipdata.getCity());
 			userToken.setId(UKTools.getUUID());
 			userToken.setUserid(playUserClient.getId());
+			logger.info("登录TOKEN_USERID:{}",userToken.getUserid());
 			userToken.setCreatetime(new Date());
 			userToken.setOrgi(playUserClient.getOrgi());
 			AccountConfig config = CacheConfigTools.getGameAccountConfig(BMDataContext.SYSTEM_ORGI) ;
@@ -98,13 +116,16 @@ public class GuestPlayerController extends Handler{
     		}
 			userToken.setLastlogintime(new Date());
 			userToken.setUpdatetime(new Date(0));
-			
-			tokenESRes.save(userToken) ;//账号信息存入ES
+			tokenRepository.save(userToken);//账号信息存入ES
+
+			//tokenESRes.save(userToken) ;//账号信息存入ES
 		}
 		playUserClient.setToken(userToken.getId()); // ApiUser中存放的是用户信息
+		userToken.setUserid(playUserClient.getId());
 		CacheHelper.getApiUserCacheBean().put(userToken.getId(),userToken, userToken.getOrgi());
 		CacheHelper.getApiUserCacheBean().put(playUserClient.getId(),playUserClient, userToken.getOrgi());
 		ResultData playerResultData = new ResultData( playUserClient!=null , playUserClient != null ? MessageEnum.USER_REGISTER_SUCCESS: MessageEnum.USER_REGISTER_FAILD_USERNAME , playUserClient , userToken) ;
+		PlayUserClient userClient = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(userToken.getUserid(), userToken.getOrgi());
 		GameConfig gameConfig = CacheConfigTools.getGameConfig(userToken.getOrgi()) ; // 获取游戏配置信息
 		if(gameConfig!=null){
 			playerResultData.setGametype(gameConfig.getGamemodel());
@@ -144,6 +165,9 @@ public class GuestPlayerController extends Handler{
 		/**
 		 * 根据游戏配置 ， 选择 返回的 玩法列表
 		 */
+		if(isNeedSave) {
+			playUserClientRepository.saveAndFlush(playUserClient);
+		}
 		logger.info("登录返回数据 data:{}", JSONObject.toJSONString(playerResultData));
 		return new ResponseEntity<>(playerResultData, HttpStatus.OK);
     }
@@ -156,7 +180,7 @@ public class GuestPlayerController extends Handler{
 	 */
 	public PlayUserClient register(PlayUser player , IP ipdata , HttpServletRequest request ) throws IllegalAccessException, InvocationTargetException{
 		PlayUserClient playUserClient = GameUtils.create(player, ipdata, request) ;
-		int users = playUserESRes.countByUsername(player.getUsername()+"") ;
+		int users = playUserESRes.countByUsername(player.getUsername()) ;
 		if(users == 0){
 			UKTools.published(player , playUserESRes , playUserRes);
 		}

@@ -69,13 +69,16 @@ public class CreateAllCardsTask extends AbstractTask implements ValueWithExpiryT
 						 * 历史遗留的问题，CacheHelper.getApiUserCacheBean()获取的是真实玩家的 数据，包括玩家的状态，CacheHelper.getGamePlayerCacheBean()存放的是包含机器人玩家的数据
 						 */
 						playUserClient = (PlayUserClient) CacheHelper.getGamePlayerCacheBean().getPlayer(player.getPlayuser(), this.orgi) ;
+						if(playUserClient == null){
+							continue;
+						}
 						playUserClient.setRoomready(false);
 						CacheHelper.getGamePlayerCacheBean().put(playUserClient.getId(),playUserClient, gameRoom.getOrgi()) ;
 					}else if(playUserClient.getPlayertype().equals(BMDataContext.PlayerTypeEnum.LEAVE.toString()) || playUserClient.getPlayertype().equals(BMDataContext.PlayerTypeEnum.OFFLINE.toString())){
 						/**
 						 * 离线和托管玩家，离开房间以后，牌局结束时从当前房间清理出去
 						 */
-						ActionTaskUtils.updatePlayerClientStatus(playUserClient, playUserClient.getPlayertype(),true);
+						//ActionTaskUtils.updatePlayerClientStatus(playUserClient, playUserClient.getPlayertype(),true);
 					}
 				}
 			}

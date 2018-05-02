@@ -25,8 +25,15 @@ public abstract interface DealFlowRepository extends JpaRepository<DealFlow, Str
 
     public abstract Page<DealFlow> findBySrcType(String srcType,Pageable paramPageable);
 
-    @Query(value="select t from DealFlow t  where t.createTime >=:startTime and t.creatTime <=:endTime limit startRow pageSize",nativeQuery=true)
-    public abstract List<DealFlow> findByTimeRange(@Param("startTime") Date startTime, @Param("endTime")Date endTime);
+    @Query(value="select DATE_FORMAT(t.create_time,'%Y-%m') month,sum(t.num) as num from deal_flow t  where  open_id='88888888888888888888888888888888' and src_type='消费' " +
+            "and DATE_FORMAT(t.create_time,'%Y-%m') >=:startTime and DATE_FORMAT(t.create_time,'%Y-%m') <=:endTime group by DATE_FORMAT(t.create_time,'%Y-%m')",nativeQuery=true)
+    public abstract List<Object> findByMonthRange(@Param("startTime") String startTime, @Param("endTime")String endTime);
+
+    @Query(value="select  DATE_FORMAT(t.create_time,'%Y-%m-%d') data,sum(t.num) as num from deal_flow t  where  open_id = '88888888888888888888888888888888'  " +
+            "and src_type='消费' and DATE_FORMAT(t.create_time,'%Y-%m-%d') >=:startTime and DATE_FORMAT(t.create_time,'%Y-%m-%d') <=:endTime group by  DATE_FORMAT(t.create_time,'%Y-%m-%d')",nativeQuery=true)
+    public abstract List<Object> findByDayRange(@Param("startTime") String startTime, @Param("endTime")String endTime);
+
+
 
 
 }

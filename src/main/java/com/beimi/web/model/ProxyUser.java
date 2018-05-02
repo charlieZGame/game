@@ -4,15 +4,17 @@ import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Created by zhengchenglei on 2018/4/6.
  */
 
 @Entity
-@Table(name = "manager_user")
+@Table(name = "proxy_user")
 @org.hibernate.annotations.Proxy(lazy = false)
-public class ManagerUser implements Serializable {
+public class ProxyUser implements Serializable {
 
     private String id ;
     private String openId;
@@ -20,12 +22,12 @@ public class ManagerUser implements Serializable {
     private String photo;
     private String tel;
     private String mail;
-    private String userId;
+    private Integer userId;
     private String userCategory;
     private String createPin;
-    private String createTime;
+    private Date createTime;
     private String updatePin;
-    private String updateTime;
+    private Date updateTime;
     private String yxbj;
 
 
@@ -73,14 +75,6 @@ public class ManagerUser implements Serializable {
         this.createPin = createPin;
     }
 
-    public String getCreateTime() {
-        return createTime;
-    }
-
-    public void setCreateTime(String createTime) {
-        this.createTime = createTime;
-    }
-
     public String getUserCategory() {
         return userCategory;
     }
@@ -97,11 +91,21 @@ public class ManagerUser implements Serializable {
         this.updatePin = updatePin;
     }
 
-    public String getUpdateTime() {
-        return updateTime;
+    public Date getCreateTime() {
+        //return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(createTime);
+        return this.updateTime;
     }
 
-    public void setUpdateTime(String updateTime) {
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
+
+    public Date getUpdateTime() {
+        //return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(this.updateTime);
+        return this.updateTime;
+    }
+
+    public void setUpdateTime(Date updateTime) {
         this.updateTime = updateTime;
     }
 
@@ -129,11 +133,11 @@ public class ManagerUser implements Serializable {
         this.tel = tel;
     }
 
-    public String getUserId() {
+    public Integer getUserId() {
         return userId;
     }
 
-    public void setUserId(String userId) {
+    public void setUserId(Integer userId) {
         this.userId = userId;
     }
 }
