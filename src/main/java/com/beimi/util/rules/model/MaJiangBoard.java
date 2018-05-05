@@ -233,11 +233,11 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 				 *
 				 */
 				boolean hasAction = false;
-				Player[] playersTemp = new Player[board.getPlayers().length-1];
+				Player[] playersTemp = new Player[board.getPlayers().length - 1];
 				int n = 0;
-				for (int i = 0;i<board.getPlayers().length ; i++){
-					if(player.getPlayuser().equals(board.getPlayers()[i].getPlayuser())){
-						for(int j = (i==3 ? 0 : i + 1); j != i ; j = (j == 3 ? 0 : j + 1) ){
+				for (int i = 0; i < board.getPlayers().length; i++) {
+					if (player.getPlayuser().equals(board.getPlayers()[i].getPlayuser())) {
+						for (int j = (i == 3 ? 0 : i + 1); j != i; j = (j == 3 ? 0 : j + 1)) {
 							playersTemp[n] = board.getPlayers()[j];
 							n++;
 						}
@@ -271,9 +271,9 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 							logger.info("通知客户端吃碰胡 peng:{}", mjCard.isPeng());
 
 							try {
-								if(((MaJiangBoard)board).getCycleController().containsKey(temp.getPlayuser()) &&
-										((MaJiangBoard)board).getCycleController().get(temp.getPlayuser()) && mjCard.isHu()){
-									logger.info("userId:{},mjCard:{},cycleController 存在未处理cycleController:{}",temp.getPlayuser(),mjCard,cycleController);
+								if (((MaJiangBoard) board).getCycleController().containsKey(temp.getPlayuser()) &&
+										((MaJiangBoard) board).getCycleController().get(temp.getPlayuser()) && mjCard.isHu()) {
+									logger.info("userId:{},mjCard:{},cycleController 存在未处理cycleController:{}", temp.getPlayuser(), mjCard, cycleController);
 
 									//此处不应该break,应该continue 校验其他的用户
 									//break;
@@ -282,19 +282,18 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 								}
 
 								hasAction = true;
-								logger.info("userId:{} 继续",temp.getPlayuser());
+								logger.info("userId:{} 继续", temp.getPlayuser());
 								synchronized (huController) {
-									huController.put(temp.getPlayuser(),mjCard);
-									logger.info("huController 添加 userId:{},data:{}，huController:{}",temp.getPlayuser(),mjCard,huController);
+									huController.put(temp.getPlayuser(), mjCard);
+									logger.info("huController 添加 userId:{},data:{}，huController:{}", temp.getPlayuser(), mjCard, huController);
 									if (huController.size() >= 2) {
 										huController.wait();
 										if (handlerDoIt) {
+											huController.clear();
 											break;
 										}
-										handlerDoIt = false;
 										ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
 									} else {
-										handlerDoIt = false;
 										ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
 									}
 								}
@@ -305,17 +304,9 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}
-							//} else {
-							//ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
-							//}
-						} else {
-							//player.setRecoveryHistory(ArrayUtils.add(player.getHistoryArray(), takeCards.getCard()));
-							//mjCard.setCommand("ting");
-							//提示胡牌暂时去掉
-							//mjCard.setRecommendCards(GameUtils.recommandCards(temp, temp.getCardsArray(),gamePlayway.getCode()));
-							//ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
 						}
-					}else{
+						handlerDoIt = false;
+					} else {
 						MJCardMessage mjCard = new MJCardMessage();
 						mjCard.setUserid(player.getPlayuser());
 						mjCard.setCommand("ting");
@@ -323,11 +314,10 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 						ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
 */
 						//提示胡牌暂时去掉
-						mjCard.setRecommendCards(GameUtils.recommandCards(temp, temp.getCardsArray(),gamePlayway.getCode()));
+						mjCard.setRecommendCards(GameUtils.recommandCards(temp, temp.getCardsArray(), gamePlayway.getCode()));
 						ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
 					}
 				}
-
 
 				/**
 				 * 无杠碰吃
@@ -344,6 +334,43 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 			}
 		}
 		return takeCards;
+	}
+
+
+
+	private void cphHandler() {
+
+		if (((MaJiangBoard) board).getCycleController().containsKey(temp.getPlayuser()) &&
+				((MaJiangBoard) board).getCycleController().get(temp.getPlayuser()) && mjCard.isHu()) {
+			logger.info("userId:{},mjCard:{},cycleController 存在未处理cycleController:{}", temp.getPlayuser(), mjCard, cycleController);
+
+			//此处不应该break,应该continue 校验其他的用户
+			//break;
+			continue;
+
+		}
+
+		hasAction = true;
+		logger.info("userId:{} 继续", temp.getPlayuser());
+		synchronized (huController) {
+			huController.put(temp.getPlayuser(), mjCard);
+			logger.info("huController 添加 userId:{},data:{}，huController:{}", temp.getPlayuser(), mjCard, huController);
+			if (huController.size() >= 2) {
+				huController.wait();
+				if (handlerDoIt) {
+					huController.clear();
+					break;
+				}
+				ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
+			} else {
+				ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
+			}
+		}
+		if (handlerDoIt) {
+			huController.clear();
+			break;
+		}
+
 	}
 
 	/**

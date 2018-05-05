@@ -693,6 +693,7 @@ public class GameEngine {
 					if (((MaJiangBoard) board).getHuController().size() > 0) {
 						if (board instanceof MaJiangBoard) {
 							synchronized (((MaJiangBoard) board).getHuController()) {
+								((MaJiangBoard) board).setHandlerDoIt(true);
 								MJCardMessage mjCardMessage = ((MaJiangBoard) board).getHuController().remove(userid);
 								logger.info("userId:{} 碰移除 mjCardMessage:{}",userid,mjCardMessage);
 								((MaJiangBoard) board).getHuController().notifyAll();
@@ -809,6 +810,7 @@ public class GameEngine {
 					if (((MaJiangBoard) board).getHuController().size() > 0) {
 						if (board instanceof MaJiangBoard) {
 							synchronized (((MaJiangBoard) board).getHuController()) {
+								((MaJiangBoard) board).setHandlerDoIt(true);
 								MJCardMessage mjCardMessage = ((MaJiangBoard) board).getHuController().remove(userid);
 								logger.info("userId:{} 杠移除 ",userid,mjCardMessage);
 								((MaJiangBoard) board).getHuController().notifyAll();

@@ -7,7 +7,7 @@ cc.Class({
   // use this for initialization
   onLoad: function() {
     cc.beimi.room_callback = null; //加入房间回调函数
-    this.isStartHearbeat = false;
+    cc.beimi.isStartHearbeat = false;
   },
   ready: function() {
     var check = false;
@@ -20,6 +20,7 @@ cc.Class({
   },
   connect: function() {
     let self = this;
+    self.lastConnectTime = Date.now();
     cc.beimi.isConnect = false;
     self.loadding();
     if (cc.beimi.isConnecting) {
@@ -55,9 +56,9 @@ cc.Class({
     cc.game.on(cc.game.EVENT_SHOW, function(event) {
       console.log("游戏在前台运行");
       //self.alert("SHOW TRUE");
-      this.lastRecordTime = 0;
-      this.lastRecieveTime = 0;
-      this.isPing = false;
+      cc.beimi.lastRecordTime = 0;
+      cc.beimi.lastRecieveTime = 0;
+      cc.beimi.isPing = false;
       if(!cc.beimi.isConnect && cc.beimi.authorization != null) {
         self.connect();
       }
@@ -66,8 +67,8 @@ cc.Class({
       console.log("已经连接服务器");
 
       cc.beimi.isConnect = true;
-      self.lastRecieveTime = Date.now();
-      self.isPing = true;
+      cc.beimi.lastRecieveTime = Date.now();
+      cc.beimi.isPing = true;
       cc.beimi.socket.emit("heartbeat", cc.beimi.authorization);
       //self.alert("connected to server");
       self.startHearbeat();
@@ -84,9 +85,19 @@ cc.Class({
       // if (cc.find("Canvas/loadding")) {
       //   self.alert("网络繁忙，请稍后再试");
       // }
+      if(Date.now() - self.lastConnectTime < 2000){
+          return
+      }
       if(cc.beimi.authorization != null) {
+        cc.beimi.isConnecting = false;
         self.connect();
       }
+    });
+
+    cc.beimi.socket.on("tokenIllegal", function(result) {
+        console.log("收到tokenIllegal消息",result);
+        cc.beimi.sessiontimeout = true;
+        self.alert("登录已过期，请重新登录");
     });
 
     cc.beimi.socket.on("gamestatus", function(result) {
@@ -182,34 +193,34 @@ cc.Class({
 
   startHearbeat:function(){
       let self = this;
-      this.isStartHearbeat = true;
+      cc.beimi.isStartHearbeat = true;
       cc.beimi.socket.on('heartbeat',function(){
           console.log('--------------Recieve heartbeat------------');
-          self.lastRecieveTime = Date.now();
-          self.isPing = false;
+          cc.beimi.lastRecieveTime = Date.now();
+          cc.beimi.isPing = false;
       });
       setInterval(function(){
-          if(Date.now() - self.lastRecordTime < 2000){
+          if(Date.now() - cc.beimi.lastRecordTime < 2000){
               return
           }
           if(cc.beimi.authorization == null){
               clearInterval();
               return
           }
-          if(!self.isPing && (Date.now() - self.lastRecordTime > 11000 ||
-              Date.now() - self.lastRecieveTime > 15000)){
+          if(!cc.beimi.isPing && (Date.now() - cc.beimi.lastRecordTime > 11000 ||
+              Date.now() - cc.beimi.lastRecieveTime > 15000)){
               console.log('--------------Send heartbeat------------');
               console.error('-----------'+new Date()+'----------');
-              self.isPing = true;
-              self.lastRecieveTime = Date.now();
+              cc.beimi.isPing = true;
+              cc.beimi.lastRecieveTime = Date.now();
               cc.beimi.socket.emit("heartbeat", cc.beimi.authorization);
-          } else if(self.isPing && Date.now() - self.lastRecieveTime > 11000){
+          } else if(cc.beimi.isPing && Date.now() - cc.beimi.lastRecieveTime > 11000){
               cc.beimi.isConnect = false;
-              self.isPing = false;
+              cc.beimi.isPing = false;
               console.log('--------------connect------------');
               self.connect();
           }
-          self.lastRecordTime = Date.now();
+          cc.beimi.lastRecordTime = Date.now();
       },5000);
   },
 
@@ -230,6 +241,7 @@ cc.Class({
     return object.getComponent(common);
   },
   loadding: function() {
+    console.log("------------------------------"+cc.beimi.loadding.size()+"----------------------------");
     if (cc.beimi.loadding.size() > 0) {
       this.loaddingDialog = cc.beimi.loadding.get();
       this.loaddingDialog.parent = cc.find("Canvas");
@@ -261,7 +273,9 @@ cc.Class({
   },
 
   closeloadding: function() {
+    console.log("--------------------------closeloadding-------------------------");
     if (cc.find("Canvas/loadding")) {
+      console.log("--------------------------Canvas-------------------------");
       cc.beimi.loadding.put(cc.find("Canvas/loadding"));
     }
   },
@@ -308,9 +322,7 @@ cc.Class({
 
   scene: function(name, self) {
     cc.director.preloadScene(name, function() {
-      if (cc.beimi&&self.loaddingDialog) {
-        self.closeloadding(self.loaddingDialog);
-      }
+      self.closeloadding();
       cc.director.loadScene(name);
     });
   },
@@ -329,6 +341,7 @@ cc.Class({
          *切换游戏场景之前，需要先检查是否 是在游戏中，如果是在游戏中，则直接进入该游戏，如果不在游戏中，则执行 新场景游戏
          */
     cc.beimi.extparams = extparams;
+    console.log("========cc.beimi.extparams======",cc.beimi.extparams);
     cc.beimi.joinroom =  true;
     /**
          * 发送状态查询请求，如果玩家当前在游戏中，则直接进入游戏恢复状态，如果玩家不在游戏中，则创建新游戏场景
@@ -493,50 +506,93 @@ cc.Class({
      * 分享
      */
   wxShare: function(title, description, url) {
-    jsb.reflection.callStaticMethod("org/cocos2dx/javascript/AppActivity", "shareByWeiXin",
-      "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", title, description, url);
+    if(cc.sys.os == cc.sys.OS_ANDROID) {
+      jsb.reflection.callStaticMethod("org/cocos2dx/javascript/AppActivity", "shareByWeiXin",
+        "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", title, description, url);
+    } else if(cc.sys.os == cc.sys.OS_IOS){
+      jsb.reflection.callStaticMethod("OCNativeForCocos", "shareByWeiXin:", title, description, url);
+    }
   },
 
   /**
      * 登录
      */
   loginByWeiXin: function() {
-    jsb.reflection.callStaticMethod("org/cocos2dx/javascript/AppActivity", "loginByWeiXin", "()V");
+    if(cc.sys.os == cc.sys.OS_ANDROID) {
+      jsb.reflection.callStaticMethod("org/cocos2dx/javascript/AppActivity", "loginByWeiXin", "()V");
+    } else if(cc.sys.os == cc.sys.OS_IOS){
+      jsb.reflection.callStaticMethod("OCNativeForCocos", "loginByWeiXin:");
+    }
   },
 
   getWxFlag: function() {
-    var flag = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getWxFlag", "()Z");
-    return flag;
+    if(cc.sys.os == cc.sys.OS_ANDROID) {
+      var flag = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getWxFlag", "()Z");
+      return flag;
+    } else if(cc.sys.os == cc.sys.OS_IOS){
+      var flag = jsb.reflection.callStaticMethod("OCNativeForCocos", "getWxFlag:");
+      return flag;
+    }
   },
 
   getOpenId: function() {
-    var openId = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getOpenId", "()Ljava/lang/String;");
-    return openId;
+    if(cc.sys.os == cc.sys.OS_ANDROID) {
+      var openId = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getOpenId", "()Ljava/lang/String;");
+      return openId;
+    } else if(cc.sys.os == cc.sys.OS_IOS){
+      var openId = jsb.reflection.callStaticMethod("OCNativeForCocos", "getOpenId:");
+      return openId;
+    }
   },
 
   getNickname: function() {
-    var name = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getNickname", "()Ljava/lang/String;");
-    return name;
+    if(cc.sys.os == cc.sys.OS_ANDROID) {
+      var name = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getNickname", "()Ljava/lang/String;");
+      return name;
+    } else if(cc.sys.os == cc.sys.OS_IOS){
+      var name = jsb.reflection.callStaticMethod("OCNativeForCocos", "getNickname:");
+      return name;
+    }
   },
 
   getAvatar: function() {
-    var avatar = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getAvatar", "()Ljava/lang/String;");
-    return avatar;
+    if(cc.sys.os == cc.sys.OS_ANDROID) {
+      var avatar = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getAvatar", "()Ljava/lang/String;");
+      return avatar;
+    } else if(cc.sys.os == cc.sys.OS_IOS){
+      var avatar = jsb.reflection.callStaticMethod("OCNativeForCocos", "getAvatar:");
+      return avatar;
+    }
   },
 
   getSex: function() {
-    var sex = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getSex", "()I");
-    return sex;
+    if(cc.sys.os == cc.sys.OS_ANDROID) {
+      var sex = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getSex", "()I");
+      return sex;
+    } else if(cc.sys.os == cc.sys.OS_IOS){
+      var sex = jsb.reflection.callStaticMethod("OCNativeForCocos", "getSex:");
+      return sex;
+    }
   },
 
   getMsg: function() {
-    var msg = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getMsg", "()Ljava/lang/String;");
-    return msg;
+    if(cc.sys.os == cc.sys.OS_ANDROID) {
+      var msg = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getMsg", "()Ljava/lang/String;");
+      return msg;
+    } else if(cc.sys.os == cc.sys.OS_IOS){
+      var sex = jsb.reflection.callStaticMethod("OCNativeForCocos", "getMsg:");
+      return sex;
+    }
   },
 
   getPassword: function() {
-    var msg = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getPassword", "()Ljava/lang/String;");
-    return msg;
+    if(cc.sys.os == cc.sys.OS_ANDROID) {
+      var pwd = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getPassword", "()Ljava/lang/String;");
+      return pwd;
+    } else if(cc.sys.os == cc.sys.OS_IOS){
+      var pwd = jsb.reflection.callStaticMethod("OCNativeForCocos", "getPassword:");
+      return pwd;
+    }
   },
 
   // called every frame, uncomment this function to activate update callback

@@ -3,26 +3,9 @@ var beiMiCommon = require("BeiMiCommon");
 cc.Class({
     extends: beiMiCommon,
     properties: {
-        // foo: {
-        //     // ATTRIBUTES:
-        //     default: null,        // The default value will be used only when the component attaching
-        //                           // to a node for the first time
-        //     type: cc.SpriteFrame, // optional, default is typeof default
-        //     serializable: true,   // optional, default is true
-        // },
-        // bar: {
-        //     get () {
-        //         return this._bar;
-        //     },
-        //     set (value) {
-        //         this._bar = value;
-        //     }
-        // },
         numdata: {
             default:null,
             type:cc.Node
-
-
         }
     },
 
@@ -64,11 +47,11 @@ cc.Class({
         console.log("查询加入房间result-->",result);
         var data = self.parse(result) ;
         if(data.result == "ok"){
-            var extparams = {
-                gametype : data.code ,
-                playway :  data.id ,
-                gamemodel : "room"
-            } ;
+          var extparams = data;
+          extparams.gametype = data.code;
+          extparams.playway = data.id;
+          extparams.gamemodel = "room";
+
             /**
              * 发送创建房间开始游戏的请求
              */

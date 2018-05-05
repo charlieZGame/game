@@ -329,19 +329,65 @@ cc.Class({
      * 重构后，只有两个消息类型
      */
   onLoad: function() {
-    console.error("===============game=====onLoad===================");
+    console.error("===============game=====onLoad===================",cc.beimi.extparams);
     this.initdata(true);
     this.resize();
     this.ting_tip.active = false;
     let self = this;
+    let roomType = "";
+    if (cc.beimi.extparams&&cc.beimi.extparams.gametype == "koudajiang") {
+      roomType+="扣大将玩法";
+      if(cc.beimi.extparams.jun) {
+        roomType+=cc.beimi.extparams.jun+"局";
+      }else if (cc.beimi.extparams.koujun) {
+        roomType+=cc.beimi.extparams.koujun+"局";
+      }
+
+      if(cc.beimi.extparams.hunfeng==true ||cc.beimi.extparams.hunfeng=="true") {
+        roomType+=" 带风";
+      }else if(cc.beimi.extparams.koufeng==true || cc.beimi.extparams.koufeng=='true') {
+        roomType+=" 带风";
+      }else {
+        roomType+=" 无风";
+      }
+
+      if(cc.beimi.extparams.hunpiao&&cc.beimi.extparams.hunpiao!="0") {
+        roomType+=" 漂"+cc.beimi.extparams.hunpiao;
+      }else if (cc.beimi.extparams.koupiao&&cc.beimi.extparams.koupiao!="0") {
+       roomType+=" 漂"+cc.beimi.extparams.koupiao;
+      }else {
+        roomType+=" 不漂"
+      }
+
+    }else {
+      roomType+="涞源玩法";
+      if(cc.beimi.extparams.jun) {
+        roomType+=cc.beimi.extparams.jun+"局";
+      }
+      if(cc.beimi.extparams.hun) {
+        roomType+=" "+cc.beimi.extparams.hun+"混";
+      }
+      if(cc.beimi.extparams.hunfeng==true ||cc.beimi.extparams.hunfeng=="true" ) {
+        roomType+=" 带风";
+      }else{
+        roomType+=" 无风";
+      }
+
+      if(cc.beimi.extparams.hunpiao!="0") {
+        roomType+=" "+cc.beimi.extparams.hunpiao+"漂";
+      }else {
+        roomType+=" 不漂"
+      }
+    }
+
+
     if (cc.beimi.extparams&&cc.beimi.extparams.gametype == "koudajiang") {
       cc.loader.loadRes("images/img/game_kou", cc.SpriteFrame, function(error, spriteFrame) {
         self.desk_title.spriteFrame = spriteFrame;
       });
-      self.roomtype_label.string = "扣大将玩法";
-    } else {
-      self.roomtype_label.string = "涞源玩法";
     }
+
+    self.roomtype_label.string = roomType;
     if (this.mask != null) {
       this.mask.active = false;
     }

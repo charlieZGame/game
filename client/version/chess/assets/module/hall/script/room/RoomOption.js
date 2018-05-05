@@ -171,7 +171,7 @@ cc.Class({
               var resultObj = self.parse(result);
               //房卡不够
               console.log("resultObj==cardCheck=>",resultObj.status);
-              if(resultObj.status==-1&& cc.beimi.daikaiRoom ){
+              if(resultObj.status==-1 && cc.beimi.daikaiRoom ){
                  cc.beimi.daikaiRoom = false;
                  self.closeOpenWin();
                  self.alert(resultObj.msg || '房间创建失败，请联系管理员');

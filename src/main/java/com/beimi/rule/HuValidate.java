@@ -57,6 +57,8 @@ public class HuValidate {
             isHaveWin = true;
             if(CollectionUtils.isNotEmpty(player.getCoverCards())){
                 coverSize = player.getCoverCards().size()/4;
+                coverSize = coverSize + getdajiangSize(player);
+
             }
 
             ReturnResult allTempReturnResult = null;
@@ -107,25 +109,73 @@ public class HuValidate {
                         returnResult.setUserId(player.getPlayuser());
                         String pengGangResult = getGangAndPengHandler(player.getActions(), true, userScore);
                         sb.append(pengGangResult == null ? "" : pengGangResult);
-                        returnResult.setScore(30 + userScore.get(player.getPlayuser()) + returnResult.getScore());
-                        returnResult.setDesc(sb.append(" 老龙(自摸" + vaStr.toString() + ") 10 × 3 = 30 分 ").toString());
-                        otherPlayerScore(userScore, player, 10,bank,gameRoom.getPiao());
-                    } else if (i > 1) {
+                        returnResult.setDesc(sb.append(" 老龙(自摸" + vaStr.toString() + ") ").toString());
+                        if(player.isBanker()){
+                            returnResult.setScore(36 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                            otherPlayerScore(userScore, player, 12,returnResult,players);
+                        }else{
+                            returnResult.setScore(32 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                            otherPlayerScore(userScore, player, 10,returnResult,players);
+                            for(Player player1 : players){
+                                if(player1.isBanker()){
+                                    userScore.put(player1.getPlayuser(),userScore.get(player1.getPlayuser())-2);
+                                }
+                            }
+                        }
+                    } else if (i == 2) {
                         //老老龙
                         returnResult.setUserId(player.getPlayuser());
                         String pengGangResult = getGangAndPengHandler(player.getActions(), true, userScore);
                         sb.append(pengGangResult == null ? "" : pengGangResult);
-                        returnResult.setScore(60 + userScore.get(player.getPlayuser()) + returnResult.getScore());
-                        returnResult.setDesc(sb.append(" 老老龙(自摸" + vaStr.toString() + ") 20 × 3 = 60 分 ").toString());
-                        otherPlayerScore(userScore, player, 20,bank,gameRoom.getPiao());
+                        returnResult.setDesc(sb.append(" 老老龙(自摸" + vaStr.toString() + ") ").toString());
+                        if(player.isBanker()){
+                            returnResult.setScore(66 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                            otherPlayerScore(userScore, player, 22,returnResult,players);
+                        }else{
+                            returnResult.setScore(62 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                            otherPlayerScore(userScore, player, 20,returnResult,players);
+                            for(Player player1 : players){
+                                if(player1.isBanker()){
+                                    userScore.put(player1.getPlayuser(),userScore.get(player1.getPlayuser())-2);
+                                }
+                            }
+                        }
+                    }else if(i >= 3){
+                        //老老老龙
+                        returnResult.setUserId(player.getPlayuser());
+                        String pengGangResult = getGangAndPengHandler(player.getActions(), true, userScore);
+                        sb.append(pengGangResult == null ? "" : pengGangResult);
+                        returnResult.setDesc(sb.append(" 老老老龙(自摸" + vaStr.toString() + ") ").toString());
+                        if(player.isBanker()) {
+                            returnResult.setScore(126 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                            otherPlayerScore(userScore, player, 42,returnResult,players);
+                        }else{
+                            returnResult.setScore(122 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                            otherPlayerScore(userScore, player, 40,returnResult,players);
+                            for(Player player1 : players){
+                                if(player1.isBanker()){
+                                    userScore.put(player1.getPlayuser(),userScore.get(player1.getPlayuser())-2);
+                                }
+                            }
+                        }
                     } else {
                         // 自摸 篓子每一家两分
                         returnResult.setUserId(player.getPlayuser());
-                        otherPlayerScore(userScore, player, 2,bank,gameRoom.getPiao());
                         String pengGangResult = getGangAndPengHandler(player.getActions(), true, userScore);
                         sb.append(pengGangResult == null ? "" : pengGangResult);
-                        returnResult.setScore(6 + userScore.get(player.getPlayuser()) + returnResult.getScore());
-                        returnResult.setDesc(sb.append(" 赢(自摸) 3 × 2 = 6 分 ").toString());
+                        if(player.isBanker()) {
+                            returnResult.setScore(12 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                            otherPlayerScore(userScore, player, 4,returnResult,players);
+                        }else{
+                            returnResult.setScore(8 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                            otherPlayerScore(userScore, player, 2,returnResult,players);
+                            for(Player player1 : players){
+                                if(player1.isBanker()){
+                                    userScore.put(player1.getPlayuser(),userScore.get(player1.getPlayuser())-2);
+                                }
+                            }
+                        }
+                        returnResult.setDesc(sb.append(" 赢(自摸) ").toString());
                     }
                 } else {
                     if (i == 1) {
@@ -134,33 +184,63 @@ public class HuValidate {
                         returnResult.setUserId(player.getPlayuser());
                         String pengGangResult = getGangAndPengHandler(player.getActions(), true, userScore);
                         sb.append(pengGangResult == null ? "" : pengGangResult);
+                        returnResult.setDesc(sb.append(" 少龙(" + vaStr.toString() + ") ").toString());
                         if(player.isBanker()) {
-                            returnResult.setScore(8 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                            returnResult.setScore(19 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                            userScore.put(player.getTargetUser(), userScore.get(player.getTargetUser()) - 19);
+                            otherPlayerScore(userScore, player, 0, returnResult, players);
                         }else{
-                            returnResult.setScore(5 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                            returnResult.setScore(17 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                            userScore.put(player.getTargetUser(), userScore.get(player.getTargetUser()) - 17);
+                            otherPlayerScore(userScore, player, 0, returnResult, players);
                         }
-                        returnResult.setDesc(sb.append(" 少龙(" + vaStr.toString() + ")  5 × 3 = 15 分 ").toString());
-                        otherPlayerScore(userScore, player, 5,bank,gameRoom.getPiao());
-                    } else if (i > 1) {
+                    } else if (i == 2) {
                         //老龙
                         returnResult.setUserId(player.getPlayuser());
                         String pengGangResult = getGangAndPengHandler(player.getActions(), true, userScore);
                         sb.append(pengGangResult == null ? "" : pengGangResult);
-                        returnResult.setScore(30 + userScore.get(player.getPlayuser()) + returnResult.getScore());
-                        returnResult.setDesc(sb.append(" 老龙(" + vaStr.toString() + ") 10 × 3 = 30 分 ").toString());
-                        otherPlayerScore(userScore, player, 10,bank,gameRoom.getPiao());
+                        returnResult.setDesc(sb.append(" 老龙(" + vaStr.toString() + ") ").toString());
+                        if(player.isBanker()) {
+                            returnResult.setScore(36 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                            userScore.put(player.getTargetUser(), userScore.get(player.getTargetUser()) - 36);
+                            otherPlayerScore(userScore, player, 0, returnResult, players);
+                        }else{
+                            returnResult.setScore(32 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                            userScore.put(player.getTargetUser(), userScore.get(player.getTargetUser()) - 32);
+                            otherPlayerScore(userScore, player, 0, returnResult, players);
+                        }
+                    }else if(i >= 3){
+                        //老老龙
+                        returnResult.setUserId(player.getPlayuser());
+                        String pengGangResult = getGangAndPengHandler(player.getActions(), true, userScore);
+                        sb.append(pengGangResult == null ? "" : pengGangResult);
+                        returnResult.setDesc(sb.append(" 老老龙(" + vaStr.toString() + ")").toString());
+                        if(player.isBanker()) {
+                            returnResult.setScore(66 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                            userScore.put(player.getTargetUser(), userScore.get(player.getTargetUser()) - 66);
+                            otherPlayerScore(userScore, player, 0, returnResult, players);
+                        }else{
+                            returnResult.setScore(62 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                            userScore.put(player.getTargetUser(), userScore.get(player.getTargetUser()) - 62);
+                            otherPlayerScore(userScore, player, 0, returnResult, players);
+                        }
                     } else {
                         //坎子
                         try {
                             returnResult.setUserId(player.getPlayuser());
                             String pengGangResult = getGangAndPengHandler(player.getActions(), true, userScore);
                             //// TODO: 2018/4/22  ZCL菽粟计算再是有问题
-                            userScore.put(player.getTargetUser(), userScore.get(player.getTargetUser()) - 3);
+                            if(player.isBanker()) {
+                                userScore.put(player.getTargetUser(), userScore.get(player.getTargetUser()) - 8);
+                                returnResult.setScore(8 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                            }else{
+                                userScore.put(player.getTargetUser(), userScore.get(player.getTargetUser()) - 5);
+                                returnResult.setScore(5 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                            }
                             sb.append(pengGangResult == null ? "" : pengGangResult);
-                            returnResult.setScore(3 + userScore.get(player.getPlayuser()) + returnResult.getScore());
-                            returnResult.setDesc(sb.append(" 赢(点炮)  3 分 ").toString());
+                            returnResult.setDesc(sb.append(" 赢(点炮) ").toString());
                             // 坎子点炮的人全出
-                            otherPlayerScore(userScore, player, 0,bank,gameRoom.getPiao());
+                            otherPlayerScore(userScore, player, 0,returnResult,players);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -195,11 +275,6 @@ public class HuValidate {
             if (!entry.getKey().equals(winUser)) {
                 ReturnResult returnResult = new ReturnResult();
                 returnResult.setUserId(entry.getKey());
-          /*      if (winIsbank) {
-                    returnResult.setScore(entry.getValue() - gameRoom.getPiao());
-                } else {
-                    returnResult.setScore(bank.equals(entry.getKey()) ? (entry.getValue() - gameRoom.getPiao()) : entry.getValue());
-                }*/
                 returnResult.setScore(entry.getValue());
                 if(coverSize > 0){
                     returnResult.setScore(returnResult.getScore()*(coverSize*2));
@@ -213,23 +288,45 @@ public class HuValidate {
     }
 
 
+    private static int getdajiangSize(Player player){
+
+
+        return 0;
+
+    }
+
+
+
     /**
      *
      * @param userScore
      * @param player
      * @param sc
      */
-    private static void otherPlayerScore(Map<String, Integer> userScore,Player player,int sc,String bank,Integer piao) {
+    private static void otherPlayerScore(Map<String, Integer> userScore,Player player,int sc,ReturnResult returnResult,Player[] players) {
 
 
         for (Map.Entry<String, Integer> score : userScore.entrySet()) {
             // 进来的都是赢了的用户
             if (!score.getKey().equals(player.getPlayuser())) {
-                if (piao != null && piao > 0) {
-                    if (player.isBanker()) {
-                        userScore.put(score.getKey(), score.getValue() - piao);
-                    } else if (bank.equals(score.getKey())) {
-                        userScore.put(score.getKey(), score.getValue() - piao);
+                if (player.isBanker()) {
+                    userScore.put(score.getKey(), score.getValue() - player.getPiao());
+                    returnResult.setScore(returnResult.getScore() + player.getPiao());
+                    for(Player player1 : players){
+                        if(player1.getPlayuser().equals(score.getKey())) {
+                            userScore.put(score.getKey(), score.getValue() - player1.getPiao());
+                            returnResult.setScore(returnResult.getScore() + player1.getPiao());
+                        }
+                    }
+
+                } else if (score.getKey().equals(player.getTargetUser())) {
+                    userScore.put(score.getKey(), score.getValue() - player.getPiao());
+                    returnResult.setScore(returnResult.getScore() + player.getPiao());
+                    for(Player player1 : players){
+                        if(player1.getPlayuser().equals(score.getKey())) {
+                            userScore.put(score.getKey(), score.getValue() - player1.getPiao());
+                            returnResult.setScore(returnResult.getScore() + player1.getPiao());
+                        }
                     }
                 }
                 userScore.put(score.getKey(), score.getValue() - sc);

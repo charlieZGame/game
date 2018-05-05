@@ -18,6 +18,9 @@ cc.Class({
         this.node.on("close", function (event) {
             if(cc.beimi!=null && cc.beimi.sessiontimeout == true){
                 cc.beimi.sessiontimeout = null;
+                cc.beimi.authorization = null;
+                cc.beimi.socket.disconnect();
+                cc.beimi.socket = null;
                 self.scene("login" , self) ;
             }else if (cc.beimi!=null &&cc.beimi.isLeaveroom) {
                console.log("====cc.beimi.isLeaveroom==========",cc.beimi.isLeaveroom);

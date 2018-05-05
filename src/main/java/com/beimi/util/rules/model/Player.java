@@ -53,6 +53,7 @@ public class Player implements Message,java.io.Serializable , Cloneable{
 
 	private String targetUser; //点炮用户
 
+	private Integer piao = 0; // 当前用户p飘几
 	private List<List<Byte>>collections;
 
 	private String nickname;
@@ -328,5 +329,13 @@ public class Player implements Message,java.io.Serializable , Cloneable{
 
 	public void setTargetUser(String targetUser) {
 		this.targetUser = targetUser;
+	}
+
+	public Integer getPiao() {
+		return piao;
+	}
+
+	public void setPiao(Integer piao) {
+		this.piao = piao;
 	}
 }

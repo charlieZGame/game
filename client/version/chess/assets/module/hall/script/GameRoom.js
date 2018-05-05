@@ -3,16 +3,6 @@ cc.Class({
     extends: beiMiCommon,
 
     properties: {
-        // foo: {
-        //    default: null,      // The default value will be used only when the component attaching
-        //                           to a node for the first time
-        //    url: cc.Texture2D,  // optional, default is typeof default
-        //    serializable: true, // optional, default is true
-        //    visible: true,      // optional, default is true
-        //    displayName: 'Foo', // optional
-        //    readonly: false,    // optional, default is false
-        // },
-        // ...
         roomidDialog: {
             default: null,
             type: cc.Prefab
@@ -32,15 +22,16 @@ cc.Class({
         } , 200);
     },
     onClickJoinRoom:function(){
+      let self = this;
        cc.beimi.audio.playUiSound();
-        if(this.roomidDialog){
-            cc.beimi.openwin = cc.instantiate(this.roomidDialog) ;
-            cc.beimi.openwin.parent = this.root();
-        }
+       if (cc.beimi.isHasEnterRoom==2) {
+           self.preload(cc.beimi.extparams, this) ;
+       }else {
+         if(this.roomidDialog){
+             cc.beimi.openwin = cc.instantiate(this.roomidDialog) ;
+             cc.beimi.openwin.parent = this.root();
+         }
+       }
     },
 
-    // called every frame, uncomment this function to activate update callback
-    // update: function (dt) {
-
-    // },
 });

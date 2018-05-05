@@ -31,11 +31,13 @@ cc.Class({
       default: null,
       type: cc.Node
     }
+
   },
 
   // use this for initialization
   onLoad: function() {
     let self = this;
+    cc.beimi.isHasEnterRoom=1;
     console.error("大厅--onLoad---------");
     this.node.on('mousedown', function(event) {
       console.log("场景中的鼠标点击事件--mousedown---------");
@@ -94,8 +96,24 @@ cc.Class({
         self.closeOpenWin();
         self.alert("代开房间号:"+data.roomId);
       });
-
     }
+
+    cc.beimi.socket.emit("searchHaveNotFinishGame", cc.beimi.authorization);
+    cc.beimi.socket.on("searchHaveNotFinishGame", function(result) {
+      /**
+        * 获取是否有正在游戏的状态
+        */
+      var data = self.parse(result);
+      console.error("searchHaveNotFinishGame====>",data);
+      if (data.type==1||data.type=="1") {
+          cc.beimi.isHasEnterRoom=1
+      }else if (data.type==2||data.type=="2") {
+          cc.beimi.isHasEnterRoom=2;
+          cc.beimi.extparams = data;
+      }
+
+    });
+
 
     cc.beimi.audio.playBGM("bgMain.mp3");
     cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);

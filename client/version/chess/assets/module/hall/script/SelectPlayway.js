@@ -3,16 +3,6 @@ cc.Class({
     extends: beiMiCommon,
 
     properties: {
-        // foo: {
-        //    default: null,      // The default value will be used only when the component attaching
-        //                           to a node for the first time
-        //    url: cc.Texture2D,  // optional, default is typeof default
-        //    serializable: true, // optional, default is true
-        //    visible: true,      // optional, default is true
-        //    displayName: 'Foo', // optional
-        //    readonly: false,    // optional, default is false
-        // },
-        // ...
         first: {
             default: null,
             type: cc.Node
@@ -45,39 +35,74 @@ cc.Class({
 
     // use this for initialization
     onLoad: function () {
-        this.first.getChildByName("rank").active = false;
-        if(cc.beimi != null && cc.beimi.user != null){
-            this.disMenu("first") ;
-            this.playwaypool = new cc.NodePool();
-            for(var i=0 ; i<20 ; i++){ //最大玩法数量不能超过20种
-                this.playwaypool.put(cc.instantiate(this.playway));
-            }
-            this.playwayarray = new Array();
-            if(this.gamepoint && cc.beimi!=null && cc.beimi.games !=null){
-                for(var inx=0 ; inx < this.gamepoint.children.length ; inx++){
-                    let name = this.gamepoint.children[inx].name ;
-                    var gameenable = false ;
-                    for(var i=0 ; i<cc.beimi.games.length ; i++){
-                        var gamemodel = cc.beimi.games[i] ;
-                        for(var j=0 ; j<gamemodel.types.length ; j++){
-                            let gametype = gamemodel.types[j] ;
-                            if(gametype.code == name){
-                                gameenable = true ; break ;
-                            }
-                        }
-                        if(gameenable == true){break ;}
-                    }
-                    if(gameenable == true){
-                        this.gamepoint.children[inx].active = true ;
-                    }else{
-                        this.gamepoint.children[inx].active = false ;
-                    }
-                }
-            }
+      let self = this;
+      this.first.getChildByName("rank").active = false;
+      this.init(this);
+      cc.beimi.socket.on("searchHaveNotFinishGame", function(result) {
+        /**
+          * 获取是否有正在游戏的状态
+          */
+        var data = self.parse(result);
+        console.error("searchHaveNotFinishGame==0000==>",data);
+        if (data.type==1||data.type=="1") {
+            cc.beimi.isHasEnterRoom=1
+        }else if (data.type==2||data.type=="2") {
+            cc.beimi.isHasEnterRoom=2;
+            cc.beimi.extparams = data;
+            self.init(self);
         }
+      });
 
     },
+
+   init:function(context){
+     if(cc.beimi != null && cc.beimi.user != null){
+         context.disMenu("first") ;
+         context.playwaypool = new cc.NodePool();
+         for(var i=0 ; i<20 ; i++){ //最大玩法数量不能超过20种
+             context.playwaypool.put(cc.instantiate(context.playway));
+         }
+         context.playwayarray = new Array();
+         if(context.gamepoint && cc.beimi!=null && cc.beimi.games !=null){
+             for(var inx=0 ; inx < context.gamepoint.children.length ; inx++){
+                 let name = context.gamepoint.children[inx].name ;
+                 var gameenable = false ;
+                 console.log("cc.beimi.games",cc.beimi.games);
+                 for(var i=0 ; i<cc.beimi.games.length ; i++){
+                     var gamemodel = cc.beimi.games[i] ;
+                     for(var j=0 ; j<gamemodel.types.length ; j++){
+                         let gametype = gamemodel.types[j] ;
+                         if(gametype.code == name){
+                             gameenable = true ; break ;
+                         }
+                     }
+                     if(gameenable == true){break ;}
+                 }
+                 if(gameenable == true){
+                   console.log("===========this.gamepoint.children[inx].name============",cc.beimi.isHasEnterRoom,context.gamepoint.children[inx]);
+                     context.gamepoint.children[inx].active = true;
+                     let self=context;
+                     let createroomNode = context.gamepoint.children[inx];
+                     if (cc.beimi.isHasEnterRoom==2&&context.gamepoint.children[inx].name=="createroom") {
+                       cc.loader.loadRes("images/img/create_unable", cc.SpriteFrame, function(error, spriteFrame) {
+                          console.log("createroomNode=====>",createroomNode);
+                         createroomNode._components[0].spriteFrame = spriteFrame;
+                       });
+                     }
+                 }else{
+                     context.gamepoint.children[inx].active = false ;
+                 }
+             }
+         }
+     }
+   },
+
     onClick:function(event, data){
+       console.log("data==>",data);
+
+       if (data=="createroom"&&cc.beimi.isHasEnterRoom==2) {
+         return
+       }
         cc.beimi.audio.playUiSound();
         this.disMenu("second") ;
         var girlAni = this.global.getComponent("DefaultHallDataBind");
@@ -92,7 +117,6 @@ cc.Class({
                 }else{
                     this.title.children[inx].active = false ;
                 }
-
             }
         }
         /**
