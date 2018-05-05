@@ -84,6 +84,17 @@ cc.Class({
           */
         self.updatepva();
       });
+
+      cc.beimi.socket.on("proxyCreateRoom", function(result) {
+        /**
+          * 代开房间
+          */
+        var data = self.parse(result);
+        console.log("proxyCreateRoom====>",data);
+        self.closeOpenWin();
+        self.alert("代开房间号:"+data.roomId);
+      });
+
     }
 
     cc.beimi.audio.playBGM("bgMain.mp3");

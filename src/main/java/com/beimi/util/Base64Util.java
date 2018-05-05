@@ -22,16 +22,20 @@ public class Base64Util {
     }
 
 
-    public static String baseDencode(String str) throws IOException {
+    public static String baseDencode(String str) {
 
-        return new String(new BASE64Decoder().decodeBuffer(str),"UTF-8");
+        try {
+            return new String(new BASE64Decoder().decodeBuffer(str),"UTF-8");
+        } catch (IOException e) {
+           throw new RuntimeException(e);
+        }
 
     }
 
 
     public static void main(String[] args) throws Exception {
-        System.out.println(baseEncode("杨柳依依"));
-        System.out.println(baseDencode("R3Vlc3RfMUFkdGM0"));
+        System.out.println(baseEncode("ZCL"));
+    //    System.out.println(baseDencode("R3Vlc3RfMUFkdGM0"));
      //   System.out.println(baseDencode(baseEncode("NXAybzVwK3o1TDZkNUw2ZA==,15#UjNWbGMzUmZNV3hGVVVsRw==,-5#UjNWbGMzUmZNR05qZEUwMQ==,-5#UjNWbGMzUmZNR2gwV1Zvdw==,-5")));
     }
 

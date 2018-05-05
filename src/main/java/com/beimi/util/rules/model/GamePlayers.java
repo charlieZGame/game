@@ -1,9 +1,12 @@
 package com.beimi.util.rules.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import com.beimi.backManager.WEChartUtil;
 import com.beimi.core.engine.game.Message;
 import com.beimi.web.model.PlayUserClient;
+import org.apache.commons.collections4.CollectionUtils;
 
 public class GamePlayers implements Message{
 	private int maxplayers ;
@@ -12,7 +15,13 @@ public class GamePlayers implements Message{
 	
 	public GamePlayers(int maxplayers , List<PlayUserClient> player ,String command){
 		this.maxplayers = maxplayers ;
-		this.player = player ;
+		if(CollectionUtils.isNotEmpty(player)) {
+			List<PlayUserClient> playUserClients = new ArrayList<PlayUserClient>();
+			for(PlayUserClient client : player){
+				playUserClients.add(WEChartUtil.clonePlayUserClient(client));
+			}
+			this.player = playUserClients;
+		}
 		this.command = command ;
 	}
 	

@@ -43,6 +43,7 @@ public class CreateAllCardsTask extends AbstractTask implements ValueWithExpiryT
 	public void execute(){
 		Board board = (Board) CacheHelper.getBoardCacheBean().getCacheObject(gameRoom.getId(), gameRoom.getOrgi());
 		board.setFinished(true);
+		String userId = board.getPlayers()[0].getPlayuser();
 		GamePlayway gamePlayWay = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), gameRoom.getOrgi()) ;
 		boolean gameOver = false ;
 		if(gamePlayWay!=null){
@@ -100,5 +101,9 @@ public class CreateAllCardsTask extends AbstractTask implements ValueWithExpiryT
 		}
 		
 		BMDataContext.getGameEngine().finished(gameRoom.getId(), orgi);
+		if(gameRoom.getCurrentnum() == gameRoom.getNumofgames()) {
+			GameUtils.updatePlayerClientStatus(userId, gameRoom.getOrgi(), BMDataContext.PlayerTypeEnum.LEAVE.toString(), true);
+		}
+
 	}
 }

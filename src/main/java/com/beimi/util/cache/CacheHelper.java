@@ -89,6 +89,9 @@ public class CacheHelper {
 	public static CacheBean getApiUserCacheBean() {
 		return cacheInstance!=null ? cacheInstance.getApiUserCacheBean() : null ;
 	}
+	public static CacheBean getProxyGameRoomCache() {
+		return cacheInstance!=null ? cacheInstance.getProxyGameRoomCache() : null ;
+	}
 	/**
 	 * 存放游戏数据的 ，Board
 	 * @return

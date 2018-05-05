@@ -8,6 +8,8 @@ import com.beimi.model.GameResultSummary;
 import com.beimi.rule.HuValidate;
 import com.beimi.rule.ReturnResult;
 import com.beimi.util.GameWinCheck;
+import com.beimi.util.cache.hazelcast.HazlcastCacheHelper;
+import com.beimi.util.cache.hazelcast.impl.ProxyGameRoomCache;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -307,12 +309,22 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 							//ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
 							//}
 						} else {
-							player.setRecoveryHistory(ArrayUtils.add(player.getHistoryArray(), takeCards.getCard()));
-							mjCard.setCommand("ting");
+							//player.setRecoveryHistory(ArrayUtils.add(player.getHistoryArray(), takeCards.getCard()));
+							//mjCard.setCommand("ting");
 							//提示胡牌暂时去掉
 							//mjCard.setRecommendCards(GameUtils.recommandCards(temp, temp.getCardsArray(),gamePlayway.getCode()));
-							ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
+							//ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
 						}
+					}else{
+						MJCardMessage mjCard = new MJCardMessage();
+						mjCard.setUserid(player.getPlayuser());
+						mjCard.setCommand("ting");
+/*
+						ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
+*/
+						//提示胡牌暂时去掉
+						mjCard.setRecommendCards(GameUtils.recommandCards(temp, temp.getCardsArray(),gamePlayway.getCode()));
+						ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
 					}
 				}
 
@@ -457,16 +469,22 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 	}
 
 
-	@Transactional
 	public void houseCardHandler(GameRoom gameRoom, GamePlayway playway,Board board,List<PlayUserClient> players,List<ReturnResult> returnResults){
 
 		try {
 			if (gameRoom == null || playway == null) {
 				return;
 			}
+
+			ProxyGameRoomCache cacheBean = (ProxyGameRoomCache) CacheHelper.getProxyGameRoomCache().getCacheInstance(HazlcastCacheHelper.CacheServiceEnum.ProxyGameRoomCache.toString());
+			String userId = null;
+			for(Map.Entry<String,Object> entry : cacheBean.getInstance().entrySet()){
+				if(((Map<String, String>)entry.getValue()).containsKey(gameRoom.getRoomid())){
+						userId = entry.getKey();
+				}
+			}
 			HouseCardHandlerService cardHandlerService = BMDataContext.getContext().getBean("houseCardHandlerService", HouseCardHandlerService.class);
-			cardHandlerService.cardHandler(gameRoom,players,returnResults);
-			cardHandlerService.saveUserFlow(gameRoom, board, players,returnResults);
+			cardHandlerService.dataBaseSummaryHandler(gameRoom,players,board,returnResults,userId);
 		}catch (Exception e){
 			logger.error("保存历史数据异常 returnResults:{}",returnResults,e);
 		}
@@ -488,7 +506,6 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 		for (Player player : board.getPlayers()) {
 			PlayUserClient playUser = getPlayerClient(players, player.getPlayuser());
 			SummaryPlayer summaryPlayer = new SummaryPlayer(player.getPlayuser(), playUser.getUsername() + "", board.getRatio(), board.getRatio() * playway.getScore(), false, player.getPlayuser().equals(board.getBanker()));
-
 			logger.info("汇总结果");
 			logger.info("player:{} 牌数 size:{}", player.getPlayuser(), player.getCardsArray().length);
 			if (!player.isWin()) {
@@ -524,7 +541,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 					}
 					System.out.println("赢家的牌信息end");
 				}
-				returnResults = scoreSummary(board.getPlayers(), summary, gameRoom, board.getBanker());
+				returnResults = scoreSummary(board.getPlayers(), summary, gameRoom, board.getBanker(),playway);
 				ReturnResult returnResult = null;
 				for (ReturnResult rr : returnResults) {
 					if (rr.isWin()) {
@@ -561,14 +578,14 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 		 */
 	}
 
-	private List<ReturnResult> scoreSummary(Player[] players,Summary summarys,GameRoom gameRoom,String bank) {
+	private List<ReturnResult> scoreSummary(Player[] players,Summary summarys,GameRoom gameRoom,String bank,GamePlayway playway) {
 		logger.info("tid:{}开始算分操作");
 
 		if (players == null || players.length == 0 ) {
 			logger.info("tid:{} 信息不全1");
 			return null;
 		}
-		List<ReturnResult> returnResults = HuValidate.validateHu(players,gameRoom,bank);
+		List<ReturnResult> returnResults = HuValidate.validateHu(players,gameRoom,bank,playway);
 		if (CollectionUtils.isEmpty(returnResults)) {
 			logger.info("tid:{} 信息不全2");
 			return null;

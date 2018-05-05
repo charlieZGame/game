@@ -75,7 +75,6 @@ cc.Class({
     onLoad: function () {
         let self = this ;
         this.group = new Array();
-
         //创建房间
         this.node.on('createroom', function (event) {
             cc.beimi.audio.playUiSound();
@@ -119,42 +118,75 @@ cc.Class({
             console.log("发送创建房间开始游戏的请求======socket=preload======>",JSON.stringify(extparams));
             self.preload(extparams , self) ;
         });
-
         //代开房间
         this.node.on('daikai', function (event) {
             cc.beimi.audio.playUiSound();
-            // /**
-            //  * 把参数 汇总一下， 然后转JSON以后序列化成字符串，发送 创建房间的请求
-            //  */
-            // var extparams = {} ;
-            // let values = new Array();
-            // for(var inx=0 ; inx<self.group.length ; inx++){
-            //     let groupitem = self.group[inx] ;
-            //     let value = "" ;
-            //     for(var j=0 ; j<groupitem.groupoptions.length ; j++){
-            //         let option = groupitem.groupoptions[j] ;
-            //         if(option.checked == true){
-            //             if(value != ""){
-            //                 value = value + "," ;
-            //             }
-            //             value = value + option.item.value ;
-            //         }
-            //     }
-            //     extparams[groupitem.data.code] = value ;
-            // }
-            // /**
-            //  * 藏到全局变量里去，进入场景后使用，然后把这个参数置空
-            //  * @type {{}}
-            //  */
-            // extparams.gametype = self.data.code ;
-            // extparams.playway = self.data.id;
-            // extparams.gamemodel = "room" ;
-            // /**
-            //  * 发送创建房间开始游戏的请求
-            //  */
-            // event.stopPropagation() ;
-            // console.log("发送创建房间开始游戏的请求======socket=preload======>",JSON.stringify(extparams));
-            // self.preload(extparams , self) ;
+            cc.beimi.daikaiRoom = true;
+            cc.beimi.extparams = null;
+            if (!cc.beimi.isConnect) {
+              self.alert("网络繁忙，请稍后再试");
+              if(cc.beimi.authorization != null) {
+                self.connect();
+              }
+              return
+            }
+            /**
+             * 把参数 汇总一下， 然后转JSON以后序列化成字符串，发送 创建房间的请求
+             */
+            var extparams = {} ;
+            let values = new Array();
+            for(var inx=0 ; inx<self.group.length ; inx++){
+                let groupitem = self.group[inx] ;
+                let value = "" ;
+                for(var j=0 ; j<groupitem.groupoptions.length ; j++){
+                    let option = groupitem.groupoptions[j] ;
+                    if(option.checked == true){
+                        if(value != ""){
+                            value = value + "," ;
+                        }
+                        value = value + option.item.value ;
+                    }
+                }
+                extparams[groupitem.data.code] = value ;
+            }
+            /**
+             * 藏到全局变量里去，进入场景后使用，然后把这个参数置空
+             * @type {{}}
+             */
+            extparams.gametype = self.data.code ;
+            extparams.playway = self.data.id;
+            extparams.gamemodel = "room" ;
+            /**
+             * 发送创建房间开始游戏的请求
+             */
+            event.stopPropagation() ;
+            console.log("发送代开房间开始游戏的请求======socket=preload======>",JSON.stringify(extparams));
+            var param = {
+              token: cc.beimi.authorization,
+              playway: extparams.playway,
+              orgi: cc.beimi.user.orgi,
+              extparams: extparams
+            };
+            cc.beimi.socket.on("cardCheck", function(result) {
+              var resultObj = self.parse(result);
+              //房卡不够
+              console.log("resultObj==cardCheck=>",resultObj.status);
+              if(resultObj.status==-1&& cc.beimi.daikaiRoom ){
+                 cc.beimi.daikaiRoom = false;
+                 self.closeOpenWin();
+                 self.alert(resultObj.msg || '房间创建失败，请联系管理员');
+              }else if(cc.beimi.daikaiRoom){
+                cc.beimi.daikaiRoom = false;
+                var param = {
+                  token: cc.beimi.authorization,
+                  playway: extparams.playway,
+                  orgi: cc.beimi.user.orgi,
+                  extparams: extparams
+                };
+                cc.beimi.socket.emit("proxyCreateRoom", JSON.stringify(param));
+              }
+            });
+            cc.beimi.socket.emit("cardCheck", JSON.stringify(param));
         });
     },
 
@@ -169,7 +201,7 @@ cc.Class({
         if(playway.free == true){
             this.freeopt.active = true;
             this.createroom.active = false ;
-            if (true) {
+            if (cc.beimi.user.usercategory==2||cc.beimi.user.usercategory=="2") {
               this.freedaikaiNode.active = true;
               this.freemiddlecreatebt.active = false;
               this.freerightcreatebt.active = true;
@@ -179,12 +211,17 @@ cc.Class({
               this.freerightcreatebt.active = false;
             }
         }else{
+            console.log("cc.beimi.user===>",cc.beimi.user);
             this.freeopt.active = false;
             this.createroom.active = true ;
-            if (true) {
+            if(cc.beimi.user.usercategory==2||cc.beimi.user.usercategory=="2") {
               this.daikaiNode.active = true;
               this.middlecreatebt.active = false;
               this.rightcreatebt.active = true;
+            }else  if(cc.beimi.user.usercategory==1||cc.beimi.user.usercategory=="1"||cc.beimi.user.usercategory==3||cc.beimi.user.usercategory=="3") {
+              this.daikaiNode.active = false;
+              this.middlecreatebt.active = true;
+              this.rightcreatebt.active = false;
             }else {
               this.daikaiNode.active = false;
               this.middlecreatebt.active = true;
@@ -211,12 +248,9 @@ cc.Class({
         if(this.optiongroup!=null && playway.groups!=null){
             for(var inx = 0 ; inx < playway.groups.length ; inx++){
                 let group = cc.instantiate(this.optiongroup) ;
-
-
                 let playWayGroup = group.getComponent("PlaywayGroup") ;
                 playWayGroup.init(playway.groups[inx] , this.optiongroupitem , playway.items) ;
                 this.group.push(playWayGroup);
-
                 group.parent = this.optionsnode ;
             }
         }

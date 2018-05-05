@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import com.alibaba.fastjson.JSONObject;
+import com.beimi.backManager.WEChartUtil;
 import com.beimi.util.*;
 import com.beimi.web.model.*;
 import com.beimi.web.service.repository.jpa.AnnouncementRespository;
@@ -91,9 +92,7 @@ public class GuestPlayerController extends Handler{
 				playUser.setPhoto("");
 				register(playUser, ipdata, request);
 				playUserRes.save(playUser);
-				playUser.setNickname(nickName);
 				playUserClient = playUserClientRepository.findById(playUser.getId());
-				playUserClient.setNickname(nickName);
 				isNeedSave = true;
 			} catch (IllegalAccessException | InvocationTargetException e) {
 				e.printStackTrace();
@@ -168,6 +167,8 @@ public class GuestPlayerController extends Handler{
 		if(isNeedSave) {
 			playUserClientRepository.saveAndFlush(playUserClient);
 		}
+		PlayUserClient client = WEChartUtil.clonePlayUserClient(playUserClient);
+		playerResultData.setData(client);
 		logger.info("登录返回数据 data:{}", JSONObject.toJSONString(playerResultData));
 		return new ResponseEntity<>(playerResultData, HttpStatus.OK);
     }

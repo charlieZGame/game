@@ -149,9 +149,9 @@ cc.Class({
       if(resultObj.status==-1){
          self.alert(resultObj.msg || '房间创建失败，请联系管理员');
       }else {
-        if (cc.beimi.extparams.gametype == "koudajiang") {
+        if (cc.beimi.extparams&&cc.beimi.extparams.gametype&&cc.beimi.extparams.gametype == "koudajiang") {
           self.scene("majiang", self);
-        } else {
+        } else if(cc.beimi.extparams&&cc.beimi.extparams.gametype){
           self.scene(cc.beimi.extparams.gametype, self);
         }
       }
@@ -475,6 +475,7 @@ cc.Class({
     //房卡不够
     console.log("resultObj==cardCheck=>",resultObj.status);
     if(resultObj.status==-1){
+       self.closeOpenWin();
        self.alert(resultObj.msg || '房间创建失败，请联系管理员');
     }else {
       console.log("---------------0000000000000000000000-------------");

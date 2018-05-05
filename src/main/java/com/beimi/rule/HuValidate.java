@@ -7,6 +7,7 @@ import com.beimi.util.GameUtils;
 import com.beimi.util.cache.CacheHelper;
 import com.beimi.util.rules.model.Action;
 import com.beimi.util.rules.model.Player;
+import com.beimi.web.model.GamePlayway;
 import com.beimi.web.model.GameRoom;
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -30,14 +31,13 @@ public class HuValidate {
     }
 
 
-    public static List<ReturnResult> validateHu(Player[] players,GameRoom gameRoom,String bank) {
+    public static List<ReturnResult> validateHu(Player[] players,GameRoom gameRoom,String bank,GamePlayway playway) {
 
         if (CollectionUtils.isEmpty(checkScoreRuleList) || players == null || players.length == 0) {
             return null;
         }
 
         String winUser = null;
-    //    boolean winIsbank = false;
         Map<String, Integer> map = new HashMap<String, Integer>();
         Map<String, Integer> allUserScore = null;
         Map<String, Integer> userScore = new HashMap<String, Integer>();
@@ -54,9 +54,6 @@ public class HuValidate {
             if (!player.isWin()) {
                 continue;
             }
-         /*   if (player.isBanker()) {
-                winIsbank = true;
-            }*/
             isHaveWin = true;
             if(CollectionUtils.isNotEmpty(player.getCoverCards())){
                 coverSize = player.getCoverCards().size()/4;
@@ -70,6 +67,9 @@ public class HuValidate {
                 int i = 0;
                 StringBuilder vaStr = new StringBuilder();
                 for (ICheckScoreRule checkScoreRule : checkScoreRuleList) {
+                    if("koudajiang".equals(playway.getCode()) && checkScoreRule instanceof WHHValidate){
+                        continue;
+                    }
                     checkScoreRule.setData(collection, player.getActions(), player.getPowerfullArray());
                     if (checkScoreRule.isSatisfy()) {
                         if (checkScoreRule instanceof YTLValidate) {
@@ -134,7 +134,11 @@ public class HuValidate {
                         returnResult.setUserId(player.getPlayuser());
                         String pengGangResult = getGangAndPengHandler(player.getActions(), true, userScore);
                         sb.append(pengGangResult == null ? "" : pengGangResult);
-                        returnResult.setScore(15 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                        if(player.isBanker()) {
+                            returnResult.setScore(8 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                        }else{
+                            returnResult.setScore(5 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                        }
                         returnResult.setDesc(sb.append(" 少龙(" + vaStr.toString() + ")  5 × 3 = 15 分 ").toString());
                         otherPlayerScore(userScore, player, 5,bank,gameRoom.getPiao());
                     } else if (i > 1) {
@@ -153,9 +157,10 @@ public class HuValidate {
                             //// TODO: 2018/4/22  ZCL菽粟计算再是有问题
                             userScore.put(player.getTargetUser(), userScore.get(player.getTargetUser()) - 3);
                             sb.append(pengGangResult == null ? "" : pengGangResult);
-                            returnResult.setScore(6 + userScore.get(player.getPlayuser()) + returnResult.getScore());
-                            returnResult.setDesc(sb.append(" 赢 1 × 3 + 3 = 6 分 ").toString());
-                            otherPlayerScore(userScore, player, 1,bank,gameRoom.getPiao());
+                            returnResult.setScore(3 + userScore.get(player.getPlayuser()) + returnResult.getScore());
+                            returnResult.setDesc(sb.append(" 赢(点炮)  3 分 ").toString());
+                            // 坎子点炮的人全出
+                            otherPlayerScore(userScore, player, 0,bank,gameRoom.getPiao());
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -322,7 +327,7 @@ public class HuValidate {
         player1.setWin(true);
         GameRoom gameRoom = new GameRoom();
         gameRoom.setPiao(2);
-        List<ReturnResult> returnResults = validateHu(players,gameRoom,"2");
+        List<ReturnResult> returnResults = validateHu(players,gameRoom,"2",null);
        System.out.println(JSONObject.toJSONString(returnResults));
 
     }

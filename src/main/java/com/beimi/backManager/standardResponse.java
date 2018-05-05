@@ -47,7 +47,14 @@ public class StandardResponse<T> {
     }
 
     public String toJSON(){
-        return JSONObject.toJSONString(this);
+        String resp = JSONObject.toJSONString(this);
+        System.out.println("返回数据 resp["+resp+"]");
+        return resp;
+    }
+    public String toJSON(long tid){
+        String resp = JSONObject.toJSONString(this);
+        System.out.println("tid:{},返回数据 tid:["+tid+"] resp["+resp+"]");
+        return resp;
     }
 
 }

@@ -1,6 +1,7 @@
 package com.beimi.web.handler.wechart;
 
 import com.alibaba.fastjson.JSONObject;
+import com.beimi.backManager.WEChartUtil;
 import com.beimi.core.BMDataContext;
 import com.beimi.util.*;
 import com.beimi.util.cache.CacheHelper;
@@ -62,25 +63,32 @@ public class WChartLoginController extends Handler{
      */
     public PlayUserClient register(PlayUser player , IP ipdata , javax.servlet.http.HttpServletRequest request ) throws IllegalAccessException, InvocationTargetException{
         PlayUserClient playUserClient = GameUtils.create(player, ipdata, request) ;
-     /*   int users = playUserClientRepository.countByUsername(player.getUsername()) ;
-        if(users == 0){
-            UKTools.published(player , playUserRes , playUserRes);
-        }*/
         return playUserClient ;
     }
-    @Transactional
-    @RequestMapping("/login")
-    public ResponseEntity<ResultData> login(javax.servlet.http.HttpServletRequest request ,
-                                            String openId, String nickname, Integer sex, String avatar,String pwd) throws InvocationTargetException, IllegalAccessException, UnsupportedEncodingException {
 
-        //nickname = URLDecoder.decode(nickname, "utf-8");
-       // avatar = URLDecoder.decode(nickname, "utf-8");
+    @RequestMapping("/login")
+    public ResponseEntity<ResultData> login(HttpServletRequest request ,
+                                            String openId, String nickname, Integer sex, String avatar,String pwd) throws Exception {
+
+        ResponseEntity<ResultData> responseEntity =  loginHandler(request,openId,nickname,sex,avatar,pwd);
+        ResultData resultData = responseEntity.getBody();
+        PlayUserClient playUserClient = (PlayUserClient) resultData.getData();
+        resultData.setData(WEChartUtil.clonePlayUserClient(playUserClient));
+        CacheHelper.getApiUserCacheBean().put(playUserClient.getId(), playUserClient, playUserClient.getOrgi());
+        logger.info("登录返回数据 data:{}", JSONObject.toJSONString(responseEntity));
+        return responseEntity;
+    }
+
+
+    @Transactional
+    private ResponseEntity<ResultData> loginHandler(HttpServletRequest request ,
+                              String openId, String nickname, Integer sex, String avatar,String pwd)throws Exception{
         PlayUserClient playUserClient = null;
         Token userToken = null;
         long tid = System.currentTimeMillis();
         logger.info("tid:{}微信用户开始登陆 openId:{},nickname:{},avatar:{},pwd:{}",tid,openId,nickname,avatar,pwd);
 
-        if (org.apache.commons.lang.StringUtils.isBlank(openId)|| org.apache.commons.lang.StringUtils.isEmpty(pwd)) {
+        if (StringUtils.isEmpty(openId)|| StringUtils.isEmpty(pwd)) {
             return new ResponseEntity(null, HttpStatus.FORBIDDEN);
         }
 
@@ -110,7 +118,6 @@ public class WChartLoginController extends Handler{
             playUserRes.save(playUser);
             playUser.setNickname(nickname);
             playUserClient = playUserClientRepository.findById(playUser.getId());
-            playUserClient.setNickname(nickname);
         }
         userToken = tokenRepository.findById(playUserClient.getUsername() + "");
         if (userToken == null) { //生成token
@@ -134,7 +141,6 @@ public class WChartLoginController extends Handler{
         }
         playUserClient.setToken(userToken.getId()); // ApiUser中存放的是用户信息
         CacheHelper.getApiUserCacheBean().put(userToken.getId(), userToken, userToken.getOrgi());
-        CacheHelper.getApiUserCacheBean().put(playUserClient.getId(), playUserClient, userToken.getOrgi());
         ResultData playerResultData = new ResultData(playUserClient != null, playUserClient != null ? MessageEnum.USER_REGISTER_SUCCESS : MessageEnum.USER_REGISTER_FAILD_USERNAME, playUserClient, userToken);
         GameConfig gameConfig = CacheConfigTools.getGameConfig(userToken.getOrgi()); // 获取游戏配置信息
         if (gameConfig != null) {
@@ -176,8 +182,8 @@ public class WChartLoginController extends Handler{
          * 根据游戏配置 ， 选择 返回的 玩法列表
          */
         playUserClientRepository.saveAndFlush(playUserClient);
-        logger.info("登录返回数据 data:{}", JSONObject.toJSONString(playerResultData));
         return new ResponseEntity<>(playerResultData, HttpStatus.OK);
+
     }
 
 

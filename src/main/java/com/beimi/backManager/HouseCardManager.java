@@ -43,6 +43,8 @@ public class HouseCardManager {
     @Autowired
     private ProxyUserRepository proxyUserRepository;
 
+    private String masterPost = "88888888888888888888888888888888";
+
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
 
@@ -69,39 +71,57 @@ public class HouseCardManager {
 
     @ResponseBody
     @RequestMapping("/getCardInfoAnalysis")
-    public String getCardInfoAnalysis(String type,String startTime,String endTime){
+    public String getCardInfoAnalysis(HttpServletRequest request,String type,String startTime,String endTime){
 
         long tid = System.currentTimeMillis();
+        logger.info("进入统计接口");
         try {
-           /* String checkResult = WEChartUtil.supperManagerValidate(request,proxyUserRepository);
-            if(StringUtils.isNotEmpty(checkResult)){
-                return checkResult;
-            }*/
-            List<Object> response = null;
-            if("1".equals(type)) {
-                response = dealFlowRepository.findByMonthRange(startTime,endTime);
-            }else if("2".equals(type)){
-                response = dealFlowRepository.findByDayRange(startTime,endTime);
-            }else{
-                return new StandardResponse<String>(1,"OK","undefined type").toJSON();
+            String checkResult = WEChartUtil.supperManagerValidate(request,proxyUserRepository);
+            if(StringUtils.isEmpty(checkResult)){
+                return generateAnaliyser(tid,masterPost,type,startTime,endTime);
             }
-            CardsAnalysis cardsanalysis = new CardsAnalysis();
-            cardsanalysis.setType(type);
-            List<CardsAnalysis.CardInfo> cardInfos = new ArrayList<CardsAnalysis.CardInfo>();
-            for(Object obj : response){
-                Object[] objects = (Object[]) obj;
-                CardsAnalysis.CardInfo cardInfo = cardsanalysis.new CardInfo();
-                cardInfo.setData(objects[0] == null ? null: (String)objects[0]);
-                cardInfo.setNumber(objects[1] == null ? 0 : (objects[1] instanceof BigDecimal ? ((BigDecimal) objects[1]).intValue() : (Integer) objects[1]));
-                cardInfos.add(cardInfo);
+            checkResult = WEChartUtil.supperProxyManagerValidate(request,proxyUserRepository);
+            if(StringUtils.isEmpty(checkResult)){
+                String openId = (String)request.getAttribute("openId");
+                return generateAnaliyser(tid,openId,type,startTime,endTime);
             }
-            cardsanalysis.setCardInfo(cardInfos);
+            return checkResult;
 
-            return new StandardResponse<CardsAnalysis>(1,"OK",cardsanalysis).toJSON();
         }catch (Exception e){
             logger.error("tid:{} 查询房卡配置信息异常 ",tid,e);
             return new StandardResponse<PageResponse>(-1,e.getMessage(),null).toJSON();
         }
+    }
+
+    /**
+     *
+     * @param openId
+     * @param type
+     * @param startTime
+     * @param endTime
+     * @return
+     */
+    private String generateAnaliyser(long tid,String openId,String type,String startTime,String endTime) {
+        List<Object> response = null;
+        if ("1".equals(type)) {
+            response = dealFlowRepository.findByMonthRange(openId, startTime, endTime);
+        } else if ("2".equals(type)) {
+            response = dealFlowRepository.findByDayRange(openId, startTime, endTime);
+        } else {
+            return new StandardResponse<String>(1, "OK", "undefined type").toJSON();
+        }
+        CardsAnalysis cardsanalysis = new CardsAnalysis();
+        cardsanalysis.setType(type);
+        List<CardsAnalysis.CardInfo> cardInfos = new ArrayList<CardsAnalysis.CardInfo>();
+        for (Object obj : response) {
+            Object[] objects = (Object[]) obj;
+            CardsAnalysis.CardInfo cardInfo = cardsanalysis.new CardInfo();
+            cardInfo.setData(objects[0] == null ? null : (String) objects[0]);
+            cardInfo.setNumber(objects[1] == null ? 0 : (objects[1] instanceof BigDecimal ? ((BigDecimal) objects[1]).intValue() : (Integer) objects[1]));
+            cardInfos.add(cardInfo);
+        }
+        cardsanalysis.setCardInfo(cardInfos);
+        return new StandardResponse<CardsAnalysis>(1, "OK", cardsanalysis).toJSON(tid);
     }
 
 
@@ -187,32 +207,29 @@ public class HouseCardManager {
             }
             PlayUser targetPlayUser = playUserRepository.findByUsername(targetUserId);
             if (("2".equals(proxyUser.getUserCategory()) && playUser == null) || targetPlayUser == null) {
-                return new StandardResponse(-1, "can't find user", null).toJSON();
+                return new StandardResponse(-1, "充值用户不存在", null).toJSON();
             }
             if ("2".equals(proxyUser.getUserCategory()) && playUser.getCards() < num) {
-                return new StandardResponse(-1, "cards number don't enough", null).toJSON();
+                return new StandardResponse(-1, "代理用户房卡不足", null).toJSON();
             }
             if("3".equals(proxyUser.getUserCategory())) {
                 ConsumeCard consumeCard = consumeCardRepository.findByType("1");
                 if(consumeCard.getEffectiveNum() <=0 || consumeCard.getEffectiveNum() < num){
-                    return new StandardResponse(-1, "cards don't enough", null).toJSON();
+                    return new StandardResponse(-1, "主账户房卡不足", null).toJSON();
                 }
                 consumeCard.setEffectiveNum(consumeCard.getEffectiveNum() - num);
                 targetPlayUser.setCards(targetPlayUser.getCards() + num);
                 consumeCardRepository.saveAndFlush(consumeCard);
                 playUserRepository.saveAndFlush(targetPlayUser);
-                WEChartUtil.addDealflow(dealFlowRepository,proxyUser.getUserId()+"",num,"消费",proxyUser.getOpenId());
-                WEChartUtil.addDealflow(dealFlowRepository,targetPlayUser.getUsername()+"",num,"买入",targetPlayUser.getOpenid());
+                WEChartUtil.addDealflow(dealFlowRepository,"主账户",num,"消费",masterPost,proxyUser.getNickname(),proxyUser.getOpenId()+"");
+                WEChartUtil.addDealflow(dealFlowRepository,targetPlayUser.getUsername()+"",num,"买入",targetPlayUser.getOpenid(),proxyUser.getNickname(),proxyUser.getOpenId()+"");
             }else{
-                if(playUser.getCards() <=0 ||playUser.getCards() < num){
-                    return new StandardResponse(-1, "cards don't enough", null).toJSON();
-                }
                 playUser.setCards(playUser.getCards() - num);
                 targetPlayUser.setCards(targetPlayUser.getCards() + num);
                 playUserRepository.saveAndFlush(playUser);
                 playUserRepository.saveAndFlush(targetPlayUser);
-                WEChartUtil.addDealflow(dealFlowRepository,playUser.getUsername()+"",num,"消费",playUser.getOpenid());
-                WEChartUtil.addDealflow(dealFlowRepository,targetPlayUser.getUsername()+"",num,"买入",targetPlayUser.getOpenid());
+                WEChartUtil.addDealflow(dealFlowRepository,playUser.getUsername()+"",num,"消费",playUser.getOpenid(),proxyUser.getNickname(),proxyUser.getOpenId()+"");
+                WEChartUtil.addDealflow(dealFlowRepository,targetPlayUser.getUsername()+"",num,"买入",targetPlayUser.getOpenid(),proxyUser.getNickname(),proxyUser.getOpenId()+"");
             }
         }catch (Exception e){
             logger.info("房卡充值异常 openId:{},num:{},targetUserId:{}",(String)request.getAttribute("openId"),num,targetUserId,e);

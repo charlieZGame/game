@@ -87,6 +87,8 @@ public class PlayUserClient implements UserEvent ,Message, java.io.Serializable 
 	private int diamonds ;		//钻石数量
 	private String photo;
 
+	private String usercategory;
+
 
 	private String nickname;
 	
@@ -470,6 +472,14 @@ public class PlayUserClient implements UserEvent ,Message, java.io.Serializable 
 		this.photo = photo;
 	}
 
+	public String getUsercategory() {
+		return usercategory;
+	}
+
+	public void setUsercategory(String usercategory) {
+		this.usercategory = usercategory;
+	}
+
 
 	@Override
 	public String toString() {
@@ -509,6 +519,7 @@ public class PlayUserClient implements UserEvent ,Message, java.io.Serializable 
 				", goldcoins=" + goldcoins +
 				", diamonds=" + diamonds +
 				", photo='" + photo + '\'' +
+				", usercategory='" + usercategory + '\'' +
 				", nickname='" + nickname + '\'' +
 				", sign='" + sign + '\'' +
 				'}';

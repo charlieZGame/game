@@ -34,6 +34,8 @@ public class DealFlow implements Serializable{
 
     private String createPin ;
 
+    private String handlerUserId;
+
     private String updatePin ;
 
     private String xybj ;
@@ -146,5 +148,13 @@ public class DealFlow implements Serializable{
 
     public void setSrcType(String srcType) {
         this.srcType = srcType;
+    }
+
+    public String getHandlerUserId() {
+        return handlerUserId;
+    }
+
+    public void setHandlerUserId(String handlerUserId) {
+        this.handlerUserId = handlerUserId;
     }
 }

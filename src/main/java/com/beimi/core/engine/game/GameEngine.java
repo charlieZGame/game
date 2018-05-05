@@ -8,9 +8,12 @@ import java.util.Map;
 import javax.annotation.Resource;
 
 import com.alibaba.fastjson.JSONObject;
+import com.beimi.backManager.WEChartUtil;
 import com.beimi.core.engine.game.impl.UserBoard;
 import com.beimi.core.engine.game.model.MJCardMessage;
 import com.beimi.core.engine.game.model.Playway;
+import com.beimi.util.cache.hazelcast.HazlcastCacheHelper;
+import com.beimi.util.cache.hazelcast.impl.ProxyGameRoomCache;
 import com.beimi.util.rules.model.*;
 import com.beimi.web.model.PlayUser;
 import org.apache.commons.collections4.CollectionUtils;
@@ -67,7 +70,7 @@ public class GameEngine {
 			 */
 			//JoinRoom joinRoom = new JoinRoom(userClient, gameEvent.getIndex(), gameEvent.getGameRoom().getPlayers(), gameEvent.getGameRoom());
 			//logger.info("tid:{},userId:{} send JoinRoom data:{} ",tid,beiMiClient.getUserid(),JSONObject.toJSONString(joinRoom));
-			ActionTaskUtils.sendEvent("joinroom", new JoinRoom(userClient, gameEvent.getIndex(), gameEvent.getGameRoom().getPlayers(), gameEvent.getGameRoom()), gameEvent.getGameRoom());
+			ActionTaskUtils.sendEvent("joinroom", new JoinRoom(WEChartUtil.clonePlayUserClient(userClient), gameEvent.getIndex(), gameEvent.getGameRoom().getPlayers(), gameEvent.getGameRoom()), gameEvent.getGameRoom());
 			//ActionTaskUtils.sendEvent("joinroom", joinRoom);
 			/**
 			 * 发送给单一玩家的消息
@@ -200,25 +203,17 @@ public class GameEngine {
 	}
 
 
-	/**
-	 *
-	 * @param tid
-	 * @param playerList
-	 * @param board
-	 * @param currentPlayer
-	 * @param beiMiClient
-     * @param gameEvent
-     */
-/*	private void hunHandler(long tid,List<PlayUserClient> playerList,MaJiangBoard board,Player currentPlayer,BeiMiClient beiMiClient,GameEvent gameEvent) {
-		for (PlayUserClient player : playerList) {
-			if (!currentPlayer.getPlayuser().equals(player.getId())) {
-				continue;
+
+	public static boolean isExistProxy(String roomId){
+		ProxyGameRoomCache cacheBean = (ProxyGameRoomCache) CacheHelper.getProxyGameRoomCache().getCacheInstance(HazlcastCacheHelper.CacheServiceEnum.ProxyGameRoomCache.toString());
+		for (Object map : cacheBean.getInstance().values()) {
+			if (((Map<String, String>) map).containsKey(roomId)) {
+				return true;
 			}
-			logger.info("tid:{} 恢复hun牌面信息发牌完成 cards:{}", tid, player.getCards());
-			RecoveryData recoveryData = new RecoveryData(currentPlayer, board.getLasthands(), board.getNextplayer() != null ? board.getNextplayer().getNextplayer() : null, 25, false, board);
-			beiMiClient.getClient().sendEvent("recovery", recoveryData, gameEvent.getGameRoom());
 		}
-	}*/
+		return false;
+	}
+
 	
 	/**
 	 * 玩家房间选择， 新请求，游戏撮合， 如果当前玩家是断线重连， 或者是 退出后进入的，则第一步检查是否已在房间
@@ -241,8 +236,10 @@ public class GameEngine {
 			if(!StringUtils.isBlank(roomid) && CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, orgi)!=null){//
 				gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, orgi) ;		//直接加入到 系统缓存 （只有一个地方对GameRoom进行二次写入，避免分布式锁）
 			}else{
-				if(beiMiClient.getExtparams()!=null && BMDataContext.BEIMI_SYSTEM_ROOM.equals(beiMiClient.getExtparams().get("gamemodel"))){	//房卡游戏 , 创建ROOM
-					gameRoom = this.creatGameRoom(gamePlayway, userid , true , beiMiClient) ;
+				if(isExistProxy(roomid) && BMDataContext.BEIMI_SYSTEM_ROOM.equals(beiMiClient.getExtparams().get("gamemodel"))){
+					gameRoom = this.creatGameRoom(gamePlayway, userid , true , beiMiClient,roomid) ;
+				}else if(beiMiClient.getExtparams()!=null && BMDataContext.BEIMI_SYSTEM_ROOM.equals(beiMiClient.getExtparams().get("gamemodel"))){	//房卡游戏 , 创建ROOM
+					gameRoom = this.creatGameRoom(gamePlayway, userid , true , beiMiClient,null) ;
 				}else{	//
 					/**
 					 * 大厅游戏 ， 撮合游戏 , 发送异步消息，通知RingBuffer进行游戏撮合，撮合算法描述如下：
@@ -264,7 +261,7 @@ public class GameEngine {
 					}
 					
 					if(gameRoom==null){	//无房间 ， 需要
-						gameRoom = this.creatGameRoom(gamePlayway, userid , false , beiMiClient) ;
+						gameRoom = this.creatGameRoom(gamePlayway, userid , false , beiMiClient,null) ;
 					}else{
 						playUser.setPlayerindex(System.currentTimeMillis());//从后往前坐，房主进入以后优先坐在 首位
 						needtakequene =  true ;
@@ -325,7 +322,7 @@ public class GameEngine {
 	 * @param data
 	 * @param gameRoom
      */
-	private void setGameParam(String data,GameRoom gameRoom) {
+	public void setGameParam(String data,GameRoom gameRoom) {
 
 		if (StringUtils.isNotEmpty(data)) {
 			Map<String, Object> map = JSONObject.parseObject(data, Map.class);
@@ -385,7 +382,7 @@ public class GameEngine {
 			playUser.setPlayertype(BMDataContext.PlayerTypeEnum.NORMAL.toString());
 			playUser.setRoomid(gameRoom.getId());
 			playUser.setRoomready(false);
-			
+
 			playerList.add(playUser) ;
 			NettyClients.getInstance().joinRoom(playUser.getId(), gameRoom.getId());
 			//CacheHelper.getGamePlayerCacheBean().put(playUser.getId(), playUser, playUser.getOrgi()); //将用户加入到 room ， MultiCache
@@ -642,8 +639,8 @@ public class GameEngine {
 						if (((MaJiangBoard) board).getHuController().size() > 0) {
 							if (board instanceof MaJiangBoard) {
 								synchronized (((MaJiangBoard) board).getHuController()) {
-									MJCardMessage mjCardMessage = ((MaJiangBoard) board).getHuController().remove(board.getLast().getUserid());
-									logger.info("userId:{} 过移除 mjCardMessage:{}",board.getLast().getUserid(),mjCardMessage);
+									MJCardMessage mjCardMessage = ((MaJiangBoard) board).getHuController().remove(userid);
+									logger.info("userId:{} 过移除 mjCardMessage:{}",userid,mjCardMessage);
 									if(mjCardMessage.isHu()){
 										((MaJiangBoard) board).getCycleController().put(player.getPlayuser(),true);
 									}
@@ -696,8 +693,8 @@ public class GameEngine {
 					if (((MaJiangBoard) board).getHuController().size() > 0) {
 						if (board instanceof MaJiangBoard) {
 							synchronized (((MaJiangBoard) board).getHuController()) {
-								MJCardMessage mjCardMessage = ((MaJiangBoard) board).getHuController().remove(board.getLast().getUserid());
-								logger.info("userId:{} 碰移除 ",board.getLast().getUserid(),mjCardMessage);
+								MJCardMessage mjCardMessage = ((MaJiangBoard) board).getHuController().remove(userid);
+								logger.info("userId:{} 碰移除 mjCardMessage:{}",userid,mjCardMessage);
 								((MaJiangBoard) board).getHuController().notifyAll();
 								//((MaJiangBoard) board).setHandlerDoIt(true);
 							}
@@ -812,8 +809,8 @@ public class GameEngine {
 					if (((MaJiangBoard) board).getHuController().size() > 0) {
 						if (board instanceof MaJiangBoard) {
 							synchronized (((MaJiangBoard) board).getHuController()) {
-								MJCardMessage mjCardMessage = ((MaJiangBoard) board).getHuController().remove(board.getLast().getUserid());
-								logger.info("userId:{} 杠移除 ",board.getLast().getUserid(),mjCardMessage);
+								MJCardMessage mjCardMessage = ((MaJiangBoard) board).getHuController().remove(userid);
+								logger.info("userId:{} 杠移除 ",userid,mjCardMessage);
 								((MaJiangBoard) board).getHuController().notifyAll();
 								//((MaJiangBoard) board).setHandlerDoIt(true);
 							}
@@ -843,10 +840,10 @@ public class GameEngine {
 							if (((MaJiangBoard) board).getHuController().size() > 0) {
 								synchronized (((MaJiangBoard) board).getHuController()) {
 									((MaJiangBoard) board).setHandlerDoIt(true);
-									MJCardMessage mjCardMessage = ((MaJiangBoard) board).getHuController().remove(board.getLast().getUserid());
-									logger.info("userId:{} 糊移除 ",board.getLast().getUserid(),mjCardMessage);
+									MJCardMessage mjCardMessage = ((MaJiangBoard) board).getHuController().remove(userid);
+									logger.info("userId:{} 糊移除 ",userid,mjCardMessage);
 									((MaJiangBoard) board).getHuController().notifyAll();
-									logger.info("用户胡牌 userId:{}", player.getPlayuser());
+									logger.info("用户胡牌 userId:{}", userid);
 								}
 							}
 						}
@@ -1018,31 +1015,31 @@ public class GameEngine {
 	 * @param userid
 	 * @return
 	 */
-	private  GameRoom creatGameRoom(GamePlayway playway , String userid , boolean cardroom , BeiMiClient beiMiClient){
-		GameRoom gameRoom = new GameRoom() ;
+	public GameRoom creatGameRoom(GamePlayway playway , String userid , boolean cardroom , BeiMiClient beiMiClient,String roomId) {
+		GameRoom gameRoom = new GameRoom();
 		gameRoom.setCreatetime(new Date());
 		gameRoom.setRoomid(UKTools.getUUID());
 		gameRoom.setUpdatetime(new Date());
-		
-		if(playway!=null){
+
+		if (playway != null) {
 			gameRoom.setPlayway(playway.getId());
 			gameRoom.setRoomtype(playway.getRoomtype());
 			gameRoom.setPlayers(playway.getPlayers());
 		}
 		gameRoom.setPlayers(playway.getPlayers());
 		gameRoom.setCardsnum(playway.getCardsnum());
-		
+
 		gameRoom.setCurpalyers(1);
 		gameRoom.setCardroom(cardroom);
-		
+
 		gameRoom.setStatus(BeiMiGameEnum.CRERATED.toString());
-		
+
 		gameRoom.setCardsnum(playway.getCardsnum());
-		
+
 		gameRoom.setCurrentnum(0);
-		
+
 		gameRoom.setCreater(userid);
-		
+
 		gameRoom.setMaster(userid);
 		gameRoom.setNumofgames(playway.getNumofgames());   //无限制
 		gameRoom.setOrgi(playway.getOrgi());
@@ -1050,29 +1047,36 @@ public class GameEngine {
 		/**
 		 * 房卡模式启动游戏
 		 */
-		if(beiMiClient.getExtparams()!=null && BMDataContext.BEIMI_SYSTEM_ROOM.equals(beiMiClient.getExtparams().get("gamemodel"))){
+		//if (beiMiClient.getExtparams() != null && BMDataContext.BEIMI_SYSTEM_ROOM.equals(beiMiClient.getExtparams().get("gamemodel"))) {
+		//if (beiMiClient.getExtparams() != null) {
 			gameRoom.setRoomtype(BMDataContext.ModelType.ROOM.toString());
 			gameRoom.setCardroom(true);
-			gameRoom.setExtparams(beiMiClient.getExtparams());
+			if(beiMiClient != null) {
+				gameRoom.setExtparams(beiMiClient.getExtparams());
+			}
 			/**
 			 * 产生 房间 ID ， 麻烦的是需要处理冲突 ，准备采用的算法是 先生成一个号码池子，然后重分布是缓存的 Queue里获取
 			 */
-			gameRoom.setRoomid(RandomCharUtil.getRandomNumberChar(6));
+			if (StringUtils.isNotEmpty(roomId)) {
+				gameRoom.setRoomid(roomId);
+			} else {
+				gameRoom.setRoomid(RandomCharUtil.getRandomNumberChar(6));
+			}
 
 			/**
 			 * 分配房间号码 ， 并且，启用 规则引擎，对房间信息进行赋值
 			 */
-			kieSession.insert(gameRoom) ;
-			kieSession.fireAllRules() ;
-		}else{
-			gameRoom.setRoomtype(BMDataContext.ModelType.HALL.toString());
-		}
-		
-		CacheHelper.getQueneCache().put(gameRoom, playway.getOrgi());	//未达到最大玩家数量，加入到游戏撮合 队列，继续撮合
-		
-		UKTools.published(gameRoom, null, BMDataContext.getContext().getBean(GameRoomRepository.class) , BMDataContext.UserDataEventType.SAVE.toString());
-		
-		return gameRoom ;
+			kieSession.insert(gameRoom);
+			kieSession.fireAllRules();
+		//} else {
+		//	gameRoom.setRoomtype(BMDataContext.ModelType.HALL.toString());
+		//}
+
+		CacheHelper.getQueneCache().put(gameRoom, playway.getOrgi());    //未达到最大玩家数量，加入到游戏撮合 队列，继续撮合
+
+		UKTools.published(gameRoom, null, BMDataContext.getContext().getBean(GameRoomRepository.class), BMDataContext.UserDataEventType.SAVE.toString());
+
+		return gameRoom;
 	}
 	
 	

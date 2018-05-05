@@ -1,5 +1,6 @@
 package com.beimi.backManager;
 
+import com.beimi.util.Base64Util;
 import com.beimi.util.cache.CacheHelper;
 import com.beimi.util.cache.hazelcast.impl.PlayerCach;
 import com.beimi.web.model.PlayUser;
@@ -7,6 +8,7 @@ import com.beimi.web.model.PlayUserClient;
 import com.beimi.web.model.ProxyUser;
 import com.beimi.web.service.repository.jpa.PlayUserRepository;
 import com.beimi.web.service.repository.jpa.ProxyUserRepository;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,29 +50,71 @@ public class UserMananger {
         PageResponse pageResponse = null;
         PageRequest pageRequest = new PageRequest(startPage, pageSize);
         try {
-            String checkResult = WEChartUtil.supperManagerValidate(request,proxyUserRepository);
-            if(StringUtils.isNotEmpty(checkResult)){
+            String checkResult = WEChartUtil.supperManagerValidate(request, proxyUserRepository);
+            if (StringUtils.isNotEmpty(checkResult)) {
                 return checkResult;
             }
+            Page<PlayUser> playUsers = null;
             if ("2".equals(usercategory) || "3".equals(usercategory)) {
-                Page<PlayUser> playUsers = playUserRepository.findByUsercategory(usercategory, pageRequest);
-                if (playUsers != null) {
-                    pageResponse = new PageResponse(playUsers.getNumber(), playUsers.getSize(), playUsers.getTotalPages(), playUsers.getContent());
-                }
+                playUsers = playUserRepository.findByUsercategory(usercategory, pageRequest);
             } else {
-                Page<PlayUser> playUsers = playUserRepository.findAll(pageRequest);
+                playUsers = playUserRepository.findAll(pageRequest);
+            }
+            if (playUsers != null) {
+                if(CollectionUtils.isNotEmpty(playUsers.getContent())) {
+                    for (PlayUser playUser : playUsers) {
+                        playUser.setNickname(Base64Util.baseDencode(playUser.getNickname()));
+                        userDataHandler(playUser);
+                    }
+                }
                 pageResponse = new PageResponse(playUsers.getNumber(), playUsers.getSize(),
                         playUsers.getTotalPages(), playUsers.getContent());
             }
-            if (pageResponse == null) {
-                return new StandardResponse<PageResponse>(1, "OK", null).toJSON();
-            } else {
-                return new StandardResponse<PageResponse>(1, "OK", pageResponse).toJSON();
-            }
+            return new StandardResponse<PageResponse>(1, "OK", pageResponse).toJSON();
         } catch (Exception e) {
             logger.error("tid:{} 获取注册用户信息异常 startPage:{},pageSize:{}", e);
             return new StandardResponse<PageResponse>(-1, e.getMessage(), null).toJSON();
         }
+    }
+
+    private void userDataHandler(PlayUser playUser){
+        if(playUser == null){
+            return;
+        }
+        playUser.setBirthday(null);
+        playUser.setCards(null);
+        playUser.setBrowser(null);
+        playUser.setUsertype(null);
+        playUser.setProvince(null);
+        playUser.setCountry(null);
+        playUser.setDatastatus(null);
+        playUser.setDiamonds(null);
+        playUser.setDisabled(null);
+        playUser.setEmail(null);
+        playUser.setExperience(null);
+        playUser.setFans(null);
+        playUser.setFirstname(null);
+        playUser.setFollows(null);
+        playUser.setGender(null);
+        playUser.setGoldcoins(null);
+        playUser.setHeadimg(null);
+        playUser.setIntegral(null);
+        playUser.setIsp(null);
+        playUser.setJobtitle(null);
+        playUser.setLanguage(null);
+        playUser.setUsertype(null);
+        playUser.setUseragent(null);
+        playUser.setRegion(null);
+        playUser.setLogin(null);
+        playUser.setUname(null);
+        playUser.setSecureconf(null);
+        playUser.setQqid(null);
+        playUser.setPassword(null);
+        playUser.setOrgi(null);
+        playUser.setPassupdatetime(null);
+        playUser.setMemo(null);
+        playUser.setMidname(null);
+        playUser.setMobile(null);
     }
 
     @ResponseBody
@@ -95,6 +139,7 @@ public class UserMananger {
         try {
             long tid = System.currentTimeMillis();
             ProxyUser proxyUser = WEChartUtil.addManagerUser(tid,proxyUserRepository, (String) request.getAttribute("openId"), nickname, photo);
+            proxyUser.setNickname(Base64Util.baseEncode(proxyUser.getNickname()));
             return new StandardResponse(1,"OK",proxyUser).toJSON();
         }catch (Exception e){
             logger.info("用户登录异常",e);
@@ -153,6 +198,9 @@ public class UserMananger {
             logger.info("tid:{} 开始查询代理用户信息 openId:{},startPage:{},pageSize:{}",tid,request.getParameter("openId"),startPage,pageSize);
             Page<ProxyUser> playUsers = proxyUserRepository.findByUserCategory("2",pageRequest);
             if (playUsers != null) {
+                for (ProxyUser playUser : playUsers) {
+                    playUser.setNickname(Base64Util.baseDencode(playUser.getNickname()));
+                }
                 pageResponse = new PageResponse(playUsers.getNumber(), playUsers.getSize(), playUsers.getTotalPages(), playUsers.getContent());
             }
         }catch (Exception e){
@@ -170,6 +218,7 @@ public class UserMananger {
             return checkResult;
         }
         ProxyUser proxyUser = proxyUserRepository.findByUserId(targetUserId);
+        proxyUser.setNickname(Base64Util.baseDencode(proxyUser.getNickname()));
         return new StandardResponse<ProxyUser>(1,"OK",proxyUser).toJSON();
     }
 
@@ -181,8 +230,13 @@ public class UserMananger {
         if(StringUtils.isNotEmpty(checkResult)){
             return checkResult;
         }
-        List<ProxyUser> proxyUser = proxyUserRepository.findByNickname(nickname);
-        return new StandardResponse<List<ProxyUser>>(1,"OK",proxyUser).toJSON();
+        List<ProxyUser> proxyUsers = proxyUserRepository.findByNickname(nickname);
+        if(proxyUsers != null){
+            for (ProxyUser playUser : proxyUsers) {
+                playUser.setNickname(Base64Util.baseDencode(playUser.getNickname()));
+            }
+        }
+        return new StandardResponse<List<ProxyUser>>(1,"OK",proxyUsers).toJSON();
     }
 
 

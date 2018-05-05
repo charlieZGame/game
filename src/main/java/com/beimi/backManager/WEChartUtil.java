@@ -2,7 +2,9 @@ package com.beimi.backManager;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.beimi.util.Base64Util;
 import com.beimi.web.model.DealFlow;
+import com.beimi.web.model.PlayUserClient;
 import com.beimi.web.model.ProxyUser;
 import com.beimi.web.service.repository.jpa.DealFlowRepository;
 import com.beimi.web.service.repository.jpa.ProxyUserRepository;
@@ -106,7 +108,7 @@ public class WEChartUtil {
             ProxyUser user = new ProxyUser();
             user.setId(openId);
             user.setOpenId(openId);
-            user.setNickname(nickname);
+            user.setNickname(Base64Util.baseEncode(nickname));
             user.setPhoto(photo);
             user.setYxbj("1");
             user.setUserCategory("1");
@@ -182,7 +184,7 @@ public class WEChartUtil {
     }
 
 
-    public static void addDealflow(DealFlowRepository repository,String username, Integer num, String type, String userId){
+    public static void addDealflow(DealFlowRepository repository,String username, Integer num, String type, String userId,String nickName,String createPin){
         DealFlow dealFlow = new DealFlow();
         dealFlow.setUserName(username);
         dealFlow.setNum(num);
@@ -192,8 +194,27 @@ public class WEChartUtil {
         dealFlow.setUserId(userId);
         dealFlow.setOpenId(userId);
         dealFlow.setSrcType(type);
+        dealFlow.setCreatePin(Base64Util.baseEncode(nickName));
+        dealFlow.setHandlerUserId(createPin);
         repository.save(dealFlow);
 
+    }
+
+
+    public static PlayUserClient clonePlayUserClient(PlayUserClient playUserClient){
+        PlayUserClient temp = new PlayUserClient();
+        temp.setId(playUserClient.getId());
+        temp.setNickname(Base64Util.baseDencode(playUserClient.getNickname()));
+        temp.setGoldcoins(playUserClient.getGoldcoins());
+        temp.setOrgi(playUserClient.getOrgi());
+        temp.setOpenid(playUserClient.getOpenid());
+        temp.setPhoto(playUserClient.getPhoto());
+        temp.setRoomid(playUserClient.getRoomid());
+        temp.setUsername(playUserClient.getUsername());
+        temp.setToken(playUserClient.getToken());
+        temp.setPlayerlevel(playUserClient.getPlayerlevel());
+        temp.setCards(playUserClient.getCards());
+        return temp;
     }
 
 

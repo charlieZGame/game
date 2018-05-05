@@ -23,6 +23,12 @@ public interface CacheInstance {
 	 * @return
 	 */
 	public CacheBean getGameRoomCacheBean();
+
+	/**
+	 * 代理房间缓存
+	 * @return
+     */
+	public CacheBean getProxyGameRoomCache();
 	
 	/**
 	 * 游戏数据
