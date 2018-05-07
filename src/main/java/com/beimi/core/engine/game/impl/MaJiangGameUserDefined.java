@@ -75,6 +75,9 @@ public class MaJiangGameUserDefined implements ChessGame{
 		for(int i = 0;i<playUsers.size();i++){
 			if(cards.containsKey(playUsers.get(i).getId())){
 				Player player = new Player(playUsers.get(i).getId()) ;
+				if(gameRoom.getPiao() > 0){
+					player.setPiao(Integer.parseInt(gameRoom.getPioaQi().get(player.getPlayuser())));
+				}
 				byte[] b = new byte[cards.get(playUsers.get(i).getId()).size()];
 				for(int j = 0; j < b.length;j++){
 					b[j] = cards.get(playUsers.get(i).getId()).get(j);

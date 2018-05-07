@@ -191,7 +191,7 @@ public class DuZhuBoard extends Board implements java.io.Serializable{
 
 	@Override
 	public TakeCards takeCardsRequest(GameRoom gameRoom , Board board, Player player,
-			String orgi, boolean auto, byte[] playCards) {
+			String orgi, boolean auto, byte[] playCards,boolean isAllowPG) {
 		TakeCards takeCards = null ;
 		boolean automic = false ;
 		//超时了 ， 执行自动出牌

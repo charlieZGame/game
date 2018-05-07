@@ -3,26 +3,13 @@ package com.beimi.rule;
 import com.beimi.util.rules.model.Action;
 import org.apache.commons.collections4.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 /**
  * Created by zhengchenglei on 2018/4/16.
  */
-public class QYSValidate implements ICheckScoreRule {
+public class QYSValidate extends AbsCheckScoreRule {
 
-    private List<Byte> collections;
-
-    private List<Action> actions;
-
-    private byte[] powerful;
-
-
-    public QYSValidate() {
-    }
-
-    public QYSValidate(List<Byte> collections, List<Action> actions) {
-        this.collections = collections;
-        this.actions = actions;
-    }
 
     @Override
     public boolean isSatisfy() {
@@ -30,8 +17,26 @@ public class QYSValidate implements ICheckScoreRule {
         if(CollectionUtils.isEmpty(collections)  || collections.size() < 2 ){
             return false;
         }
+
+        List<Byte> hun = new ArrayList<Byte>();
+        for(Byte b : collections){
+            for(byte _b : powerful){
+                if(b == _b){
+                    hun.add(b);
+                }
+            }
+        }
+
+        collections.removeAll(hun);
         int flag = (collections.get(0) < 0 ? -1 : 1);
-        int se = collections.get(0)/36;
+        int se;
+        if(CollectionUtils.isNotEmpty(collections)) {
+            se = collections.get(0) / 36;
+        }else if(CollectionUtils.isNotEmpty(actions)){
+            se = actions.get(0).getCard() / 36;
+        }else{
+            return false;
+        }
 
         for(Byte b : collections){
             if(flag * b < 0){
@@ -64,14 +69,6 @@ public class QYSValidate implements ICheckScoreRule {
     @Override
     public Integer getHuScore() {
         return 1;
-    }
-
-
-    @Override
-    public void setData(List<Byte> collections, List<Action> actions, byte[] powerful) {
-        this.collections = collections;
-        this.actions = actions;
-        this.powerful = powerful;
     }
 
     public List<Byte> getCollections() {

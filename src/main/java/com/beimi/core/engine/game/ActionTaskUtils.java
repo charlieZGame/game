@@ -22,6 +22,7 @@ import com.beimi.util.rules.model.RoomReady;
 import com.beimi.util.server.handler.BeiMiClient;
 import com.beimi.web.model.GameRoom;
 import com.beimi.web.model.PlayUserClient;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +56,20 @@ public class ActionTaskUtils {
 			try {
 				client.getClient().sendEvent(BMDataContext.BEIMI_MESSAGE_EVENT, message);
 			//	client.getClient().sendEvent("joinroom", message);
+			}catch (Exception e){
+				logger.error("客户端发送消息异常2",e);
+			}
+			}
+		}
+	}
+
+	public static void sendEventCommand(String event, Object message,GameRoom gameRoom){
+		List<PlayUserClient> players = CacheHelper.getGamePlayerCacheBean().getCacheObject(gameRoom.getId(), gameRoom.getOrgi()) ;
+		for(PlayUserClient user : players) {
+			BeiMiClient client = NettyClients.getInstance().getClient(user.getId());
+			if(client!=null && online(user.getId(), user.getOrgi())){
+			try {
+				client.getClient().sendEvent(event, message);
 			}catch (Exception e){
 				logger.error("客户端发送消息异常2",e);
 			}
@@ -96,7 +111,15 @@ public class ActionTaskUtils {
 		 * 所有人都已经举手
 		 */
 		if(enough == true){
-			game.change(gameRoom , BeiMiGameEvent.ENOUGH.toString());	//通知状态机 , 此处应由状态机处理异步执行
+		//	game.change(gameRoom , BeiMiGameEvent.ENOUGH.toString());	//通知状态机 , 此处应由状态机处理异步执行
+			if(gameRoom.getPiao() == 0) {
+				game.change(gameRoom, BeiMiGameEvent.ENOUGH.toString());
+			}else {
+				if (CollectionUtils.isNotEmpty(playerList) && playerList.size() == 4) {
+					logger.info("restart 通知选票");
+					ActionTaskUtils.sendEventCommand("selectPiao", "ok", gameRoom);
+				}
+			}
 		}
 	}
 	

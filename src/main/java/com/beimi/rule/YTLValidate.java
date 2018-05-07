@@ -4,27 +4,14 @@ package com.beimi.rule;
 import com.beimi.util.rules.model.Action;
 import org.apache.commons.collections4.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by zhengchenglei on 2018/4/16.
  */
-public class YTLValidate implements ICheckScoreRule {
+public class YTLValidate  extends AbsCheckScoreRule{
 
-    private List<Byte> collections;
-
-    private List<Action> actions;
-
-    private byte[] powerfull;
-
-
-    public YTLValidate() {
-    }
-
-    public YTLValidate(List<Byte> collections, List<Action> actions,byte[] powerfull) {
-        this.collections = collections;
-        this.actions = actions;
-    }
 
     @Override
     public boolean isSatisfy() {
@@ -35,8 +22,23 @@ public class YTLValidate implements ICheckScoreRule {
         if (CollectionUtils.isEmpty(collections) || (collections.size() - 2) % 3 != 0 || collections.size() != 14) {
             return false;
         }
-        for(int i = 2;i < collections.size()-2 ;i = i+3){
-            if(Math.abs(collections.get(i)-collections.get(i+1)) != 1 || Math.abs(collections.get(i+1)-collections.get(i+2))!= 1){
+
+
+        List<Byte> hun = new ArrayList<Byte>();
+        for(Byte b : collections){
+            for(byte _b : powerful){
+                if(b == _b){
+                    hun.add(b);
+                }
+            }
+        }
+
+        collections.remove(0);
+        collections.remove(1);
+        collections.removeAll(hun);
+
+        for(int i = 0;i < collections.size()-1 ;i ++){
+            if(Math.abs(collections.get(i)-collections.get(i+1)) == 0){
                 return false;
             }
         }
@@ -52,13 +54,6 @@ public class YTLValidate implements ICheckScoreRule {
     @Override
     public Integer getHuScore() {
         return null;
-    }
-
-    @Override
-    public void setData(List<Byte> collections, List<Action> actions, byte[] powerful) {
-        this.collections = collections;
-        this.actions = actions;
-        this.powerfull = powerful;
     }
 
     public List<Byte> getCollections() {
@@ -77,11 +72,11 @@ public class YTLValidate implements ICheckScoreRule {
         this.actions = actions;
     }
 
-    public byte[] getPowerfull() {
-        return powerfull;
+    public byte[] getPowerful() {
+        return powerful;
     }
 
-    public void setPowerfull(byte[] powerfull) {
-        this.powerfull = powerfull;
+    public void setPowerful(byte[] powerful) {
+        this.powerful = powerful;
     }
 }

@@ -57,6 +57,7 @@ public class CreateAllCardsTask extends AbstractTask implements ValueWithExpiryT
 			if(summary.isGameRoomOver()){
 				gameOver = true ;
 			}
+			gameRoom.getPioaQi().clear();
 		}
 		for(Player player : board.getPlayers()){
 			PlayUserClient playUserClient = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(player.getPlayuser(), this.orgi) ;

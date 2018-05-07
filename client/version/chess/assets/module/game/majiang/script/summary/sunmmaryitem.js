@@ -13,6 +13,11 @@ cc.Class({
           type: cc.Label
       },
 
+      username:{
+          default: null,
+          type: cc.Label
+      },
+
       score:{
           default: null,
           type: cc.Label
@@ -48,6 +53,10 @@ cc.Class({
         type: cc.Label
       },
 
+      useravatar: {
+        default: null,
+        type: cc.Sprite
+      },
 
     },
 
@@ -164,9 +173,16 @@ cc.Class({
       }else {
         this.hu.active = false;
       }
-      this.nickname.string = data.username;
+      this.nickname.string = data.nickName;
+      this.username.string = data.username;
       this.desc.string = data.desc;
       this.score.string = data.score;
+      let self = this;
+      if (data.photo&&data.photo.length>0) {
+        cc.loader.load(data.photo, function(error, res) {
+          self.useravatar.spriteFrame = new cc.SpriteFrame(res);
+        }.bind(self));
+      }
     },
 
 

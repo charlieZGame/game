@@ -1,6 +1,7 @@
 package com.beimi.web.model;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.persistence.Column;
@@ -69,11 +70,15 @@ public class GameRoom implements UserEvent, java.io.Serializable, Comparable<Gam
 	private boolean window = true;
 	@Transient
 	private Integer piao = 0;
-	
+	@Transient
+	private Map<String,String> pioaQi = new HashMap<String,String>();
+
 	private PlayUser masterUser ;	//房间的创建人
 	private GamePlayway gamePlayway ;	//房间玩法
 
 	private Integer powerfulsize = 1;
+	@Transient
+	private boolean isBegin = false;
 
 	private Map<String,String> extparams ;//房卡模式下的自定义参数
 	
@@ -302,5 +307,21 @@ public class GameRoom implements UserEvent, java.io.Serializable, Comparable<Gam
 	@Transient
 	public void setPiao(Integer piao) {
 		this.piao = piao;
+	}
+	@Transient
+	public Map<String, String> getPioaQi() {
+		return pioaQi;
+	}
+	@Transient
+	public void setPioaQi(Map<String, String> pioaQi) {
+		this.pioaQi = pioaQi;
+	}
+	@Transient
+	public boolean isBegin() {
+		return isBegin;
+	}
+	@Transient
+	public void setBegin(boolean begin) {
+		isBegin = begin;
 	}
 }

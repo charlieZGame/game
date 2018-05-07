@@ -74,6 +74,9 @@ public class MaJiangGame implements ChessGame{
 		int inx = 0 ;
 		for(PlayUserClient playUser : playUsers){
 			Player player = new Player(playUser.getId()) ;
+			if(gameRoom.getPiao() > 0){
+				player.setPiao(Integer.parseInt(gameRoom.getPioaQi().get(playUser.getId())));
+			}
 			if(player.getPlayuser().equals(banker)){
 				player.setCards(new byte[cardsnum+1]);	//庄家
 				player.setBanker(true);

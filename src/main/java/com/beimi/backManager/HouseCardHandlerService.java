@@ -88,7 +88,7 @@ public class HouseCardHandlerService {
                     }
                 }
                 if (playUser.getId().equals(playUserClient.getId()) && StringUtils.isEmpty(proxyUserId)) {
-                    playUser.setCards(playUser.getCards() - 1);
+                //    playUser.setCards(playUser.getCards() - 1);
                     //每一局都结算
                     playUserClient.setCards(playUserClient.getCards() - 1);
                 }

@@ -7,6 +7,7 @@ import com.beimi.backManager.HouseCardHandlerService;
 import com.beimi.model.GameResultSummary;
 import com.beimi.rule.HuValidate;
 import com.beimi.rule.ReturnResult;
+import com.beimi.util.Base64Util;
 import com.beimi.util.GameWinCheck;
 import com.beimi.util.cache.hazelcast.HazlcastCacheHelper;
 import com.beimi.util.cache.hazelcast.impl.ProxyGameRoomCache;
@@ -63,6 +64,9 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 	private Map<String,Boolean> cycleController = new HashMap<String,Boolean>();
 
 	private boolean handlerDoIt;
+
+	// 真对碰 杠 抢糊的情况
+	private boolean qingHu;
 
 	/**
 	 * 翻底牌 ， 斗地主
@@ -196,7 +200,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 	}
 
 	@Override
-	public TakeCards takeCardsRequest(GameRoom gameRoom, Board board, Player player, String orgi, boolean autoa, byte[] playCards) {
+	public TakeCards takeCardsRequest(GameRoom gameRoom, Board board, Player player, String orgi, boolean autoa, byte[] playCards,boolean isAllowPG) {
 		/**
 		 * 第一步就是先移除 计时器 ， 玩家通过点击页面上 牌面出牌的 需要移除计时器，并根据 状态 进行下一个节点
 		 */
@@ -244,6 +248,10 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 					}
 				}
 
+
+				List<MJCardMessage> huMessage = new ArrayList<MJCardMessage>();
+				List<MJCardMessage> cpMessage = new ArrayList<MJCardMessage>();
+
 				for (Player temp : playersTemp) {
 					/**
 					 * 玩法要求， 如果当前玩家有定缺，则当前出牌在和 缺门 的花色相同的情况下，禁止 杠碰吃胡
@@ -258,71 +266,44 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 					 * 检查是否有 杠碰吃胡的 状况 如果这轮有没有糊 则不允许糊
 					 */
 
-
 					if (!temp.getPlayuser().equals(player.getPlayuser())) {
 
 						logger.info("参与校验的牌为 card:{}", takeCards.getCard());
 						MJCardMessage mjCard = checkMJCard(temp, takeCards.getCard(), false, gamePlayway.getCode());
 						logger.info("whether having gang chi hu mjCard:{}", mjCard);
-						if (mjCard.isGang() || mjCard.isPeng() || mjCard.isChi() || mjCard.isHu()) {
+						logger.info("通知客户端吃碰胡 peng:{}", mjCard.isPeng());
+						if(mjCard.isHu()){
+							huMessage.add(mjCard);
+						}else if (isAllowPG && (mjCard.isGang() || mjCard.isPeng() || mjCard.isChi())) {
 							/**
 							 * 通知客户端 有杠碰吃胡了
 							 */
-							logger.info("通知客户端吃碰胡 peng:{}", mjCard.isPeng());
-
-							try {
-								if (((MaJiangBoard) board).getCycleController().containsKey(temp.getPlayuser()) &&
-										((MaJiangBoard) board).getCycleController().get(temp.getPlayuser()) && mjCard.isHu()) {
-									logger.info("userId:{},mjCard:{},cycleController 存在未处理cycleController:{}", temp.getPlayuser(), mjCard, cycleController);
-
-									//此处不应该break,应该continue 校验其他的用户
-									//break;
-									continue;
-
-								}
-
-								hasAction = true;
-								logger.info("userId:{} 继续", temp.getPlayuser());
-								synchronized (huController) {
-									huController.put(temp.getPlayuser(), mjCard);
-									logger.info("huController 添加 userId:{},data:{}，huController:{}", temp.getPlayuser(), mjCard, huController);
-									if (huController.size() >= 2) {
-										huController.wait();
-										if (handlerDoIt) {
-											huController.clear();
-											break;
-										}
-										ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
-									} else {
-										ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
-									}
-								}
-								if (handlerDoIt) {
-									huController.clear();
-									break;
-								}
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
+							cpMessage.add(mjCard);
 						}
-						handlerDoIt = false;
 					} else {
 						MJCardMessage mjCard = new MJCardMessage();
 						mjCard.setUserid(player.getPlayuser());
 						mjCard.setCommand("ting");
-/*
-						ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
-*/
 						//提示胡牌暂时去掉
 						mjCard.setRecommendCards(GameUtils.recommandCards(temp, temp.getCardsArray(), gamePlayway.getCode()));
 						ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
+					}
+				}
+				huMessage.addAll(cpMessage);
+				for(MJCardMessage mjCardMessage : huMessage){
+					if(cphHandler((MaJiangBoard)board,mjCardMessage)){
+						hasAction = true;
+					}
+					if(handlerDoIt){
+						handlerDoIt = false;
+						break;
 					}
 				}
 
 				/**
 				 * 无杠碰吃
 				 */
-				if (hasAction == false) {
+				if (hasAction == false && isAllowPG) {
 					board.dealRequest(gameRoom, board, orgi, false, null);
 				} else {
 					// 如果有吃碰杠，需要用户主动去打牌,不需要叫状态机处理
@@ -338,39 +319,40 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 
 
 
-	private void cphHandler() {
+	private boolean cphHandler(MaJiangBoard board,MJCardMessage mjCard) {
 
-		if (((MaJiangBoard) board).getCycleController().containsKey(temp.getPlayuser()) &&
-				((MaJiangBoard) board).getCycleController().get(temp.getPlayuser()) && mjCard.isHu()) {
-			logger.info("userId:{},mjCard:{},cycleController 存在未处理cycleController:{}", temp.getPlayuser(), mjCard, cycleController);
-
-			//此处不应该break,应该continue 校验其他的用户
-			//break;
-			continue;
-
-		}
-
-		hasAction = true;
-		logger.info("userId:{} 继续", temp.getPlayuser());
-		synchronized (huController) {
-			huController.put(temp.getPlayuser(), mjCard);
-			logger.info("huController 添加 userId:{},data:{}，huController:{}", temp.getPlayuser(), mjCard, huController);
-			if (huController.size() >= 2) {
-				huController.wait();
-				if (handlerDoIt) {
-					huController.clear();
-					break;
-				}
-				ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
-			} else {
-				ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
+		boolean hasAction = false;
+		try {
+			if (board.getCycleController().containsKey(mjCard.getUserid()) && board.getCycleController().get(mjCard.getUserid()) && mjCard.isHu()) {
+				logger.info("userId:{},mjCard:{},cycleController 存在未处理cycleController:{}", mjCard.getUserid(), mjCard, cycleController);
+				return false;
 			}
-		}
-		if (handlerDoIt) {
-			huController.clear();
-			break;
+
+			hasAction = true;
+			logger.info("userId:{} 继续", mjCard.getUserid());
+			synchronized (huController) {
+				huController.put(mjCard.getUserid(), mjCard);
+				logger.info("huController 添加 userId:{},data:{}，huController:{}", mjCard.getUserid(), mjCard, huController);
+				if (huController.size() >= 2) {
+					huController.wait();
+					if (handlerDoIt) {
+						huController.clear();
+						return hasAction;
+					}
+					ActionTaskUtils.sendEvent(mjCard.getUserid(), mjCard);
+				} else {
+					ActionTaskUtils.sendEvent(mjCard.getUserid(), mjCard);
+				}
+			}
+			if (handlerDoIt) {
+				huController.clear();
+				return hasAction;
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 
+		return hasAction;
 	}
 
 	/**
@@ -529,10 +511,17 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 
 	private void laiYuanHunSummary(GameRoom gameRoom,Board board, List<PlayUserClient> players,Summary summary,GamePlayway playway,boolean gameRoomOver) {
 
-		List<ReturnResult> returnResults = null;
+		List<ReturnResult> returnResults = new ArrayList<ReturnResult>();
 		for (Player player : board.getPlayers()) {
 			PlayUserClient playUser = getPlayerClient(players, player.getPlayuser());
 			SummaryPlayer summaryPlayer = new SummaryPlayer(player.getPlayuser(), playUser.getUsername() + "", board.getRatio(), board.getRatio() * playway.getScore(), false, player.getPlayuser().equals(board.getBanker()));
+			for(PlayUserClient playUserClient : players) {
+				if(!player.getPlayuser().equals(playUserClient.getId())){
+					continue;
+				}
+				summaryPlayer.setNickName(Base64Util.baseDencode(playUserClient.getNickname()));
+				summaryPlayer.setPhoto(playUserClient.getPhoto());
+			}
 			logger.info("汇总结果");
 			logger.info("player:{} 牌数 size:{}", player.getPlayuser(), player.getCardsArray().length);
 			if (!player.isWin()) {
@@ -734,4 +723,11 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 		System.out.println(playersTemp);
 	}
 
+	public boolean isQingHu() {
+		return qingHu;
+	}
+
+	public void setQingHu(boolean qingHu) {
+		this.qingHu = qingHu;
+	}
 }

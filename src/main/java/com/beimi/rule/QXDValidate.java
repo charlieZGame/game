@@ -8,20 +8,15 @@ import java.util.*;
 /**
  * Created by zhengchenglei on 2018/4/25.
  */
-public class QXDValidate implements ICheckScoreRule {
+public class QXDValidate  extends AbsCheckScoreRule{
 
-    private List<Byte> collections;
-
-    private List<Action> actions;
-
-    private byte[] powerful;
 
     @Override
     public boolean isSatisfy() {
 
-        if (CollectionUtils.isNotEmpty(actions)) {
+       /* if (CollectionUtils.isNotEmpty(actions)) {
             return false;
-        }
+        }*/
 
         List<Byte> tempb = new ArrayList<Byte>();
 
@@ -69,10 +64,4 @@ public class QXDValidate implements ICheckScoreRule {
         return null;
     }
 
-    @Override
-    public void setData(List<Byte> collections, List<Action> actions, byte[] powerful) {
-        this.collections = collections;
-        this.actions = actions;
-        this.powerful = powerful;
-    }
 }

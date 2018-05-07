@@ -308,6 +308,7 @@ cc.Class({
       type: cc.Node
     },
 
+
     desk_title: {
       default: null,
       type: cc.Sprite
@@ -321,7 +322,14 @@ cc.Class({
     roomtype_label: {
       default: null,
       type: cc.Label
-    }
+    },
+
+    selectpiao_dialog: {
+      default: null,
+      type: cc.Node
+    },
+
+
   },
 
   // use this for initialization
@@ -351,13 +359,13 @@ cc.Class({
         roomType+=" 无风";
       }
 
-      if(cc.beimi.extparams.hunpiao&&cc.beimi.extparams.hunpiao!="0") {
-        roomType+=" 漂"+cc.beimi.extparams.hunpiao;
-      }else if (cc.beimi.extparams.koupiao&&cc.beimi.extparams.koupiao!="0") {
-       roomType+=" 漂"+cc.beimi.extparams.koupiao;
-      }else {
-        roomType+=" 不漂"
-      }
+      // if(cc.beimi.extparams.hunpiao&&cc.beimi.extparams.hunpiao!="0") {
+      //   roomType+=" 漂"+cc.beimi.extparams.hunpiao;
+      // }else if (cc.beimi.extparams.koupiao&&cc.beimi.extparams.koupiao!="0") {
+      //  roomType+=" 漂"+cc.beimi.extparams.koupiao;
+      // }else {
+      //   roomType+=" 不漂"
+      // }
 
     }else {
       roomType+="涞源玩法";
@@ -373,11 +381,11 @@ cc.Class({
         roomType+=" 无风";
       }
 
-      if(cc.beimi.extparams.hunpiao!="0") {
-        roomType+=" "+cc.beimi.extparams.hunpiao+"漂";
-      }else {
-        roomType+=" 不漂"
-      }
+      // if(cc.beimi.extparams.hunpiao!="0") {
+      //   roomType+=" "+cc.beimi.extparams.hunpiao+"漂";
+      // }else {
+      //   roomType+=" 不漂"
+      // }
     }
 
 
@@ -402,7 +410,6 @@ cc.Class({
       if (self.chatScrollView && self.chatScrollView.active == true) {
         self.chatScrollView.active = false
       }
-
 
       //测试拖到牌
       // let temp = self.cardpool.get();
@@ -434,6 +441,14 @@ cc.Class({
     //     cards_gang.parent = self.gang_top;
     // //  cards_gang.parent = self.gang_left;
     //   self.leftactioncards.push(cards_gang);
+
+    //  结果页面测试
+    // self.summarypage = cc.instantiate(self.summary);
+    // self.summarypage.parent = self.root();
+    // let temp = self.summarypage.getComponent("summary");
+    // let datare={"finished":true,"game":"d752e1d4ac1d42aeb78940549fcfeb5a","gameRoomOver":false,"hu":false,"players":[{"balance":0,"desc":"碰 1  赢(点炮) 总分[14]","dizhu":true,"gameResultChecks":[{"pairs":"-20,9","pengs":"-12,-11,-10","three":"0,1,2,8,15,18,42,44,51"}],"gameover":false,"nickName":"Guest_0Iko1E","photo":"","ratio":2,"score":14,"userid":"0b7488e806554fa39db30cd16d07928a","username":"50004021","win":true},{"balance":0,"desc":"失败 输[-10]分","dizhu":false,"gameResultChecks":[{"others":"-21,-10,-9,25,57,66,67,68,69,74,85,99,105"}],"gameover":false,"nickName":"Guest_1wEAtR","photo":"","ratio":2,"score":-10,"userid":"a00e65b3eb3c4739a5cc6515c14b1879","username":"50004022","win":false},{"balance":0,"desc":"失败 输[-2]分","dizhu":false,"gameResultChecks":[{"others":"-31,-25,-24,-23,-16,-11,6,19,35,38,40,59,92"}],"gameover":false,"nickName":"Guest_0Mk9pt","photo":"","ratio":2,"score":-2,"userid":"fa730c5035364b55874e54396674bbec","username":"50004023","win":false},{"balance":0,"desc":"失败 输[-2]分","dizhu":false,"gameResultChecks":[{"others":"-19,10,20,30,50,64,70,78,82,86,88,97,101"}],"gameover":false,"nickName":"ZCL","photo":"http://thirdwx.qlogo.cn/mmopen/vi_32/DYAIOgq83epr1wSfeibgibyXW9o6Raxic5ce8iaW5icddmyAgO3YToMb8EmYicl6jIEzmGia0lzIicSOib4aXWObKMA1jDg/132?a=1.jpg","ratio":2,"score":-2,"userid":"o4tvp0fG8RO79awUALXF3II1SHfw","username":"50003750","win":false}],"ratio":2,"score":4}
+    // temp.create(self, datare, [], true);
+
 
       //  结算页面测试
       // self.summarytotalpage = cc.instantiate(self.summary_total);
@@ -492,12 +507,13 @@ cc.Class({
       //     self.isCankou = true;
       //   }
 
-      // 结果页面测试
-      // self.summarypage = cc.instantiate(self.summary);
-      // self.summarypage.parent = self.root();
-      // let temp = self.summarypage.getComponent("summary");
-      // let datare={"game":"d7128eb8f70b49c9ac0eedd5c4c1083b","ratio":2,"command":"allcards","finished":true,"gameRoomOver":false,"score":4,"players":[{"userid":"c178612037ac413dad4d824416961f2a","desc":"我是描述","username":"Guest_11MQ5x","ratio":2,"score":4,"gameover":false,"balance":0,"win":true,"gameResultChecks":[{"pengs":"52,53,54","mgangs":"36,37,38,39,92,93,94,95","agangs":"36,37,38,39,92,93,94,95","others":"-18,-6,1,23,89"},{"pairs":"88,17","three":"92,1,5,14,16,21,23,25,31,93,80,81"},{"pairs":"16,17","three":"88,1,5,92,14,21,23,25,31,93,80,81"},{"pairs":"80,81","three":"88,1,5,92,14,16,93,17,21,23,25,31"}],"dizhu":true},{"userid":"f3fa56bdf75e4bc4a1496d797d63286c","desc":"我是描述描述描述","username":"Guest_1F5oVN","ratio":2,"score":4,"gameover":false,"balance":0,"win":false,"gameResultChecks":[{"others":"39,54,62,63,76,79,95,96,97,105,74,84,53"}],"dizhu":false},{"userid":"960017a406234b8784ed9bf649797089","desc":"我是描述","username":"Guest_1opcw5","ratio":2,"score":4,"gameover":false,"balance":0,"win":false,"gameResultChecks":[{"pengs":"44,45,46","others":"-7,-6,51,67,68,100,101,107,47,60"}],"dizhu":false},{"userid":"140c7ea5999848b48195302fe497702b","desc":"我是描述阿斯蒂芬斯蒂芬是发","username":"Guest_1cR94c","ratio":2,"score":4,"gameover":false,"balance":0,"win":false,"gameResultChecks":[{"pengs":"0,1,2","others":"4,11,20,26,30,49,59,64,66,99"}],"dizhu":false}],"hu":false}
-      // temp.create(self, datare);
+    // //  结果页面测试
+    //   self.summarypage = cc.instantiate(self.summary);
+    //   self.summarypage.parent = self.root();
+    //   let temp = self.summarypage.getComponent("summary");
+    //   let datare={"finished":true,"game":"d752e1d4ac1d42aeb78940549fcfeb5a","gameRoomOver":false,"hu":false,"players":[{"balance":0,"desc":"碰 1  赢(点炮) 总分[14]","dizhu":true,"gameResultChecks":[{"pairs":"-20,9","pengs":"-12,-11,-10","three":"0,1,2,8,15,18,42,44,51"}],"gameover":false,"nickName":"Guest_0Iko1E","photo":"","ratio":2,"score":14,"userid":"0b7488e806554fa39db30cd16d07928a","username":"50004021","win":true},{"balance":0,"desc":"失败 输[-10]分","dizhu":false,"gameResultChecks":[{"others":"-21,-10,-9,25,57,66,67,68,69,74,85,99,105"}],"gameover":false,"nickName":"Guest_1wEAtR","photo":"","ratio":2,"score":-10,"userid":"a00e65b3eb3c4739a5cc6515c14b1879","username":"50004022","win":false},{"balance":0,"desc":"失败 输[-2]分","dizhu":false,"gameResultChecks":[{"others":"-31,-25,-24,-23,-16,-11,6,19,35,38,40,59,92"}],"gameover":false,"nickName":"Guest_0Mk9pt","photo":"","ratio":2,"score":-2,"userid":"fa730c5035364b55874e54396674bbec","username":"50004023","win":false},{"balance":0,"desc":"失败 输[-2]分","dizhu":false,"gameResultChecks":[{"others":"-19,10,20,30,50,64,70,78,82,86,88,97,101"}],"gameover":false,"nickName":"ZCL","photo":"http://thirdwx.qlogo.cn/mmopen/vi_32/DYAIOgq83epr1wSfeibgibyXW9o6Raxic5ce8iaW5icddmyAgO3YToMb8EmYicl6jIEzmGia0lzIicSOib4aXWObKMA1jDg/132?a=1.jpg","ratio":2,"score":-2,"userid":"o4tvp0fG8RO79awUALXF3II1SHfw","username":"50003750","win":false}],"ratio":2,"score":4}
+    //
+    //   temp.create(self, datare);
 
       // this.gameover([
       //   1, 2, 3, 4
@@ -656,6 +672,42 @@ cc.Class({
         event.stopPropagation();
       });
 
+      this.node.on("piao0", function(event) {
+        var param = {
+          token: cc.beimi.authorization,
+          piao:"0"
+        }
+        socket.emit("choosePiao", JSON.stringify(param));
+        event.stopPropagation();
+      });
+
+      this.node.on("piao1", function(event) {
+        var param = {
+          token: cc.beimi.authorization,
+          piao:"1"
+        }
+        socket.emit("choosePiao", JSON.stringify(param));
+        event.stopPropagation();
+      });
+
+      this.node.on("piao2", function(event) {
+        var param = {
+          token: cc.beimi.authorization,
+          piao:"2"
+        }
+        socket.emit("choosePiao", JSON.stringify(param));
+        event.stopPropagation();
+      });
+
+      this.node.on("piao3", function(event) {
+        var param = {
+          token: cc.beimi.authorization,
+          piao:"3"
+        }
+        socket.emit("choosePiao", JSON.stringify(param));
+        event.stopPropagation();
+      });
+
 
       if (cc.beimi != null) {
         if (cc.beimi.gamestatus != null && cc.beimi.gamestatus == "playing") {
@@ -737,7 +789,7 @@ cc.Class({
 
       this.map("recovery", this.recovery_event); //恢复牌局数据
 
-      this.map("roomready", this.roomready_event); //提示  这个指令后台没发
+      this.map("roomready", this.roomready_event); //提示
 
       this.map("playeready", this.playeready_event); //玩家点击了开始游戏 ， 即准备就绪
 
@@ -758,6 +810,31 @@ cc.Class({
           var data = self.parse(result);
           self.route("chat")(data, self);
         }
+      });
+
+      this.map("selectPiao", this.selectPiao_event); //接收了聊天信息
+      socket.on("selectPiao", function(result) {
+        if (self.inited == true) {
+          var data = self.parse(result);
+          self.route("selectPiao")(data, self);
+        }
+      });
+
+      socket.on("choosePiao", function(result) {
+          var data = self.parse(result);
+          console.log("choosePiao===>",data);
+          if (data&&data.length>0) {
+            for (var i = 0; i < data.length; i++) {
+              let player = self.player(data[i].userId, self);
+              var playerscript = player.getComponent("MaJiangPlayer");
+              playerscript.setPiao(data[i].piao);
+              if (cc.beimi.user.id == data[i].userId) {
+                  self.selectpiao_dialog.active = false;
+              }
+            }
+          }
+
+
       });
 
       socket.on("answerKou", function(result) {
@@ -1359,6 +1436,14 @@ cc.Class({
         break;
       }
     }
+  },
+
+  selectPiao_event: function(data, context) {
+     context.selectpiao_dialog.active = true;
+     for (var i = 0; i < context.playersarray.length; i++) {
+          var playerscript = context.playersarray[i].getComponent("MaJiangPlayer");
+          playerscript.setSelectPiao();
+     }
   },
 
   //接受聊天消息
@@ -3017,7 +3102,6 @@ cc.Class({
       }
       this.player.splice(0, this.player.length); //房间解散，释放资源
       this.player = new Array();
-
       this.initdata(true);
     } else {
       this.initdata(false);

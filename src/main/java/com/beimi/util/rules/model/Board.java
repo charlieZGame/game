@@ -82,7 +82,7 @@ public abstract class Board implements Message,java.io.Serializable {
 	 * @param playCards
 	 * @return
 	 */
-	public abstract TakeCards takeCardsRequest(GameRoom gameRoom,Board board, Player player, String orgi , boolean auto , byte[] playCards) ;
+	public abstract TakeCards takeCardsRequest(GameRoom gameRoom,Board board, Player player, String orgi , boolean auto , byte[] playCards,boolean isAllowPG) ;
 	
 	/**
 	 * 发牌动作

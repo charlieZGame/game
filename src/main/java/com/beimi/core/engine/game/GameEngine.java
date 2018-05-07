@@ -122,8 +122,19 @@ public class GameEngine {
 					}
 				}
 			} else {
-				//通知状态 开局
-				GameUtils.getGame(beiMiClient.getPlayway(), gameEvent.getOrgi()).change(gameEvent);    //通知状态机 , 此处应由状态机处理异步执行
+				//通知状态 开局 新增选飘操作，人员够了选完飘才能开局
+				//GameUtils.getGame(beiMiClient.getPlayway(), gameEvent.getOrgi()).change(gameEvent);    //通知状态机 , 此处应由状态机处理异步执行
+				String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(userid, orgi);
+				GameRoom gameRoom  = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, orgi);        //直接加入到 系统缓存 （只有一个地方对GameRoom进行二次写入，避免分布式锁）
+				if(gameRoom.getPiao() == 0) {
+					GameUtils.getGame(beiMiClient.getPlayway(), gameEvent.getOrgi()).change(gameEvent);    //通知状态机 , 此处应由状态机处理异步执行
+				}else {
+					List<PlayUserClient> playerList = CacheHelper.getGamePlayerCacheBean().getCacheObject(gameRoom.getId(), orgi);
+					if (CollectionUtils.isNotEmpty(playerList) && playerList.size() == 4) {
+						logger.info("join 通知选票");
+						ActionTaskUtils.sendEventCommand("selectPiao", "ok", gameRoom);
+					}
+				}
 			}
 		}
 	}
@@ -227,7 +238,6 @@ public class GameEngine {
 
 		String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(userid, orgi) ;
 		logger.info("userId:{}获取roomid:{}",userid,roomid);
-		//String roomid = ((GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(userid, orgi)).getRoomid() ;
 		GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(playway, orgi) ;
 		boolean needtakequene = false;
 		if(gamePlayway!=null){
@@ -493,7 +503,7 @@ public class GameEngine {
 	 * @param orgi
 	 * @return
 	 */
-	public TakeCards takeCardsRequest(String roomid, String playUserClient, String orgi , boolean auto , byte[] playCards){// playCards 为打出去的牌
+	public TakeCards takeCardsRequest(String roomid, String playUserClient, String orgi , boolean auto , byte[] playCards,boolean isAllowPG){// playCards 为打出去的牌
 		TakeCards takeCards = null ;
 		GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, orgi) ;
 		if(gameRoom!=null){
@@ -501,7 +511,7 @@ public class GameEngine {
 			if(board!=null){
 				Player player = board.player(playUserClient) ;
 				if(board.getNextplayer()!=null && player.getPlayuser().equals(board.getNextplayer().getNextplayer()) && board.getNextplayer().isTakecard() == false){
-					takeCards = board.takeCardsRequest(gameRoom, board, player, orgi, auto, playCards) ;
+					takeCards = board.takeCardsRequest(gameRoom, board, player, orgi, auto, playCards,isAllowPG) ;
 				}
 			}
 		}
@@ -718,6 +728,14 @@ public class GameEngine {
 						Map<Integer, Object> map = GameUtils.getGangCard(player.getCardsArray(), player.getActions());
 						card = (Byte) map.get(2);
 						if (!(Boolean) map.get(1)) {
+
+							// 对于碰杠 有可能存在其他家糊的情况， 所以 还要校验其他家有没有糊的情况
+							byte[] playCards = new byte[1];
+							playCards[0] = card;
+							BMDataContext.getGameEngine().takeCardsRequest(roomid, userid, gameRoom.getOrgi(), false, playCards,false);
+							if(((MaJiangBoard)board).isQingHu()){
+								return null;
+							}
 							actionEvent = new ActionEvent(board.getBanker(), userid, card, action);
 							actionEvent.setActype(BMDataContext.PlayerGangAction.MING.toString());
 							playerAction.setType(BMDataContext.PlayerGangAction.MING.toString());
@@ -835,6 +853,7 @@ public class GameEngine {
 					 * 不同的胡牌方式，处理流程不同，推倒胡，直接进入结束牌局 ， 血战：当前玩家结束牌局，血流：继续进行，下一个玩家
 					 */
 					if (gamePlayway.getWintype().equals(BMDataContext.MaJiangWinType.TUI.toString())) {        //推倒胡
+						logger.info("userId:{} 糊",userid);
 						actionEvent = new ActionEvent(board.getBanker(), userid, card, action);
 						actionEvent.setActype(BMDataContext.PlayerAction.HU.toString());
 						actionEvent.setTarget(board.getLast().getUserid());
@@ -849,6 +868,7 @@ public class GameEngine {
 								}
 							}
 						}
+						((MaJiangBoard)board).setQingHu(true);
 						player.setWin(true);
 						if (board.getNextplayer().getNextplayer().equals(userid)) {
 							player.setZm(true);
@@ -856,8 +876,8 @@ public class GameEngine {
 						} else {
 							player.setZm(false);
 							actionEvent.setZm(false);
+							player.setTargetUser(board.getLast().getUserid());
 						}
-						player.setTargetUser(board.getLast().getUserid());
 						ActionTaskUtils.sendEvent("selectaction", actionEvent, gameRoom);
 						player.setCards(ArrayUtils.add(player.getCardsArray(), card));
 

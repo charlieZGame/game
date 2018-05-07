@@ -797,12 +797,21 @@ public class GameUtils {
 
 
 	public static void main(String[] args) {
+
+
+		byte[] cards = new byte[]{46,47,63,75,76,80,94,95,97,88,-6};
+
+		Action playerAction2 = new Action("adfaf2" , BMDataContext.PlayerAction.PENG.toString() , (byte)-7);
+		List<Action> actions = new ArrayList<Action>();
+		actions.add(playerAction2);
+		getGangCard( cards,actions);
+
+
 		long start = System.nanoTime();
 		//-24,-25,-26     5,39,43,64,68,71,94,96,103,67,
 		//byte[] cards = new byte[]{0,1,2,40,41,44,45, 48,49,59};
 		//byte[] cards = new byte[]{10,28,30,32,56,64,15};
 		//byte[] cards = new byte[]{5,11,13,44,47,55,66,70,75,81,83,92,94};
-		byte[] cards = new byte[]{0,1,4,5,12,16,20,24,56,60,-20,-21,-22};
 		//byte[] cards = new byte[]{44,45,48,49,52,53};
 		byte takecard =-23;
 
@@ -842,13 +851,13 @@ public class GameUtils {
 		powerfull[3] = 5;
 		/*powerfull[1] = 53;*/
 		player.setPowerfull(powerfull);
-		List<Action> actions = new ArrayList<Action>();
+	//	List<Action> actions = new ArrayList<Action>();
 	//	Action playerAction = new Action("adfaf" , BMDataContext.PlayerAction.GANG.toString() , (byte)3);
 	//	actions.add(playerAction);
 		//player.setActions(actions);
 
-		Action playerAction2 = new Action("adfaf2" , BMDataContext.PlayerAction.PENG.toString() , (byte)31);
-		actions.add(playerAction2);
+		/*Action playerAction2 = new Action("adfaf2" , BMDataContext.PlayerAction.PENG.toString() , (byte)31);
+		actions.add(playerAction2);*/
 		//player.setActions(actions);
 
 		Action playerAction3 = new Action("adfaf4" , BMDataContext.PlayerAction.PENG.toString() , (byte)60);
@@ -1058,10 +1067,10 @@ public class GameUtils {
 	}
 
 
-	private static List<Byte> cloneList(List<Byte>src){
+	public static List<Byte> cloneList(List<Byte>src){
 
 		if(src == null || src.size() == 0){
-			return null;
+			return src;
 		}
 		List<Byte> des = new ArrayList<Byte>();
 		for(byte b : src){
@@ -1404,24 +1413,27 @@ public class GameUtils {
 		byte key = (byte) (value + 9 * rate) ;			//字典编码
 		return key ;
 	}
-	
+
+
+
+
 	/**
 	 * 麻将的出牌判断，杠碰吃胡
 	 * @param cards
 	 * @return
 	 */
-	public static Map<Integer,Object> getGangCard(byte[] cards,List<Action> actions){
+	public static Map<Integer,Object> getGangCard(byte[] cards,List<Action> actions) {
 		Map<Integer, Byte> data = new HashMap<Integer, Byte>();
 		logger.info("获取杠手牌开始");
 		System.out.println();
-		for(byte card : cards){
-			System.out.print(card+",");
+		for (byte card : cards) {
+			System.out.print(card + ",");
 		}
 		System.out.println();
 		logger.info("获取杠手牌完成");
 		logger.info("获取杠牌开始");
 		System.out.println();
-		if(CollectionUtils.isNotEmpty(actions)) {
+		if (CollectionUtils.isNotEmpty(actions)) {
 			for (Action action : actions) {
 				System.out.print(action.getCard() + ",");
 			}
@@ -1429,87 +1441,46 @@ public class GameUtils {
 		System.out.println();
 		logger.info("获取杠牌完成");
 
-	/*	List<Byte> tempList = new ArrayList<Byte>();
-		Map<Integer,String> tempMap = new HashMap<Integer,String>();
-		if(CollectionUtils.isNotEmpty(actions)) {
-			for(Action action : actions) {
-				if(BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())){
-					tempList.add((byte)(action.getCard()/4*4));
-					tempList.add((byte)(action.getCard()/4*4+1));
-					tempList.add((byte)(action.getCard()/4*4+2));
-					tempMap.put(action.getCard()/4*4,action.getSrcUserId());
-				}
-			}
-		}*/
-	/*	if(tempList.size() > 0){
-			byte[] newCards = new byte[cards.length + tempList.size()];
-			System.arraycopy(cards,0,newCards,0,cards.length);
-			for(int i = 0;i<tempList.size();i++){
-				newCards[cards.length+i] = tempList.get(i);
-			}
-			cards = newCards;
-		}*/
-		Map<Integer,Object> map = new HashMap<Integer,Object>();
+		Map<Integer, Object> map = new HashMap<Integer, Object>();
 
-		for(byte temp : cards){
-			int value = temp / 4 ;			//牌面值
-			if(data.get(value) == null){
-				data.put(value , (byte)1) ;
-			}else{
-				data.put(value, (byte)(data.get(value)+1)) ;
+		for (byte temp : cards) {
+			int value = temp / 4;            //牌面值
+			if (data.get(value) == null) {
+				data.put(value, (byte) 1);
+			} else {
+				data.put(value, (byte) (data.get(value) + 1));
 			}
-			if(data.get(value) == 4){	//自己发牌的时候，需要先判断是否有杠牌
-				map.put(1,true);
-				map.put(2,temp);
+			if (data.get(value) == 4) {    //自己发牌的时候，需要先判断是否有杠牌
+				map.put(1, true);
+				map.put(2, temp);
 				return map;
 			}
 		}
-/*
-		for(byte temp : cards){
-			int value = (temp%36) / 4 ;			//牌面值
-			int rote = temp / 36 ;				//花色
-			int key = value + 9 * rote ;		//
-			if(data.get(key) == null){
-				data.put(key , (byte)1) ;
-			}else{
-				data.put(key, (byte)(data.get(key)+1)) ;
-			}
-			if(data.get(key) == 4){	//自己发牌的时候，需要先判断是否有杠牌
-				map.put(1,true);
-				map.put(2,temp);
-				break ;
-			}
-		}
-*/
-
 
 		List<Byte> tempList = new ArrayList<Byte>();
-		Map<Integer,String> tempMap = new HashMap<Integer,String>();
-		if(CollectionUtils.isNotEmpty(actions)) {
-			for(Action action : actions) {
-				if(BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())){
-					tempList.add((byte)(action.getCard()/4*4));
-					tempList.add((byte)(action.getCard()/4*4+1));
-					tempList.add((byte)(action.getCard()/4*4+2));
-					tempMap.put((action.getCard()/4)*4,action.getSrcUserId());
+		Map<Integer, String> tempMap = new HashMap<Integer, String>();
+		if (CollectionUtils.isNotEmpty(actions)) {
+			for (Action action : actions) {
+				if (BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())) {
+					tempList.add((byte) (action.getCard() / 4 * 4));
+					tempMap.put((action.getCard() / 4) * 4, action.getSrcUserId());
 				}
 			}
 		}
-		if(CollectionUtils.isEmpty(tempList)){
+		if (CollectionUtils.isEmpty(tempList)) {
 			return map;
 		}
-		for(byte temp : tempList){
-			int value = temp / 4 ;			//牌面值
-			if(data.get(value) == null){
-				data.put(value , (byte)1) ;
-			}else{
-				data.put(value, (byte)(data.get(value)+1)) ;
-			}
-			if(data.get(value) == 3 && data.get(value) >= 1){	//自己发牌的时候，需要先判断是否有杠牌
-				map.put(1,false);
-				map.put(2,temp);
-				map.put(6,tempMap.get((temp/4)*4));
-				break ;
+		for (byte temp : tempList) {
+			int value = temp / 4;            //牌面值
+			if (data.get(value) != null && data.get(value) == 1) {
+				map.put(1, false);
+				for (byte b : cards) {
+					if (value == b / 4) {
+						map.put(2, b);
+					}
+				}
+				map.put(6, tempMap.get((temp / 4) * 4));
+				break;
 			}
 		}
 		return map;

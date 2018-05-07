@@ -10,6 +10,7 @@ import com.beimi.util.rules.model.Player;
 import com.beimi.web.model.GamePlayway;
 import com.beimi.web.model.GameRoom;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
@@ -20,10 +21,10 @@ public class HuValidate {
 
 
 
-    private static List<ICheckScoreRule> checkScoreRuleList;
+    private static List<AbsCheckScoreRule> checkScoreRuleList;
 
     static {
-        checkScoreRuleList = new ArrayList<ICheckScoreRule>();
+        checkScoreRuleList = new ArrayList<AbsCheckScoreRule>();
         checkScoreRuleList.add(new YTLValidate());
         checkScoreRuleList.add(new WHHValidate());
         checkScoreRuleList.add(new QYSValidate());
@@ -42,6 +43,12 @@ public class HuValidate {
         Map<String, Integer> allUserScore = null;
         Map<String, Integer> userScore = new HashMap<String, Integer>();
         int coverSize = 0;
+        int coverInnerSize = 0;
+
+        Map<String,Player> playMap = new HashMap<String,Player>();
+        for(Player player : players){
+            playMap.put(player.getPlayuser(),player);
+        }
 
         List<ReturnResult> returnResults = new ArrayList<ReturnResult>();
 
@@ -57,7 +64,6 @@ public class HuValidate {
             isHaveWin = true;
             if(CollectionUtils.isNotEmpty(player.getCoverCards())){
                 coverSize = player.getCoverCards().size()/4;
-                coverSize = coverSize + getdajiangSize(player);
 
             }
 
@@ -66,24 +72,41 @@ public class HuValidate {
                 for (Map.Entry<String, Integer> entry : userScore.entrySet()) {
                     userScore.put(entry.getKey(), 0);
                 }
+                int tempCoverInnerSize = 0;
                 int i = 0;
                 StringBuilder vaStr = new StringBuilder();
-                for (ICheckScoreRule checkScoreRule : checkScoreRuleList) {
-                    if("koudajiang".equals(playway.getCode()) && checkScoreRule instanceof WHHValidate){
-                        continue;
-                    }
+                for (AbsCheckScoreRule checkScoreRule : checkScoreRuleList) {
                     checkScoreRule.setData(collection, player.getActions(), player.getPowerfullArray());
-                    if (checkScoreRule.isSatisfy()) {
-                        if (checkScoreRule instanceof YTLValidate) {
-                            vaStr.append("一条龙");
-                        } else if (checkScoreRule instanceof WHHValidate) {
-                            vaStr.append("无混糊");
-                        } else if (checkScoreRule instanceof QYSValidate) {
-                            vaStr.append("清一色");
-                        } else if (checkScoreRule instanceof QXDValidate) {
-                            vaStr.append("七小对");
+                    if ("koudajiang".equals(playway.getCode())) {
+                        if (checkScoreRule.isSatisfy()) {
+                            if (checkScoreRule instanceof YTLValidate) {
+                                vaStr.append("一条龙");
+                            } else if (checkScoreRule instanceof QYSValidate) {
+                                vaStr.append("清一色");
+                            } else if (checkScoreRule instanceof QXDValidate) {
+                                vaStr.append("七小对");
+                            }
+                            i++;
                         }
-                        i++;
+                        // 混一色只存在扣的情况还是都存在
+                        if (CollectionUtils.isNotEmpty(player.getCoverCards())) {
+                            tempCoverInnerSize = getdajiangSize(collection, player.getActions(), player.getPowerfullArray(), player.getCoverCards());
+                        }
+                    } else if ("majiang".equals(playway.getCode())) {
+                        if (checkScoreRule.isSatisfy()) {
+                            if (checkScoreRule instanceof YTLValidate) {
+                                vaStr.append("一条龙");
+                            } else if (checkScoreRule instanceof WHHValidate) {
+                                vaStr.append("无混糊");
+                            } else if (checkScoreRule instanceof QYSValidate) {
+                                vaStr.append("清一色");
+                            } else if (checkScoreRule instanceof QXDValidate) {
+                                vaStr.append("七小对");
+                            }
+                            i++;
+                        }
+                    } else {
+                        break;
                     }
                 }
                 map.put(player.getPlayuser(), i);
@@ -94,74 +117,53 @@ public class HuValidate {
                 StringBuilder sb = new StringBuilder();
                 //庄票处理
                 System.out.println("票数量["+gameRoom.getPiao()+"]");
-                if (gameRoom.getPiao() != null && gameRoom.getPiao() > 0) {
-                    if (player.isBanker()) {
-                        sb.append("飘" + gameRoom.getPiao() + " × 3 =" + gameRoom.getPiao() * 3 + "分 ");
-                        returnResult.setScore(gameRoom.getPiao() * 3);
-                    } else {
-                        sb.append("飘" + gameRoom.getPiao() + " × 1 =" + gameRoom.getPiao() + "分 ");
-                        returnResult.setScore(gameRoom.getPiao());
-                    }
-                }
                 if (player.isZm()) {
                     if (i == 1) {
                         //老龙
                         returnResult.setUserId(player.getPlayuser());
-                        String pengGangResult = getGangAndPengHandler(player.getActions(), true, userScore);
+                        String pengGangResult = getGangAndPengHandler(players,playway.getCode(),player, userScore);
                         sb.append(pengGangResult == null ? "" : pengGangResult);
-                        returnResult.setDesc(sb.append(" 老龙(自摸" + vaStr.toString() + ") ").toString());
                         if(player.isBanker()){
                             returnResult.setScore(36 + userScore.get(player.getPlayuser()) + returnResult.getScore());
                             otherPlayerScore(userScore, player, 12,returnResult,players);
                         }else{
                             returnResult.setScore(32 + userScore.get(player.getPlayuser()) + returnResult.getScore());
                             otherPlayerScore(userScore, player, 10,returnResult,players);
-                            for(Player player1 : players){
-                                if(player1.isBanker()){
-                                    userScore.put(player1.getPlayuser(),userScore.get(player1.getPlayuser())-2);
-                                }
-                            }
+                            zuangHandler(players,userScore,player,returnResult);
                         }
+                        returnResult.setDesc(returnResult.getDesc() + sb.append(" 老龙(自摸" + vaStr.toString() + ") ").toString());
                     } else if (i == 2) {
                         //老老龙
                         returnResult.setUserId(player.getPlayuser());
-                        String pengGangResult = getGangAndPengHandler(player.getActions(), true, userScore);
+                        String pengGangResult = getGangAndPengHandler(players,playway.getCode(),player, userScore);
                         sb.append(pengGangResult == null ? "" : pengGangResult);
-                        returnResult.setDesc(sb.append(" 老老龙(自摸" + vaStr.toString() + ") ").toString());
                         if(player.isBanker()){
                             returnResult.setScore(66 + userScore.get(player.getPlayuser()) + returnResult.getScore());
                             otherPlayerScore(userScore, player, 22,returnResult,players);
                         }else{
                             returnResult.setScore(62 + userScore.get(player.getPlayuser()) + returnResult.getScore());
                             otherPlayerScore(userScore, player, 20,returnResult,players);
-                            for(Player player1 : players){
-                                if(player1.isBanker()){
-                                    userScore.put(player1.getPlayuser(),userScore.get(player1.getPlayuser())-2);
-                                }
-                            }
+                            zuangHandler(players,userScore,player,returnResult);
                         }
+                        returnResult.setDesc(returnResult.getDesc() + sb.append(" 老老龙(自摸" + vaStr.toString() + ") ").toString());
                     }else if(i >= 3){
                         //老老老龙
                         returnResult.setUserId(player.getPlayuser());
-                        String pengGangResult = getGangAndPengHandler(player.getActions(), true, userScore);
+                        String pengGangResult = getGangAndPengHandler(players,playway.getCode(),player, userScore);
                         sb.append(pengGangResult == null ? "" : pengGangResult);
-                        returnResult.setDesc(sb.append(" 老老老龙(自摸" + vaStr.toString() + ") ").toString());
                         if(player.isBanker()) {
                             returnResult.setScore(126 + userScore.get(player.getPlayuser()) + returnResult.getScore());
                             otherPlayerScore(userScore, player, 42,returnResult,players);
                         }else{
                             returnResult.setScore(122 + userScore.get(player.getPlayuser()) + returnResult.getScore());
                             otherPlayerScore(userScore, player, 40,returnResult,players);
-                            for(Player player1 : players){
-                                if(player1.isBanker()){
-                                    userScore.put(player1.getPlayuser(),userScore.get(player1.getPlayuser())-2);
-                                }
-                            }
+                            zuangHandler(players,userScore,player,returnResult);
                         }
+                        returnResult.setDesc(returnResult.getDesc()+ sb.append(" 老老老龙(自摸" + vaStr.toString() + ") ").toString());
                     } else {
                         // 自摸 篓子每一家两分
                         returnResult.setUserId(player.getPlayuser());
-                        String pengGangResult = getGangAndPengHandler(player.getActions(), true, userScore);
+                        String pengGangResult = getGangAndPengHandler(players,playway.getCode(),player, userScore);
                         sb.append(pengGangResult == null ? "" : pengGangResult);
                         if(player.isBanker()) {
                             returnResult.setScore(12 + userScore.get(player.getPlayuser()) + returnResult.getScore());
@@ -169,22 +171,17 @@ public class HuValidate {
                         }else{
                             returnResult.setScore(8 + userScore.get(player.getPlayuser()) + returnResult.getScore());
                             otherPlayerScore(userScore, player, 2,returnResult,players);
-                            for(Player player1 : players){
-                                if(player1.isBanker()){
-                                    userScore.put(player1.getPlayuser(),userScore.get(player1.getPlayuser())-2);
-                                }
-                            }
+                            zuangHandler(players,userScore,player,returnResult);
                         }
-                        returnResult.setDesc(sb.append(" 赢(自摸) ").toString());
+                        returnResult.setDesc(returnResult.getDesc()+ sb.append(" 赢(自摸) ").toString());
                     }
                 } else {
                     if (i == 1) {
                         //少龙
                         // 自摸 篓子每一家两分
                         returnResult.setUserId(player.getPlayuser());
-                        String pengGangResult = getGangAndPengHandler(player.getActions(), true, userScore);
+                        String pengGangResult = getGangAndPengHandler(players,playway.getCode(),player, userScore);
                         sb.append(pengGangResult == null ? "" : pengGangResult);
-                        returnResult.setDesc(sb.append(" 少龙(" + vaStr.toString() + ") ").toString());
                         if(player.isBanker()) {
                             returnResult.setScore(19 + userScore.get(player.getPlayuser()) + returnResult.getScore());
                             userScore.put(player.getTargetUser(), userScore.get(player.getTargetUser()) - 19);
@@ -194,12 +191,12 @@ public class HuValidate {
                             userScore.put(player.getTargetUser(), userScore.get(player.getTargetUser()) - 17);
                             otherPlayerScore(userScore, player, 0, returnResult, players);
                         }
+                        returnResult.setDesc(returnResult.getDesc() + sb.append(" 少龙(" + vaStr.toString() + ") ").toString());
                     } else if (i == 2) {
                         //老龙
                         returnResult.setUserId(player.getPlayuser());
-                        String pengGangResult = getGangAndPengHandler(player.getActions(), true, userScore);
+                        String pengGangResult = getGangAndPengHandler(players,playway.getCode(),player, userScore);
                         sb.append(pengGangResult == null ? "" : pengGangResult);
-                        returnResult.setDesc(sb.append(" 老龙(" + vaStr.toString() + ") ").toString());
                         if(player.isBanker()) {
                             returnResult.setScore(36 + userScore.get(player.getPlayuser()) + returnResult.getScore());
                             userScore.put(player.getTargetUser(), userScore.get(player.getTargetUser()) - 36);
@@ -209,12 +206,12 @@ public class HuValidate {
                             userScore.put(player.getTargetUser(), userScore.get(player.getTargetUser()) - 32);
                             otherPlayerScore(userScore, player, 0, returnResult, players);
                         }
+                        returnResult.setDesc(returnResult.getDesc() + sb.append(" 老龙(" + vaStr.toString() + ") ").toString());
                     }else if(i >= 3){
                         //老老龙
                         returnResult.setUserId(player.getPlayuser());
-                        String pengGangResult = getGangAndPengHandler(player.getActions(), true, userScore);
+                        String pengGangResult = getGangAndPengHandler(players,playway.getCode(),player, userScore);
                         sb.append(pengGangResult == null ? "" : pengGangResult);
-                        returnResult.setDesc(sb.append(" 老老龙(" + vaStr.toString() + ")").toString());
                         if(player.isBanker()) {
                             returnResult.setScore(66 + userScore.get(player.getPlayuser()) + returnResult.getScore());
                             userScore.put(player.getTargetUser(), userScore.get(player.getTargetUser()) - 66);
@@ -224,11 +221,15 @@ public class HuValidate {
                             userScore.put(player.getTargetUser(), userScore.get(player.getTargetUser()) - 62);
                             otherPlayerScore(userScore, player, 0, returnResult, players);
                         }
+                        returnResult.setDesc(returnResult.getDesc() + sb.append(" 老老龙(" + vaStr.toString() + ")").toString());
                     } else {
                         //坎子
                         try {
+
+                            // 坎子的情况在都大将的时候 自己的杠不算分
+
                             returnResult.setUserId(player.getPlayuser());
-                            String pengGangResult = getGangAndPengHandler(player.getActions(), true, userScore);
+                            String pengGangResult = getGangAndPengHandler(players,playway.getCode(),player, userScore);
                             //// TODO: 2018/4/22  ZCL菽粟计算再是有问题
                             if(player.isBanker()) {
                                 userScore.put(player.getTargetUser(), userScore.get(player.getTargetUser()) - 8);
@@ -238,31 +239,45 @@ public class HuValidate {
                                 returnResult.setScore(5 + userScore.get(player.getPlayuser()) + returnResult.getScore());
                             }
                             sb.append(pengGangResult == null ? "" : pengGangResult);
-                            returnResult.setDesc(sb.append(" 赢(点炮) ").toString());
                             // 坎子点炮的人全出
                             otherPlayerScore(userScore, player, 0,returnResult,players);
+                            returnResult.setDesc(returnResult.getDesc() + sb.append(" 赢(点炮) ").toString());
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
                 }
 
+                if(tempCoverInnerSize > 0){
+                    userScore.put(player.getPlayuser(),userScore.get(player.getPlayuser())*tempCoverInnerSize*2);
+                    returnResult.setScore(returnResult.getScore() * tempCoverInnerSize * 2);
+                }
                 if (allTempReturnResult == null) {
                     allTempReturnResult = returnResult;
                     allUserScore = userScore;
+                    coverInnerSize = tempCoverInnerSize;
                 } else {
                     if (allTempReturnResult.getScore() < returnResult.getScore()) {
                         allTempReturnResult = returnResult;
                         allUserScore = userScore;
+                        coverInnerSize = tempCoverInnerSize;
                     }
                 }
             }
-            //庄扣处理
+            //庄扣处理 大将的那部分在上边已经处理了
             if(coverSize > 0){
                 allTempReturnResult.setScore(allTempReturnResult.getScore()*(coverSize*2));
-                allTempReturnResult.setDesc(allTempReturnResult.getDesc() + "扣["+coverSize+"] 总分[" + allTempReturnResult.getScore() + "]");
+                if(gameRoom.getPiao() > 0){
+                    allTempReturnResult.setDesc("飘(" + player.getPiao() + ")"+allTempReturnResult.getDesc() +"扣[" + coverSize + "] 总分[" + allTempReturnResult.getScore() + "]");
+                }else {
+                    allTempReturnResult.setDesc(allTempReturnResult.getDesc() + "扣[" + coverSize + "] 总分[" + allTempReturnResult.getScore() + "]");
+                }
             }else {
-                allTempReturnResult.setDesc(allTempReturnResult.getDesc() + "总分[" + allTempReturnResult.getScore() + "]");
+                if(gameRoom.getPiao() > 0) {
+                    allTempReturnResult.setDesc("飘(" + player.getPiao() + ")" + allTempReturnResult.getDesc() + "总分[" + allTempReturnResult.getScore() + "]");
+                }else{
+                    allTempReturnResult.setDesc(allTempReturnResult.getDesc() + " 总分[" + allTempReturnResult.getScore() + "]");
+                }
             }
             returnResults.add(allTempReturnResult);
         }
@@ -277,9 +292,17 @@ public class HuValidate {
                 returnResult.setUserId(entry.getKey());
                 returnResult.setScore(entry.getValue());
                 if(coverSize > 0){
-                    returnResult.setScore(returnResult.getScore()*(coverSize*2));
+                    int doub = coverSize;
+                    if(coverInnerSize > 0){
+                        doub = doub + coverInnerSize;
+                    }
+                    returnResult.setScore(returnResult.getScore()*(doub*2));
                 }
-                returnResult.setDesc("失败 输[" + returnResult.getScore() + "]分");
+                if(gameRoom.getPiao() > 0){
+                    returnResult.setDesc("飘(" + playMap.get(entry.getKey()).getPiao() + ")"+"失败 " + ((returnResult.getScore() < 0) ? "输[" + returnResult.getScore() + "]分" : "赢[" + returnResult.getScore() + "]分"));
+                }else {
+                    returnResult.setDesc("失败 " + ((returnResult.getScore() < 0) ? "输[" + returnResult.getScore() + "]分" : "赢[" + returnResult.getScore() + "]分"));
+                }
                 returnResults.add(returnResult);
             }
         }
@@ -288,11 +311,32 @@ public class HuValidate {
     }
 
 
-    private static int getdajiangSize(Player player){
+    private static void zuangHandler(Player[] players,Map<String, Integer> userScore,Player player,ReturnResult returnResult) {
+        for (Player player1 : players) {
+            if (player1.isBanker()) {
+                userScore.put(player1.getPlayuser(), userScore.get(player1.getPlayuser()) - 2);
+                userScore.put(player1.getPlayuser(), userScore.get(player1.getPlayuser()) - player.getPiao());
+                returnResult.setScore(returnResult.getScore() + player.getPiao());
+                userScore.put(player1.getPlayuser(), userScore.get(player1.getPlayuser()) - player1.getPiao());
+                returnResult.setScore(returnResult.getScore() + player1.getPiao());
+            }
+        }
+    }
 
 
-        return 0;
+    private static int getdajiangSize(List<Byte> collections, List<Action> actions, byte[] powerful, List<Byte> coverCards){
 
+        int size = 0;
+        AbsCheckScoreRule scoreRule = new HYSValidate();
+        scoreRule.setData(collections, actions, powerful);
+        if(scoreRule.isSatisfy()){
+            size ++;
+        }
+
+        KDJValidate kdjValidate = new KDJValidate();
+        kdjValidate.setData(collections, actions, powerful,coverCards);
+        size = size + kdjValidate.isSatisfy();
+        return size;
     }
 
 
@@ -310,20 +354,31 @@ public class HuValidate {
             // 进来的都是赢了的用户
             if (!score.getKey().equals(player.getPlayuser())) {
                 if (player.isBanker()) {
+                    //算庄自己的票
                     userScore.put(score.getKey(), score.getValue() - player.getPiao());
                     returnResult.setScore(returnResult.getScore() + player.getPiao());
                     for(Player player1 : players){
+                        //算对方的票
                         if(player1.getPlayuser().equals(score.getKey())) {
                             userScore.put(score.getKey(), score.getValue() - player1.getPiao());
                             returnResult.setScore(returnResult.getScore() + player1.getPiao());
                         }
                     }
+                }/*else if(player.isZm() && !player.isBanker()){
 
-                } else if (score.getKey().equals(player.getTargetUser())) {
+                    for(Player player1 : players){
+                        if(player1.isBanker()) {
+                            userScore.put(score.getKey(), score.getValue() - player.getPiao());
+                            returnResult.setScore(returnResult.getScore() + player.getPiao());
+                            userScore.put(score.getKey(), score.getValue() - player1.getPiao());
+                            returnResult.setScore(returnResult.getScore() + player1.getPiao());
+                        }
+                    }
+                }*/else if (!player.isZm() && StringUtils.isNotEmpty(player.getTargetUser()) && score.getKey().equals(player.getTargetUser())) {  // target 表示点炮用户
                     userScore.put(score.getKey(), score.getValue() - player.getPiao());
                     returnResult.setScore(returnResult.getScore() + player.getPiao());
                     for(Player player1 : players){
-                        if(player1.getPlayuser().equals(score.getKey())) {
+                        if(player1.getPlayuser().equals(player.getTargetUser())) {
                             userScore.put(score.getKey(), score.getValue() - player1.getPiao());
                             returnResult.setScore(returnResult.getScore() + player1.getPiao());
                         }
@@ -336,45 +391,55 @@ public class HuValidate {
 
 
 
-    private static String getGangAndPengHandler(List<Action> actions,boolean isNeedScore,Map<String,Integer> userScore) {
+    private static String getGangAndPengHandler(Player[] players,String playWay,Player player,Map<String,Integer> userScore) {
 
-        if (CollectionUtils.isEmpty(actions)) {
-            return null;
-        }
-        int p = 0, ag = 0, mg = 0;
-        for (Action action : actions) {
-            if (action.getAction().equals(BMDataContext.PlayerAction.GANG.toString())) {
-                if (BMDataContext.PlayerGangAction.AN.toString().equals(action.getType())) {
-                    ag++;
-                } else if (BMDataContext.PlayerGangAction.MING.toString().equals(action.getType())) {
-                    if(userScore.containsKey(action.getSrcUserId())){
-                        userScore.put(action.getSrcUserId(),userScore.get(action.getSrcUserId())-3);
-                    }else{
-                        userScore.put(action.getSrcUserId(),-3);
-                    }
-                    mg++;
-                }
-            } else if (BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())) {
-                p++;
-            }
-        }
         StringBuilder sb = new StringBuilder();
-        if (p > 0) {
-            sb.append("碰 " + p + " ");
-        }
-        if (ag > 0) {
-            for(Map.Entry<String,Integer> entry:userScore.entrySet()){
-                if(!actions.get(0).getUserid().equals(entry.getKey())) {
-                    userScore.put(entry.getKey(), entry.getValue() - 2);
-                }
-            }
-            userScore.put(actions.get(0).getUserid(),userScore.get(actions.get(0).getUserid())+(ag * 3 * 2));
-            sb.append("暗杠(" + ag + ") × 2 × 3 ="+(ag * 3 * 2)+"分");
-        }
-        if (mg > 0) {
-            sb.append("明杠("+mg+") × 3 ="+(mg * 3)+"分").toString();
-            userScore.put(actions.get(0).getUserid(),userScore.get(actions.get(0).getUserid())+ mg * 3);
-        }
+        for(Player tempPlayer : players) {
+           if("koudajiang".equals(playWay)&&!player.isZm() && tempPlayer.getPlayuser().equals(player.getTargetUser())){
+               continue;
+           }
+           List<Action> actions = tempPlayer.getActions();
+           if (CollectionUtils.isEmpty(actions)) {
+               continue;
+           }
+           int p = 0, ag = 0, mg = 0;
+           for (Action action : actions) {
+               if (action.getAction().equals(BMDataContext.PlayerAction.GANG.toString())) {
+                   if (BMDataContext.PlayerGangAction.AN.toString().equals(action.getType())) {
+                       ag++;
+                   } else if (BMDataContext.PlayerGangAction.MING.toString().equals(action.getType())) {
+                       if (userScore.containsKey(action.getSrcUserId())) {
+                           userScore.put(action.getSrcUserId(), userScore.get(action.getSrcUserId()) - 3);
+                       } else {
+                           userScore.put(action.getSrcUserId(), -3);
+                       }
+                       mg++;
+                   }
+               } else if (BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())) {
+                   p++;
+               }
+           }
+           if (p > 0 && tempPlayer.isWin()) {
+               sb.append("碰 " + p + " ");
+           }
+           if (ag > 0) {
+               for (Map.Entry<String, Integer> entry : userScore.entrySet()) {
+                   if (!actions.get(0).getUserid().equals(entry.getKey())) {
+                       userScore.put(entry.getKey(), entry.getValue() - 2);
+                   }
+               }
+               userScore.put(actions.get(0).getUserid(), userScore.get(actions.get(0).getUserid()) + (ag * 3 * 2));
+               if(tempPlayer.isWin()) {
+                   sb.append("暗杠(" + ag + ") × 2 × 3 =" + (ag * 3 * 2) + "分");
+               }
+           }
+           if (mg > 0) {
+               if(tempPlayer.isWin()) {
+                   sb.append("明杠(" + mg + ") × 3 =" + (mg * 3) + "分").toString();
+               }
+               userScore.put(actions.get(0).getUserid(), userScore.get(actions.get(0).getUserid()) + mg * 3);
+           }
+       }
         return sb.toString();
     }
 

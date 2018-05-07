@@ -1,53 +1,55 @@
 package com.beimi.rule;
 
-
 import com.beimi.util.rules.model.Action;
 import org.apache.commons.collections4.CollectionUtils;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by zhengchenglei on 2018/4/16.
  */
-public class WHHValidate extends AbsCheckScoreRule{
-
+public class HYSValidate extends AbsCheckScoreRule {
 
     @Override
     public boolean isSatisfy() {
 
-        if (CollectionUtils.isEmpty(collections) || collections.size() < 2) {
+        if(CollectionUtils.isEmpty(collections) || collections.size() < 2){
             return false;
         }
 
-        if (collections.get(0) / 4 != collections.get(1) / 4) {
+        Map<Integer,Integer> hunSe = new HashMap<Integer,Integer>();
+        for(Byte b : collections){
+            hunSe.put(b/4,null);
+        }
+        if(CollectionUtils.isNotEmpty(actions)){
+            for(Action action : actions){
+                hunSe.put(action.getCard()/4,null);
+            }
+        }
+
+        if(hunSe.size() != 2){
             return false;
         }
 
-        if (collections.size() == 2) {
-            if(Math.abs(collections.get(0)/4 - collections.get(1)/4) != 0){
-                return false;
-            }
-            return true;
-        }
-
-        for (int i = 2; i < collections.size()-2; i = i + 3) {
-            int faway1 = Math.abs(collections.get(i)/4 - collections.get(i+1)/4);
-            int faway2 = Math.abs(collections.get(i+1)/4 - collections.get(i+2)/4);
-            if(faway1 != faway2){
-                return false;
+        for(Map.Entry<Integer,Integer> entry : hunSe.entrySet()){
+            if(entry.getKey() < 0){
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     @Override
     public CardType getHuName() {
-        return null;
+        return CardType.QYS;
     }
 
     @Override
     public Integer getHuScore() {
-        return null;
+        return 1;
     }
 
     public List<Byte> getCollections() {

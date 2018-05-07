@@ -58,10 +58,20 @@ cc.Class({
               type : cc.Node
           },
 
-          chatmessagerd:{
+        chatmessagerd:{
+             default:null ,
+             type : cc.Label
+         },
+
+         choosepiao:{
+              default:null ,
+              type : cc.Node
+          },
+
+          piao:{
                default:null ,
                type : cc.Label
-           },
+           }
     },
 
     // use this for initialization
@@ -74,6 +84,8 @@ cc.Class({
         this.chatbglt.active = false;
 
         this.chatbgrd.active = false;
+        this.choosepiao.active = false;
+        this.piao.string = "";
 
     },
     init:function(playerdata , inx , tablepos){
@@ -190,6 +202,16 @@ cc.Class({
         for(var i = 0 ; i < this.selected.children.length ; i++){
             this.selected.children[i].active = false ;
         }
+    },
+
+    setSelectPiao(){
+      this.choosepiao.active = true;
+      this.piao.string = "";
+    },
+
+    setPiao(num){
+      this.choosepiao.active = false;
+      this.piao.string = "漂"+num;
     }
 
 });

@@ -22,7 +22,7 @@ public class SummaryPlayer implements java.io.Serializable{
 	private int balance ;	  //玩家账户余额
 	private boolean win ;
 	private byte[] cards ;
-	private String desc;  // 赢牌描述
+	private String desc = "";  // 赢牌描述
 	private List<GameResultSummary> gameResultChecks;
 	
 	private boolean dizhu ;

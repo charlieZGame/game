@@ -106,12 +106,21 @@ public class GameWinCheck {
     public static boolean sevenPairCheck(Player player,Map<Integer, List<Byte>> mapCards,List<Byte> huns){
 
 
-        if(CollectionUtils.isNotEmpty(player.getActions())){
-            return false;
+        Map<Integer, List<Byte>> tempMap = new HashMap<Integer,List<Byte>>();
+        for(Map.Entry<Integer,List<Byte>>entry : mapCards.entrySet() ){
+            tempMap.put(entry.getKey(),cloneList(entry.getValue()));
         }
 
+        for(Action action : player.getActions()){
+            if(BMDataContext.PlayerAction.GANG.toString().equals(action.getAction()){
+                continue;
+            }
+            exceCategory(action.getCard(),tempMap);
+        }
+
+
         int needHun = 0;
-        for(Map.Entry<Integer,List<Byte>>entry : mapCards.entrySet() ){
+        for(Map.Entry<Integer,List<Byte>>entry : tempMap.entrySet() ){
             List<Byte> tempb = cloneList(entry.getValue());
             Collections.sort(tempb);
             Map<Integer, List<Byte>>  map = findPair(tempb);
