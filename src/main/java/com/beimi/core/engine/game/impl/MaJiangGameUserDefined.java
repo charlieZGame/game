@@ -84,9 +84,13 @@ public class MaJiangGameUserDefined implements ChessGame{
 				}
 				player.setCards(b);
 				players[i] = player;
+				player.setBanker(true);
 				cards.remove(playUsers.get(i).getId());
 			}else if(playUsers.get(i).getId().equals(banker)){
 				Player player = new Player(playUsers.get(i).getId()) ;
+				if(gameRoom.getPiao() > 0){
+					player.setPiao(Integer.parseInt(gameRoom.getPioaQi().get(player.getPlayuser())));
+				}
 				byte[] b = new byte[14];
 				for(int j = 0; j < b.length;j++){
 					b[j] = temp.remove(j);
@@ -95,6 +99,9 @@ public class MaJiangGameUserDefined implements ChessGame{
 				players[i] = player;
 			}else{
 				Player player = new Player(playUsers.get(i).getId()) ;
+				if(gameRoom.getPiao() > 0){
+					player.setPiao(Integer.parseInt(gameRoom.getPioaQi().get(player.getPlayuser())));
+				}
 				byte[] b = new byte[13];
 				for(int j = 0; j < b.length;j++){
 					b[j] = temp.remove(j);
@@ -148,7 +155,7 @@ public class MaJiangGameUserDefined implements ChessGame{
 			board.setBanker(tempbanker.getPlayuser());
 		}
 
-		gameRoom.setCurrentnum(gameRoom.getCurrentnum()+1);
+		gameRoom.setCurrentnum(gameRoom.getCurrentnum() == 0 ? gameRoom.getCurrentnum() + 1 : gameRoom.getCurrentnum());
 		return board;
 
 

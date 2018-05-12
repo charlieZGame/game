@@ -101,7 +101,7 @@ public class GameEngine {
 					//暂时不需要，从getCurentCards 里取牌
 					logger.info("tid:{} 恢复用户信息(JOINROOM) currentPlayer:{}",tid, currentPlayer.getPlayuser());
 					String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(userid, orgi);
-					GameRoom gameRoom  = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, orgi);        //直接加入到 系统缓存 （只有一个地方对GameRoom进行二次写入，避免分布式锁）
+					GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, orgi);        //直接加入到 系统缓存 （只有一个地方对GameRoom进行二次写入，避免分布式锁）
 					List<PlayUserClient> playerList = CacheHelper.getGamePlayerCacheBean().getCacheObject(gameRoom.getId(), orgi) ;
 					GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), orgi) ;
 
@@ -114,11 +114,11 @@ public class GameEngine {
 						beiMiClient.getClient().sendEvent("recovery",recoveryData);
 					}
 					if(CollectionUtils.isEmpty(currentPlayer.getActions()) && currentPlayer.getCardsArray().length == 14) {
-						sendHandleMessage((MaJiangBoard) board, gamePlayway, currentPlayer, true);
+						sendHandleMessage((MaJiangBoard) board, gamePlayway, currentPlayer, true,gameRoom);
 					}else if(currentPlayer.getActions().size() * 3 + currentPlayer.getCardsArray().length == 14) {
-						sendHandleMessage((MaJiangBoard) board, gamePlayway, currentPlayer, true);
+						sendHandleMessage((MaJiangBoard) board, gamePlayway, currentPlayer, true,gameRoom);
 					}else{
-						sendHandleMessage((MaJiangBoard) board, gamePlayway, currentPlayer, false);
+						sendHandleMessage((MaJiangBoard) board, gamePlayway, currentPlayer, false,gameRoom);
 					}
 				}
 			} else {
@@ -140,14 +140,14 @@ public class GameEngine {
 	}
 
 
-	private void sendHandleMessage(MaJiangBoard board,GamePlayway gamePlayway,Player player,boolean isCurrentTurn){
+	private void sendHandleMessage(MaJiangBoard board,GamePlayway gamePlayway,Player player,boolean isCurrentTurn,GameRoom gameRoom){
 
 		if(isCurrentTurn) {
 			byte card = player.getCardsArray()[player.getCardsArray().length - 1];
 			byte[] tempB = new byte[player.getCardsArray().length - 1];
 			System.arraycopy(player.getCardsArray(), 0, tempB, 0, tempB.length);
 			player.setCards(tempB);
-			MJCardMessage mjCard = board.checkMJCard(player, card, true, gamePlayway.getCode());
+			MJCardMessage mjCard = board.checkMJCard(player, card, true, gamePlayway.getCode(),gameRoom.isAllowPeng());
 			logger.info("恢复指令14 data:{}",mjCard);
 			boolean hasAction = false;
 			if (mjCard.isGang() || mjCard.isPeng() || mjCard.isChi() || mjCard.isHu()) {
@@ -174,7 +174,7 @@ public class GameEngine {
 				return;
 			}
 
-			MJCardMessage mjCard = board.checkMJCard(player, board.getLast().getCard(), false, gamePlayway.getCode());
+			MJCardMessage mjCard = board.checkMJCard(player, board.getLast().getCard(), false, gamePlayway.getCode(),gameRoom.isAllowPeng());
 			logger.info("恢复指令13 data:{}",mjCard);
 			if (mjCard.isGang() || mjCard.isPeng() || mjCard.isChi() || mjCard.isHu()) {
 				/**
@@ -361,6 +361,12 @@ public class GameEngine {
 				}
 				if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("koupiao"))) {
 					gameRoom.setPiao(Integer.parseInt(jsonObject.get("koupiao").toString()));
+				}
+				if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("hunpeng"))) {
+					gameRoom.setAllowPeng(Boolean.parseBoolean(jsonObject.get("hunpeng").toString()));
+				}
+				if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("koupeng"))) {
+					gameRoom.setAllowPeng(Boolean.parseBoolean(jsonObject.get("koupeng").toString()));
 				}
 			}
 		}
@@ -846,8 +852,8 @@ public class GameEngine {
 					 */
 					board.dealRequest(gameRoom, board, orgi, true, userid);
 				} else if (!StringUtils.isBlank(action) && action.equals(BMDataContext.PlayerAction.HU.toString())) {    //判断下是不是 真的胡了 ，避免外挂乱发的数据
-					Action playerAction = new Action(userid, action, card);
-					player.getActions().add(playerAction);
+					//Action playerAction = new Action(userid, action, card);
+					//player.getActions().add(playerAction);
 					GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), gameRoom.getOrgi());
 					/**
 					 * 不同的胡牌方式，处理流程不同，推倒胡，直接进入结束牌局 ， 血战：当前玩家结束牌局，血流：继续进行，下一个玩家

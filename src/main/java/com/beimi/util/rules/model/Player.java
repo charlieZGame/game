@@ -53,7 +53,7 @@ public class Player implements Message,java.io.Serializable , Cloneable{
 
 	private String targetUser; //点炮用户
 
-	private Integer piao = 0; // 当前用户p飘几
+	private Integer piao = 0; // 当前用户飘几
 	private List<List<Byte>>collections;
 
 	private String nickname;

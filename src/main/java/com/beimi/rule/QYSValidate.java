@@ -4,6 +4,7 @@ import com.beimi.util.rules.model.Action;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 /**
  * Created by zhengchenglei on 2018/4/16.
@@ -19,13 +20,16 @@ public class QYSValidate extends AbsCheckScoreRule {
         }
 
         List<Byte> hun = new ArrayList<Byte>();
-        for(Byte b : collections){
-            for(byte _b : powerful){
-                if(b == _b){
-                    hun.add(b);
+        if(powerful != null && powerful.length > 0){
+            for(Byte b : collections){
+                for(byte _b : powerful){
+                    if(b/4 == _b/4){
+                        hun.add(b);
+                    }
                 }
             }
         }
+
 
         collections.removeAll(hun);
         int flag = (collections.get(0) < 0 ? -1 : 1);
@@ -85,5 +89,16 @@ public class QYSValidate extends AbsCheckScoreRule {
 
     public void setActions(List<Action> actions) {
         this.actions = actions;
+    }
+
+    public static void main(String[] args) {
+
+        QYSValidate qxdValidate = new QYSValidate();
+
+        Byte[] stringArray = new Byte[]{0,1,2,3,4,5,6,7,8,9,10,11,12,14};
+        List<Byte> collections = Arrays.asList(stringArray);
+        qxdValidate.collections = collections;
+        System.out.println(qxdValidate.isSatisfy());
+
     }
 }

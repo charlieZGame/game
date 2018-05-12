@@ -30,7 +30,7 @@ public class UserInterceptorHandler extends HandlerInterceptorAdapter {
 	        }
 	        
 	        if(!filter){
-	        	//response.sendRedirect("/login.html");
+	        	response.sendRedirect("/login.html");
 				return true;
 	        }
     	}

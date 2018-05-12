@@ -41,9 +41,9 @@ public class OnlineCache implements CacheBean{
 	@Override
 	public Object delete(String key, String orgi) {
 		System.out.println("开始清理用户映射缓存 key:"+key+" value"+getInstance().get(key));
-		for(StackTraceElement element : Thread.currentThread().getStackTrace()) {
+	/*	for(StackTraceElement element : Thread.currentThread().getStackTrace()) {
 			System.out.println(element.getClassName()+" "+element.getMethodName()+" "+element.getLineNumber());
-		}
+		}*/
 		return getInstance().remove(key) ;
 		//return getInstance().get(key);
 	}

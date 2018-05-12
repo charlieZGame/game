@@ -123,7 +123,7 @@ cc.Class({
                 window.io = require("socket.io");
             }
 
-            cc.beimi.audio.playBGM("bgMain.mp3");
+            // cc.beimi.audio.playBGM("bgFight.mp3");
         }
     }
 

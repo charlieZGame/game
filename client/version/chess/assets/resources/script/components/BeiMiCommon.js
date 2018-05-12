@@ -14,8 +14,10 @@ cc.Class({
     if (cc.beimi) {
       check = true;
     } else {
+      cc.beimi.joinroom=false;
       this.scene("login", this);
     }
+    cc.beimi.audio.playBGM("bgFight.mp3");
     return check;
   },
   connect: function() {
@@ -101,11 +103,12 @@ cc.Class({
     });
 
     cc.beimi.socket.on("gamestatus", function(result) {
-        console.log("收到gamestatus消息",result);
-        console.log("cc.beimi.extparams------------>",JSON.stringify(cc.beimi.extparams));
       if (result != null) {
         var data = self.parse(result);
-        if (cc.beimi.extparams != null) {
+        if (data.gamestatus == "timeout") { //会话过期，退出登录 ， 会话时间由后台容器提供控制
+          cc.beimi.sessiontimeout = true;
+          self.alert("登录已过期，请重新登录");
+        } else if (cc.beimi.extparams != null) {
           if (data.gamestatus == "playing" && data.gametype != null) {
             /**
                          * 修正重新进入房间后 玩法被覆盖的问题，从服务端发送过来的 玩法数据是 当前玩家所在房间的玩法，是准确的
@@ -124,9 +127,6 @@ cc.Class({
               self.scene(data.gametype, self);
             }
 
-          } else if (data.gamestatus == "timeout") { //会话过期，退出登录 ， 会话时间由后台容器提供控制
-            cc.beimi.sessiontimeout = true;
-            self.alert("登录已过期，请重新登录");
           } else {
             console.error("cc.beimi.joinroom---->",cc.beimi.joinroom);
             console.error("cc.beimi.extparams---->",cc.beimi.extparams);

@@ -23,7 +23,7 @@ public class DizhuGame implements ChessGame{
 	 * @return
 	 */
 	public Board process(List<PlayUserClient> playUsers , GameRoom gameRoom , GamePlayway playway ,String banker , int cardsnum){
-		gameRoom.setCurrentnum(gameRoom.getCurrentnum() + 1);
+		gameRoom.setCurrentnum(gameRoom.getCurrentnum() == 0 ? gameRoom.getCurrentnum() + 1 : gameRoom.getCurrentnum());
 		Board board = new DuZhuBoard() ;
 		board.setCards(null);
 		List<Byte> temp = new ArrayList<Byte>() ;

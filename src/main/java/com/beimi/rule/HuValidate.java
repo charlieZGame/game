@@ -11,6 +11,8 @@ import com.beimi.web.model.GamePlayway;
 import com.beimi.web.model.GameRoom;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -22,6 +24,7 @@ public class HuValidate {
 
 
     private static List<AbsCheckScoreRule> checkScoreRuleList;
+    private static Logger logger = LoggerFactory.getLogger(HuValidate.class);
 
     static {
         checkScoreRuleList = new ArrayList<AbsCheckScoreRule>();
@@ -48,14 +51,10 @@ public class HuValidate {
         Map<String,Player> playMap = new HashMap<String,Player>();
         for(Player player : players){
             playMap.put(player.getPlayuser(),player);
-        }
-
-        List<ReturnResult> returnResults = new ArrayList<ReturnResult>();
-
-        for (Player player : players) {
             userScore.put(player.getPlayuser(), 0);
-        }
 
+        }
+        List<ReturnResult> returnResults = new ArrayList<ReturnResult>();
         boolean isHaveWin = false;
         for (Player player : players) {
             if (!player.isWin()) {
@@ -75,32 +74,44 @@ public class HuValidate {
                 int tempCoverInnerSize = 0;
                 int i = 0;
                 StringBuilder vaStr = new StringBuilder();
+                if("koudajiang".equals(playway.getCode())){
+                    // 混一色只存在扣的情况还是都存在
+                    if (CollectionUtils.isNotEmpty(player.getCoverCards())) {
+                        tempCoverInnerSize = getdajiangSize(collection, player.getActions(), player.getPowerfullArray(), player.getCoverCards());
+                    }
+                }
                 for (AbsCheckScoreRule checkScoreRule : checkScoreRuleList) {
                     checkScoreRule.setData(collection, player.getActions(), player.getPowerfullArray());
                     if ("koudajiang".equals(playway.getCode())) {
+                        if(checkScoreRule instanceof WHHValidate){
+                            continue;
+                        }
                         if (checkScoreRule.isSatisfy()) {
                             if (checkScoreRule instanceof YTLValidate) {
+                                logger.info("一条龙");
                                 vaStr.append("一条龙");
                             } else if (checkScoreRule instanceof QYSValidate) {
+                                logger.info("清一色");
                                 vaStr.append("清一色");
                             } else if (checkScoreRule instanceof QXDValidate) {
+                                logger.info("七小对");
                                 vaStr.append("七小对");
                             }
                             i++;
                         }
-                        // 混一色只存在扣的情况还是都存在
-                        if (CollectionUtils.isNotEmpty(player.getCoverCards())) {
-                            tempCoverInnerSize = getdajiangSize(collection, player.getActions(), player.getPowerfullArray(), player.getCoverCards());
-                        }
                     } else if ("majiang".equals(playway.getCode())) {
                         if (checkScoreRule.isSatisfy()) {
                             if (checkScoreRule instanceof YTLValidate) {
+                                logger.info("一条龙");
                                 vaStr.append("一条龙");
                             } else if (checkScoreRule instanceof WHHValidate) {
+                                logger.info("无混糊");
                                 vaStr.append("无混糊");
                             } else if (checkScoreRule instanceof QYSValidate) {
+                                logger.info("清一色");
                                 vaStr.append("清一色");
                             } else if (checkScoreRule instanceof QXDValidate) {
+                                logger.info("七小对");
                                 vaStr.append("七小对");
                             }
                             i++;
@@ -445,6 +456,20 @@ public class HuValidate {
 
 
     public static void main(String[] args) {
+
+        byte[] b1 = new byte[]{32,33,2,4,8,12,16,20,24,28,34,36,40,44};
+        List<List<Byte>> collections = new ArrayList<List<Byte>>();
+        List<Byte> collection = new ArrayList<Byte>();
+        for(byte b : b1){
+            collection.add(b);
+        }
+
+
+    }
+
+
+
+    public static void main1(String[] args) {
 
         Player[] players = new Player[4];
         Player player1 = new Player("1");

@@ -73,7 +73,7 @@ public class PlayerCach implements PlayerCacheBean{
     public Object delete(String key, String orgi) {
         System.out.println("删除用户缓存信息 key:"+key);
         for(StackTraceElement element : Thread.currentThread().getStackTrace()){
-            System.out.println(element.getClassName()+"  "+element.getMethodName()+" "+element.getLineNumber());
+           // System.out.println(element.getClassName()+"  "+element.getMethodName()+" "+element.getLineNumber());
         }
         return getInstance().remove(key) ;
     }

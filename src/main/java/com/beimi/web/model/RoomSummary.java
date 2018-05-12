@@ -10,6 +10,8 @@ public class RoomSummary {
 
     private Integer roomId;
 
+    private String roomUuid;
+
     private Integer num;
 
     private String date;
@@ -97,5 +99,13 @@ public class RoomSummary {
 
     public void setCurrentUser(boolean currentUser) {
         isCurrentUser = currentUser;
+    }
+
+    public String getRoomUuid() {
+        return roomUuid;
+    }
+
+    public void setRoomUuid(String roomUuid) {
+        this.roomUuid = roomUuid;
     }
 }

@@ -79,6 +79,8 @@ public class GameRoom implements UserEvent, java.io.Serializable, Comparable<Gam
 	private Integer powerfulsize = 1;
 	@Transient
 	private boolean isBegin = false;
+	@Transient
+	private boolean isAllowPeng = true;
 
 	private Map<String,String> extparams ;//房卡模式下的自定义参数
 	
@@ -323,5 +325,13 @@ public class GameRoom implements UserEvent, java.io.Serializable, Comparable<Gam
 	@Transient
 	public void setBegin(boolean begin) {
 		isBegin = begin;
+	}
+	@Transient
+	public boolean isAllowPeng() {
+		return isAllowPeng;
+	}
+	@Transient
+	public void setAllowPeng(boolean allowPeng) {
+		isAllowPeng = allowPeng;
 	}
 }

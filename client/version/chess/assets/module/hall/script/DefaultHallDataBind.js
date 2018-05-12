@@ -30,6 +30,11 @@ cc.Class({
     lblNoticeLayout: {
       default: null,
       type: cc.Node
+    },
+
+    black:{
+      default: null,
+      type: cc.Node
     }
 
   },
@@ -59,6 +64,11 @@ cc.Class({
         }
       }
 
+      if (cc.beimi.user.userCategory==3||cc.beimi.user.userCategory=="3") {
+        this.black.active = true;
+      }else {
+        this.black.active = false;
+      }
       this.pva_format(cc.beimi.user.playerlevel, cc.beimi.user.goldcoins, cc.beimi.user.cards, cc.beimi.user.diamonds, self);
       this.pvalistener(self, function(context) {
         console.error("更新pva");
@@ -115,7 +125,7 @@ cc.Class({
     });
 
 
-    cc.beimi.audio.playBGM("bgMain.mp3");
+    //cc.beimi.audio.playBGM("bgFight.mp3");
     cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN, this.onKeyDown, this);
   },
 

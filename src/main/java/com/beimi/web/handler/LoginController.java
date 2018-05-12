@@ -62,8 +62,8 @@ public class LoginController extends Handler{
 	@Autowired
 	private OrganRepository organRepository;
 
-    @RequestMapping(value = "/login" , method=RequestMethod.GET)
-    @Menu(type = "apps" , subtype = "user" , access = true)
+    //@RequestMapping(value = "/login" , method=RequestMethod.GET)
+    //@Menu(type = "apps" , subtype = "user" , access = true)
     public ModelAndView login(HttpServletRequest request, HttpServletResponse response  , @RequestHeader(value = "referer", required = false) String referer , @Valid String msg) {
     	ModelAndView view = request(super.createRequestPageTempletResponse("redirect:/"));
     	if(request.getSession(true).getAttribute(BMDataContext.USER_SESSION_NAME) ==null){
@@ -81,8 +81,8 @@ public class LoginController extends Handler{
         return view;
     }
     
-    @RequestMapping(value = "/login" , method=RequestMethod.POST)
-    @Menu(type = "apps" , subtype = "user" , access = true)
+   // @RequestMapping(value = "/login" , method=RequestMethod.POST)
+    //@Menu(type = "apps" , subtype = "user" , access = true)
     public ModelAndView login(HttpServletRequest request, HttpServletResponse response , @Valid User user ,@Valid String referer) {
     	ModelAndView view = request(super.createRequestPageTempletResponse("redirect:/"));
     	if(request.getSession(true).getAttribute(BMDataContext.USER_SESSION_NAME) ==null){

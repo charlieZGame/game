@@ -72,9 +72,12 @@ public class WChartLoginController extends Handler{
 
         ResponseEntity<ResultData> responseEntity =  loginHandler(request,openId,nickname,sex,avatar,pwd);
         ResultData resultData = responseEntity.getBody();
-        PlayUserClient playUserClient = (PlayUserClient) resultData.getData();
-        resultData.setData(WEChartUtil.clonePlayUserClient(playUserClient));
-        CacheHelper.getApiUserCacheBean().put(playUserClient.getId(), playUserClient, playUserClient.getOrgi());
+        PlayUserClient playUserClient = null;
+        if(resultData != null) {
+            playUserClient = (PlayUserClient) resultData.getData();
+            resultData.setData(WEChartUtil.clonePlayUserClient(playUserClient));
+            CacheHelper.getApiUserCacheBean().put(playUserClient.getId(), playUserClient, playUserClient.getOrgi());
+        }
         logger.info("登录返回数据 data:{}", JSONObject.toJSONString(responseEntity));
         return responseEntity;
     }

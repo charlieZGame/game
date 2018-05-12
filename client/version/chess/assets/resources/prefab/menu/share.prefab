@@ -1155,7 +1155,7 @@
     "_scaleY": 1,
     "_position": {
       "__type__": "cc.Vec2",
-      "x": -120,
+      "x": 0,
       "y": -158
     },
     "_skewX": 0,
@@ -1375,7 +1375,7 @@
       }
     ],
     "_tag": -1,
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 46

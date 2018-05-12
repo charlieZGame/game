@@ -269,7 +269,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 					if (!temp.getPlayuser().equals(player.getPlayuser())) {
 
 						logger.info("参与校验的牌为 card:{}", takeCards.getCard());
-						MJCardMessage mjCard = checkMJCard(temp, takeCards.getCard(), false, gamePlayway.getCode());
+						MJCardMessage mjCard = checkMJCard(temp, takeCards.getCard(), false, gamePlayway.getCode(),gameRoom.isAllowPeng());
 						logger.info("whether having gang chi hu mjCard:{}", mjCard);
 						logger.info("通知客户端吃碰胡 peng:{}", mjCard.isPeng());
 						if(mjCard.isHu()){
@@ -285,7 +285,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 						mjCard.setUserid(player.getPlayuser());
 						mjCard.setCommand("ting");
 						//提示胡牌暂时去掉
-						mjCard.setRecommendCards(GameUtils.recommandCards(temp, temp.getCardsArray(), gamePlayway.getCode()));
+						mjCard.setRecommendCards(GameUtils.recommandCards(temp, temp.getCardsArray(), gamePlayway.getCode(),gameRoom.isAllowPeng()));
 						ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
 					}
 				}
@@ -363,10 +363,10 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 	 * @param deal   是否抓牌
 	 * @return
 	 */
-	public MJCardMessage checkMJCard(Player player, byte card, boolean deal,String code) {
+	public MJCardMessage checkMJCard(Player player, byte card, boolean deal,String code,boolean isAllowPeng) {
 		//MJCardMessage mjCard = GameUtils.processMJCard(player, player.getCardsArray(), card, deal);
 		//暂时使用带混糊发
-		MJCardMessage mjCard = GameUtils.processLaiyuanMJCard(player, player.getCardsArray(),card,deal,null,code);
+		MJCardMessage mjCard = GameUtils.processLaiyuanMJCard(player, player.getCardsArray(),card,deal,null,code,isAllowPeng);
 		mjCard.setDeal(deal);
 		mjCard.setTakeuser(player.getPlayuser());
 		return mjCard;
@@ -397,7 +397,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 			}
 			logger.info("new card:{}", newCard);
 			GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), orgi) ;
-			MJCardMessage mjCard = checkMJCard(next, newCard, true,gamePlayway.getCode());
+			MJCardMessage mjCard = checkMJCard(next, newCard, true,gamePlayway.getCode(),gameRoom.isAllowPeng());
 			boolean hasAction = false;
 			if (mjCard.isGang() || mjCard.isPeng() || mjCard.isChi() || mjCard.isHu()) {
 				/**
@@ -588,6 +588,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 
 		houseCardHandler(gameRoom, playway, board, players,returnResults);
 		summary.setGameRoomOver(gameRoomOver);    //有玩家破产，房间解散
+		gameRoom.setCurrentnum(gameRoom.getCurrentnum() + 1);
 		logger.info("发送总结信息为 summary:{}", JSONObject.toJSONString(summary));
 		/**
 		 * 上面的 Player的 金币变更需要保持 数据库的日志记录 , 机器人的 金币扣完了就出局了

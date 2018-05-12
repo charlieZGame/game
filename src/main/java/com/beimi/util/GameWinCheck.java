@@ -29,16 +29,18 @@ public class GameWinCheck {
             collectionCards.add(hunsTemp.remove(0));
             collectionCards.add(hunsTemp.remove(0));
             boolean isHu = true;
+            int n = 0;
             for (Map.Entry<Integer, List<Byte>> entry : cards.entrySet()) {
+                n ++ ;
                 // 混子hunsTemp 不需要处理，在方法里边有处理
                 List<Byte> temp1 = cloneList(entry.getValue());
                 Collections.sort(temp1);
-                if (sameCardValidateHu(temp1, collectionCards, hunsTemp,true)) {
+                if (sameCardValidateHu(temp1, collectionCards, hunsTemp,true,n == cards.size())) {
                     continue;
                 }
                 List<Byte> temp2 = cloneList(entry.getValue());
                 Collections.sort(temp2);
-                if (!sameCardValidateHu(newOrderHandler(temp2), collectionCards, hunsTemp,false)) {
+                if (!sameCardValidateHu(newOrderHandler(temp2), collectionCards, hunsTemp,false,n == cards.size())) {
                     isHu = false;
                     break;
                 }
@@ -112,9 +114,18 @@ public class GameWinCheck {
         }
 
         for(Action action : player.getActions()){
-            if(BMDataContext.PlayerAction.GANG.toString().equals(action.getAction()){
+            if(BMDataContext.PlayerAction.GANG.toString().equals(action.getAction())){
                 continue;
             }
+            exceCategory((byte)(action.getCard()/ 4 * 4),tempMap);
+            if(action.getCard() < 0){
+                exceCategory((byte)(action.getCard()/ 4 * 4 - 1),tempMap);
+                exceCategory((byte)(action.getCard()/ 4 * 4 - 2),tempMap);
+            }else {
+                exceCategory((byte)(action.getCard()/ 4 * 4 + 1),tempMap);
+                exceCategory((byte)(action.getCard()/ 4 * 4 + 2),tempMap);
+            }
+            exceCategory(action.getCard(),tempMap);
             exceCategory(action.getCard(),tempMap);
         }
 
@@ -153,16 +164,18 @@ public class GameWinCheck {
             collectionCards.add(hunsTemp.remove(0));
             collectionCards.add(hunsTemp.remove(0));
             boolean isHu = true;
+            int n = 0;
             for (Map.Entry<Integer, List<Byte>> entry : cards.entrySet()) {
+                n ++;
                 List<Byte> temp = cloneList(entry.getValue());
                 Collections.sort(temp);
-                if (sameCardValidateHu(temp, collectionCards, hunsTemp,true)) {
+                if (sameCardValidateHu(temp, collectionCards, hunsTemp,true,n == cards.size())) {
                     isHu = true;
                     continue;
                 }
                 List<Byte> temp2 = cloneList(entry.getValue());
                 Collections.sort(temp2);
-                if (!sameCardValidateHu(newOrderHandler(temp2), collectionCards, hunsTemp,false)) {
+                if (!sameCardValidateHu(newOrderHandler(temp2), collectionCards, hunsTemp,false,n == cards.size())) {
                     isHu = false;
                     break;
                 }
@@ -235,12 +248,14 @@ public class GameWinCheck {
                 collectionCards.add(tempCard.remove(i));
                 Collections.sort(tempCard);
                 boolean isHu = true;
+                int n = 0;
                 for (Map.Entry<Integer, List<Byte>> entry : cardsMap.entrySet()) {
+                    n ++;
                     List<Byte> temp1 = (se == entry.getKey() ? tempCard : cloneList(entry.getValue()));
                     Collections.sort(temp1);
                     List<Byte> temp2 = cloneList(temp1);
-                    if (sameCardValidateHu(temp1, collectionCards, hunsTemp, true) ||
-                            sameCardValidateHu(newOrderHandler(temp2), collectionCards, hunsTemp, false)) {
+                    if (sameCardValidateHu(temp1, collectionCards, hunsTemp, true,n == cardsMap.size()) ||
+                            sameCardValidateHu(newOrderHandler(temp2), collectionCards, hunsTemp, false,n == cardsMap.size())) {
                         continue;
                     } else {
                         isHu = false;
@@ -272,12 +287,14 @@ public class GameWinCheck {
                 Collections.sort(tempCard);
                 boolean isHu = true;
                 List<Byte> hunsTemp = cloneList(huns);
+                int n = 0;
                 for (Map.Entry<Integer, List<Byte>> entry : cardsMap.entrySet()) {
+                    n ++;
                     List<Byte> temp1 = (se == entry.getKey() ? tempCard : cloneList(entry.getValue()));
                     Collections.sort(temp1);
                     List<Byte> temp2 = cloneList(temp1);
-                    if (sameCardValidateHu(temp1, collectionCards, hunsTemp, true) ||
-                            sameCardValidateHu(newOrderHandler(temp2), collectionCards, hunsTemp, false)) {
+                    if (sameCardValidateHu(temp1, collectionCards, hunsTemp, true,n == cardsMap.size()) ||
+                            sameCardValidateHu(newOrderHandler(temp2), collectionCards, hunsTemp, false,n == cardsMap.size())) {
                         continue;
                     } else {
                         isHu = false;
@@ -400,12 +417,14 @@ public class GameWinCheck {
                 collectionCards.add(tempCard.remove(i));
                 Collections.sort(tempCard);
                 boolean isHu = true;
+                int n = 0;
                 for (Map.Entry<Integer, List<Byte>> entry : cardsMap.entrySet()) {
+                    n ++;
                     List<Byte> temp1 = (se == entry.getKey() ? tempCard : cloneList(entry.getValue()));
                     Collections.sort(temp1);
                     List<Byte> temp2 = cloneList(temp1);
-                    if (sameCardValidateHu(temp1, collectionCards, hunsTemp,true) ||
-                            sameCardValidateHu(newOrderHandler(temp2), collectionCards, hunsTemp,false)) {
+                    if (sameCardValidateHu(temp1, collectionCards, hunsTemp,true,n == cardsMap.size()) ||
+                            sameCardValidateHu(newOrderHandler(temp2), collectionCards, hunsTemp,false,n == cardsMap.size())) {
                         continue;
                     } else {
                         isHu = false;
@@ -441,12 +460,14 @@ public class GameWinCheck {
               //  List<Byte> hunsTemp = cloneList(huns);
                 boolean isHu = true;
                 List<Byte> hunsTemp = cloneList(huns);
+                int n = 0;
                 for (Map.Entry<Integer, List<Byte>> entry : cardsMap.entrySet()) {
+                    n ++;
                     List<Byte> temp1 = (se == entry.getKey() ? tempCard : cloneList(entry.getValue()));
                     Collections.sort(temp1);
                     List<Byte> temp2 = cloneList(temp1);
-                    if (sameCardValidateHu(temp1, collectionCards, hunsTemp,true) ||
-                            sameCardValidateHu(newOrderHandler(temp2), collectionCards, hunsTemp,false)) {
+                    if (sameCardValidateHu(temp1, collectionCards, hunsTemp,true,n == cardsMap.size()) ||
+                            sameCardValidateHu(newOrderHandler(temp2), collectionCards, hunsTemp,false,n == cardsMap.size())) {
                         continue;
                     } else {
                         isHu = false;
@@ -478,7 +499,7 @@ public class GameWinCheck {
      * @param hunTemp
      * @return
      */
-    private static boolean sameCardValidateHu(List<Byte> tempCards, List<Byte> collectionCards, List<Byte> hunTemp,boolean isPairFist) {
+    private static boolean sameCardValidateHu(List<Byte> tempCards, List<Byte> collectionCards, List<Byte> hunTemp,boolean isPairFist,boolean isLast) {
 
         int i = 0;
         List<Byte> temp = cloneList(hunTemp);
@@ -557,6 +578,9 @@ public class GameWinCheck {
                 tempCards.removeAll(rabbishCards);
                 if (tempCards.size() == 0) {
                     collectionCards.addAll(tempCollectionCards);
+                    for(int m = 0 ;isLast && m < hunSize;m++){
+                        collectionCards.add(hunTemp.remove(0));
+                    }
                     return true;
                 } else if (tempCards.size() == 1) {
                     GameWinCheckUtil.cardCollection(hunSize, tempCollectionCards, 0, hunTemp, tempCards, rabbishCards, 2);
@@ -578,6 +602,9 @@ public class GameWinCheck {
                     hunTemp.addAll(temp);
                     return false;
                 } else {
+                    for(int m = 0 ;isLast && m < hunSize; m++){
+                        collectionCards.add(hunTemp.remove(0));
+                    }
                     collectionCards.addAll(tempCollectionCards);
                     return true;
                 }
@@ -978,10 +1005,11 @@ public class GameWinCheck {
 
 
         List<GameResultSummary> gameResultChecks = new ArrayList<GameResultSummary>();
-        if (CollectionUtils.isEmpty(collections)) {
+    /*    if (CollectionUtils.isEmpty(collections)) {
             return gameResultChecks;
-        }
+        }*/
         GameResultSummary gameResultCheck = new GameResultSummary();
+        gameResultChecks.add(gameResultCheck);
         List<Byte> pairs = new ArrayList<Byte>();
         gameResultCheck.setPairs(pairs);
         pairs.add(collections.remove(0));
@@ -998,7 +1026,6 @@ public class GameWinCheck {
             return gameResultChecks;
         }
         generateGangPeng(player, gameResultCheck);
-        gameResultChecks.add(gameResultCheck);
         return gameResultChecks;
     }
 

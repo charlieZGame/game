@@ -230,7 +230,7 @@ public class UserMananger {
         if(StringUtils.isNotEmpty(checkResult)){
             return checkResult;
         }
-        List<ProxyUser> proxyUsers = proxyUserRepository.findByNickname(nickname);
+        List<ProxyUser> proxyUsers = proxyUserRepository.findByNickname(Base64Util.baseEncode(nickname));
         if(proxyUsers != null){
             for (ProxyUser playUser : proxyUsers) {
                 playUser.setNickname(Base64Util.baseDencode(playUser.getNickname()));

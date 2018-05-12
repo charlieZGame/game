@@ -341,6 +341,7 @@ cc.Class({
     this.initdata(true);
     this.resize();
     this.ting_tip.active = false;
+    cc.beimi.currentnum=0;
     let self = this;
     let roomType = "";
     if (cc.beimi.extparams&&cc.beimi.extparams.gametype == "koudajiang") {
@@ -410,7 +411,7 @@ cc.Class({
       if (self.chatScrollView && self.chatScrollView.active == true) {
         self.chatScrollView.active = false
       }
-
+      console.log("this.roomUuid",this.roomUuid);
       //测试拖到牌
       // let temp = self.cardpool.get();
       // let temp_script = temp.getComponent("HandCards");
@@ -663,7 +664,7 @@ cc.Class({
       });
 
       this.node.on("share", function(event) {
-        self.wxShare("房间号：" + self.roomid.string, "房间已经开好，快来保定三缺一跟我嗨到爆！", "https://fir.im/bd3q1");
+        self.wxShare("房间号：" + self.roomid.string, "房间已经开好，快来三缺一跟我嗨到爆！", "https://fir.im/bd3q1");
         event.stopPropagation();
       });
 
@@ -728,7 +729,7 @@ cc.Class({
 
       }
       this.addComponent("Voice");
-      cc.beimi.audio.playBGM("bgFight.mp3");
+      //cc.beimi.audio.playBGM("bgFight.mp3");
     }
   },
 
@@ -833,7 +834,6 @@ cc.Class({
               }
             }
           }
-
 
       });
 
@@ -940,8 +940,6 @@ cc.Class({
             self.endGame();
           } else {}
         });
-
-
       }
     }
   },
@@ -1007,6 +1005,7 @@ cc.Class({
       if (context.roomid != null) {
         context.roomid.string = data.roomid;
       }
+      context.roomUuid= data.roomUuid;
     } else {
       if (context.roomid != null) {
         context.roomid.string = "大厅房间";
@@ -2208,6 +2207,7 @@ cc.Class({
     }
     context.ju.string = data.currentnum + "/" + data.numofgames + "局"
     context.currentnum = data.currentnum;
+    cc.beimi.currentnum= data.currentnum;
     context.numofgames = data.numofgames;
     var groupNums = 0;
     for (var times = 0; times < 4; times++) {
@@ -3119,7 +3119,11 @@ cc.Class({
 
   getGameOverSummary(){
     let socket = this.socket();
-    socket.emit("gameOverSummary",this.roomid.string);
+    let param = {
+      roomid:this.roomid.string,
+      roomUuid:this.roomUuid
+    }
+    socket.emit("gameOverSummary",JSON.stringify(param));
   },
 
   endGame: function() {

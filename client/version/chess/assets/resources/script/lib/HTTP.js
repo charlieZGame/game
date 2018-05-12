@@ -5,8 +5,8 @@ var HTTP = cc.Class({
     properties: {
     },
     statics: {
-        baseURL:"http://jenkins.suncity.ink:8081",// 8080是web，8081是app
-        wsURL : "http://jenkins.suncity.ink:9082",// 9081是web，9082是app
+        baseURL:"http://www.laiyuanmajiang.top:8080",// 8080是web，8081是app
+        wsURL : "http://www.laiyuanmajiang.top:9081",// 9081是web，9082是app
         authorization: null,
         httpGet: function (url , success , error , object) {
             var xhr = cc.loader.getXMLHttpRequest();

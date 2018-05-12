@@ -33,55 +33,62 @@ public class UserCaseTest {
 
     @ResponseBody
     @RequestMapping("playHistoryTest")
-    public String playHistoryRepositoryTest(String category,String userId,Integer roomId) throws IOException {
+    public String playHistoryRepositoryTest(String category,String userId,String roomId) throws IOException {
 
         if(StringUtils.isEmpty(category) || "1".equals(category)) {
             List<Object> summays = playHistoryRepository.findByUserId(userId);
             if (CollectionUtils.isEmpty(summays)) {
-                return new StandardResponse(-1, "roomIds is null", null).toJSON();
+                return new StandardResponse(1, "ok", null).toJSON();
             }
-            List<Integer> list = new ArrayList<Integer>();
-            List<String> roomTemp = new ArrayList<String>();
+            List<String> list = new ArrayList<String>();
             for (Object obj : summays) {
-                if(obj == null){
+                if (obj == null) {
                     continue;
                 }
-                list.add(obj instanceof BigInteger ? ((BigInteger) obj).intValue() : (Integer) obj);
+                list.add((String) obj);
             }
-            if(CollectionUtils.isEmpty(list)){
-                return new StandardResponse(-1, "roomIds2 is null",null).toJSON();
+            if (CollectionUtils.isEmpty(list)) {
+                return new StandardResponse(-1, "roomIds2 is null", null).toJSON();
             }
             List<Object> response = playHistoryRepository.summayRoom(list);
+            if (CollectionUtils.isEmpty(response)) {
+                return new StandardResponse(1, "ok", null).toJSON();
+            }
+            List<String> roomTemp = new ArrayList<String>();
             List<RoomSummary> lis = new ArrayList<RoomSummary>();
             for (Object obj : response) {
                 Object[] objects = (Object[]) obj;
                 RoomSummary roomSummay = new RoomSummary();
-                roomSummay.setRoomId(objects[0] == null ? 0: (objects[0] instanceof BigInteger ? ((BigInteger) objects[0]).intValue() : (Integer) objects[0]));
+                roomSummay.setRoomId(objects[0] == null ? 0 : (objects[0] instanceof BigInteger ? ((BigInteger) objects[0]).intValue() : (Integer) objects[0]));
                 roomSummay.setNum(objects[1] == null ? 0 : (objects[1] instanceof BigInteger ? ((BigInteger) objects[1]).intValue() : (Integer) objects[1]));
                 roomSummay.setNickname(objects[2] == null ? null : Base64Util.baseDencode((String) objects[2]));
                 roomSummay.setUserNo(objects[3] == null ? 0 : (objects[3] instanceof BigInteger ? ((BigInteger) objects[3]).intValue() : (Integer) objects[3]));
-                roomSummay.setPhoto(objects[4] == null ? null : (String)objects[4]);
+                roomSummay.setPhoto(objects[4] == null ? null : (String) objects[4]);
                 roomSummay.setScore(objects[5] == null ? 0 : (objects[5] instanceof BigDecimal ? ((BigDecimal) objects[5]).intValue() : (Integer) objects[5]));
                 roomSummay.setDate(objects[6] == null ? null : new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(objects[6]));
                 Object cards = (objects[7] == null ? 0 : objects[7]);
-                roomSummay.setUseCards(cards == null ? 0 :cards instanceof BigDecimal ? ((BigDecimal) cards).intValue() : (Integer) cards);
+                roomSummay.setUseCards(cards == null ? 0 : cards instanceof BigDecimal ? ((BigDecimal) cards).intValue() : (Integer) cards);
+                if (objects[8] != null && userId.equals(objects[8])) {
+                    roomSummay.setCurrentUser(true);
+                }
+                roomSummay.setRoomUuid((String)objects[9]);
                 lis.add(roomSummay);
             }
-            Map<String,Object> tempMap = new HashMap<String,Object>();
-            for(RoomSummary roomSummary : lis){
-                if(tempMap.containsKey(roomSummary.getRoomId()+"")){
-                    ((List<RoomSummary>)tempMap.get(roomSummary.getRoomId()+"")).add(roomSummary);
-                }else{
-                    roomTemp.add(roomSummary.getRoomId()+"");
+            Map<String, Object> tempMap = new HashMap<String, Object>();
+            for (RoomSummary roomSummary : lis) {
+                if (tempMap.containsKey(roomSummary.getRoomId() + "")) {
+                    ((List<RoomSummary>) tempMap.get(roomSummary.getRoomId() + "")).add(roomSummary);
+                } else {
+                    roomTemp.add(roomSummary.getRoomId() + "");
                     List<RoomSummary> listemp = new ArrayList<RoomSummary>();
                     listemp.add(roomSummary);
-                    tempMap.put(roomSummary.getRoomId()+"",listemp);
+                    tempMap.put(roomSummary.getRoomId() + "", listemp);
                 }
             }
-            tempMap.put("roomIds",roomTemp);
+            tempMap.put("roomIds", roomTemp);
             return new StandardResponse(1, "ok", tempMap).toJSON();
         }else{
-            List<PlayHistory> playHistories = playHistoryRepository.findByUserIdAndRoomId(userId,roomId);
+            List<PlayHistory> playHistories = playHistoryRepository.findByUserIdAndRoomUuid(userId,roomId);
             List<Map<String,Object>> returnList = new ArrayList<Map<String,Object>>();
             if (CollectionUtils.isNotEmpty(playHistories)) {
                 for (PlayHistory playHistory : playHistories) {

@@ -1,5 +1,6 @@
 package com.beimi.rule;
 
+import com.beimi.core.BMDataContext;
 import com.beimi.util.rules.model.Action;
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -14,9 +15,22 @@ public class QXDValidate  extends AbsCheckScoreRule{
     @Override
     public boolean isSatisfy() {
 
-       /* if (CollectionUtils.isNotEmpty(actions)) {
-            return false;
-        }*/
+
+        if(CollectionUtils.isNotEmpty(actions)) {
+            for (Action action : actions){
+                if(BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())){
+                    collections.add((byte)(action.getCard()/ 4 * 4));
+                    if(action.getCard() < 0){
+                        collections.add((byte)(action.getCard()/ 4 * 4 - 1));
+                        collections.add((byte) (action.getCard() / 4 * 4 - 2));
+                    }else {
+                        collections.add((byte) (action.getCard() / 4 * 4 + 1));
+                        collections.add((byte) (action.getCard() / 4 * 4 + 2));
+                    }
+                }
+            }
+        }
+
 
         List<Byte> tempb = new ArrayList<Byte>();
 
@@ -63,5 +77,18 @@ public class QXDValidate  extends AbsCheckScoreRule{
     public Integer getHuScore() {
         return null;
     }
+
+
+    public static void main(String[] args) {
+
+        QXDValidate qxdValidate = new QXDValidate();
+
+        Byte[] stringArray = new Byte[]{0,1,2,3,4,5,6,7,8,9,10,11,12,14};
+        List<Byte> collections = Arrays.asList(stringArray);
+        qxdValidate.collections = collections;
+        System.out.println(qxdValidate.isSatisfy());
+
+    }
+
 
 }

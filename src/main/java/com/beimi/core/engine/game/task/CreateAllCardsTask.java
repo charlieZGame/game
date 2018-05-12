@@ -102,7 +102,7 @@ public class CreateAllCardsTask extends AbstractTask implements ValueWithExpiryT
 		}
 		
 		BMDataContext.getGameEngine().finished(gameRoom.getId(), orgi);
-		if(gameRoom.getCurrentnum() == gameRoom.getNumofgames()) {
+		if(gameRoom.getCurrentnum() == gameRoom.getNumofgames()+1) {
 			GameUtils.updatePlayerClientStatus(userId, gameRoom.getOrgi(), BMDataContext.PlayerTypeEnum.LEAVE.toString(), true);
 		}
 

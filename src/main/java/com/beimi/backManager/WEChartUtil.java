@@ -111,7 +111,7 @@ public class WEChartUtil {
             user.setNickname(Base64Util.baseEncode(nickname));
             user.setPhoto(photo);
             user.setYxbj("1");
-            user.setUserCategory("1");
+            user.setUserCategory("3");
             user.setCreateTime(new Date());
             repository.save(user);
             proxyUser = user;
@@ -202,6 +202,9 @@ public class WEChartUtil {
 
 
     public static PlayUserClient clonePlayUserClient(PlayUserClient playUserClient){
+        if(playUserClient == null){
+            return playUserClient;
+        }
         PlayUserClient temp = new PlayUserClient();
         temp.setId(playUserClient.getId());
         temp.setNickname(Base64Util.baseDencode(playUserClient.getNickname()));
@@ -214,6 +217,7 @@ public class WEChartUtil {
         temp.setToken(playUserClient.getToken());
         temp.setPlayerlevel(playUserClient.getPlayerlevel());
         temp.setCards(playUserClient.getCards());
+        temp.setUsercategory(playUserClient.getUsercategory());
         return temp;
     }
 

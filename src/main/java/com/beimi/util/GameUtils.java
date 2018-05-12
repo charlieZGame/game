@@ -400,11 +400,11 @@ public class GameUtils {
 	}
 
 
-	public static List<Byte> recommandCards(Player player ,byte[] cards,String code){
+	public static List<Byte> recommandCards(Player player ,byte[] cards,String code,boolean isAllowPeng){
 
 		List<Byte> recommendCard = new ArrayList<Byte>();
 		for(int i = -7 ; i < 27;i++){
-			MJCardMessage message = processLaiyuanMJCard(player,cards,(byte)(i*4),true,null,code);
+			MJCardMessage message = processLaiyuanMJCard(player,cards,(byte)(i*4),true,null,code,isAllowPeng);
 			if(message.isHu()){
 				recommendCard.add((byte)(i*4));
 			}
@@ -424,7 +424,7 @@ public class GameUtils {
      * @return
      */
 	public static MJCardMessage processLaiyuanMJCard(Player player ,byte[] cards , byte takecard ,boolean deal,
-													 List<List<Byte>> collections,String code) {
+													 List<List<Byte>> collections,String code,boolean isAllowPeng) {
 
 		logger.info("userId:{},参与校验手牌为",player.getPlayuser());
 		System.out.println();
@@ -472,36 +472,36 @@ public class GameUtils {
 		if("majiang".equals(code) || CollectionUtils.isEmpty(player.getCoverCards())) {
 
 			//查看碰的里边有杠的没有
-			Map<Byte,Boolean> isExits = new HashMap<Byte,Boolean>();
-			if(CollectionUtils.isNotEmpty(player.getActions())){
-				for(Action action : player.getActions()){
-					if( BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())){
-						if(action.getCard()/4== takecard/4 && deal){
+			Map<Byte, Boolean> isExits = new HashMap<Byte, Boolean>();
+			if (CollectionUtils.isNotEmpty(player.getActions())) {
+				for (Action action : player.getActions()) {
+					if (BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())) {
+						if (action.getCard() / 4 == takecard / 4 && deal) {
 							mjCard.setCard(takecard);
 							mjCard.setGang(true);
-							isExits.put((byte)(action.getCard()/4),true);
+							isExits.put((byte) (action.getCard() / 4), true);
 						}
 					}
 				}
 			}
-				//碰杠
+			//碰杠
 			for (Map.Entry<Integer, Integer> entry : data.entrySet()) {
 				//有碰可能有杠
 				if (entry.getKey() == takecard / 4) {
-					if (entry.getValue() == 2 && !deal && cards.length - huns.size() > 2) {
+					if (entry.getValue() == 2 && !deal && cards.length - huns.size() > 2 && isAllowPeng) {
 						mjCard.setCard(takecard);
 						mjCard.setPeng(true);
 					} else if (entry.getValue() == 3) {
 						mjCard.setCard(takecard);
 						mjCard.setGang(true);
-						if(!isExits.containsKey(takecard/4) && !deal) {
+						if (!isExits.containsKey(takecard / 4) && !deal) {
 							mjCard.setPeng(true);
 						}
 					}
 				}
 			}
-		}else{
-			kougangpeng(player,takecard,data,mjCard,deal);
+		}else {
+			kougangpeng(player, takecard, data, mjCard, deal,isAllowPeng);
 		}
 
 		// 处理手牌
@@ -643,7 +643,7 @@ public class GameUtils {
 			//碰杠
 			for (Map.Entry<Integer, Integer> entry : data.entrySet()) {
 				//有碰可能有杠
-				if (entry.getKey() == takecard / 4) {
+				if (entry.getKey() == takecard / 4) { //cards.length - huns.size() 当手里取了混只有两张时候不允许碰
 					if (entry.getValue() == 2 && !deal && cards.length - huns.size() > 2) {
 						mjCard.setCard(takecard);
 						mjCard.setPeng(true);
@@ -657,7 +657,7 @@ public class GameUtils {
 				}
 			}
 		}else{
-			kougangpeng(player,takecard,data,mjCard,deal);
+			kougangpeng(player,takecard,data,mjCard,deal,true);
 		}
 
 		// 处理手牌
@@ -737,7 +737,7 @@ public class GameUtils {
 
 
 
-	private static void kougangpeng(Player player, byte takecard ,Map<Integer, Integer> data,MJCardMessage mjCard,boolean deal) {
+	private static void kougangpeng(Player player, byte takecard ,Map<Integer, Integer> data,MJCardMessage mjCard,boolean deal,boolean isAllowPeng) {
 
 
 		// 扣空的情况在上边解决了和混子的打法一起解决了
@@ -750,7 +750,7 @@ public class GameUtils {
 		if(CollectionUtils.isNotEmpty(player.getActions())){
 			for(Action action : player.getActions()){
 				if( BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())){
-					if(action.getCard()/4== takecard/4 && deal){
+					if(action.getCard()/4== takecard/4 && deal && isAllowPeng){
 						mjCard.setCard(takecard);
 						mjCard.setGang(true);
 						isExits.put((byte)(action.getCard()/4),true);
@@ -799,21 +799,21 @@ public class GameUtils {
 	public static void main(String[] args) {
 
 
-		byte[] cards = new byte[]{46,47,63,75,76,80,94,95,97,88,-6};
+	/*	byte[] cards = new byte[]{46,47,63,75,76,80,94,95,97,88,-6};
 
 		Action playerAction2 = new Action("adfaf2" , BMDataContext.PlayerAction.PENG.toString() , (byte)-7);
 		List<Action> actions = new ArrayList<Action>();
 		actions.add(playerAction2);
-		getGangCard( cards,actions);
+		getGangCard( cards,actions);*/
 
 
 		long start = System.nanoTime();
 		//-24,-25,-26     5,39,43,64,68,71,94,96,103,67,
-		//byte[] cards = new byte[]{0,1,2,40,41,44,45, 48,49,59};
+		byte[] cards = new byte[]{1,2,4,8,12,16,20,24,28,32,36,40,44};
 		//byte[] cards = new byte[]{10,28,30,32,56,64,15};
 		//byte[] cards = new byte[]{5,11,13,44,47,55,66,70,75,81,83,92,94};
 		//byte[] cards = new byte[]{44,45,48,49,52,53};
-		byte takecard =-23;
+		byte takecard =14;
 
 	/*	List<Byte> list = new ArrayList<Byte>();
 		for(byte b : cards){
@@ -844,24 +844,23 @@ public class GameUtils {
 		}
 		Player player = new Player("USER1");
 		player.setColor(2);
-		byte[] powerfull = new byte[4];
-		powerfull[0] = 0;
-		powerfull[1] = 1;
-		powerfull[2] = 4;
-		powerfull[3] = 5;
+		byte[] powerfull = new byte[3];
+		powerfull[0] = 24;
+		powerfull[1] = 28;
+		powerfull[2] = 32;
 		/*powerfull[1] = 53;*/
 		player.setPowerfull(powerfull);
-	//	List<Action> actions = new ArrayList<Action>();
-	//	Action playerAction = new Action("adfaf" , BMDataContext.PlayerAction.GANG.toString() , (byte)3);
-	//	actions.add(playerAction);
+		List<Action> actions = new ArrayList<Action>();
+		Action playerAction = new Action("adfaf" , BMDataContext.PlayerAction.GANG.toString() , (byte)-30);
+		actions.add(playerAction);
 		//player.setActions(actions);
 
-		/*Action playerAction2 = new Action("adfaf2" , BMDataContext.PlayerAction.PENG.toString() , (byte)31);
-		actions.add(playerAction2);*/
-		//player.setActions(actions);
+		Action playerAction2 = new Action("adfaf2" , BMDataContext.PlayerAction.PENG.toString() , (byte)100);
+		actions.add(playerAction2);
+	//	player.setActions(actions);
 
-		Action playerAction3 = new Action("adfaf4" , BMDataContext.PlayerAction.PENG.toString() , (byte)60);
-		//actions.add(playerAction3);
+		Action playerAction3 = new Action("adfaf4" , BMDataContext.PlayerAction.PENG.toString() , (byte)97);
+		actions.add(playerAction3);
 
 		//player.setActions(actions);
 

@@ -11,6 +11,7 @@ public class JoinRoom implements Message{
 	private int maxplayers ;
 	private boolean cardroom ;
 	private String roomid ;
+	private String roomUuid;
 	
 	public JoinRoom(PlayUserClient player , int index , int maxplayer , GameRoom gameRoom){
 		this.player = player;
@@ -18,6 +19,7 @@ public class JoinRoom implements Message{
 		this.maxplayers = maxplayer ;
 		this.cardroom = gameRoom.isCardroom() ;
 		this.roomid = gameRoom.getRoomid() ;
+		this.roomUuid = gameRoom.getId();
 	}
 	
 	public String getCommand() {
@@ -59,5 +61,13 @@ public class JoinRoom implements Message{
 
 	public void setRoomid(String roomid) {
 		this.roomid = roomid;
+	}
+
+	public String getRoomUuid() {
+		return roomUuid;
+	}
+
+	public void setRoomUuid(String roomUuid) {
+		this.roomUuid = roomUuid;
 	}
 }

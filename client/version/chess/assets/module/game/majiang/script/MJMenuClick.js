@@ -52,17 +52,15 @@ cc.Class({
 
 
   onBackClick: function() {
-    console.log("------要离开房间");
-    if(cc.beimi.gamestatus == 'ready'){
+    console.log("------要离开房间当前局",cc.beimi.currentnum);
+    if(cc.beimi.gamestatus == 'ready' ||cc.beimi.gamestatus == 'notready' &&(!cc.beimi.currentnum || cc.beimi.currentnum<1)  ){
        this.leaveRoomOnNoPlaying();
        cc.beimi.joinroom=false;
        this.scene(cc.beimi.gametype, this);
-    }else
-    if (this.leaveDialogprefab) {
+    }else if (this.leaveDialogprefab) {
       cc.beimi.openwin = cc.instantiate(this.leaveDialogprefab);
       cc.beimi.openwin.parent = this.root();
     }
-
   },
 
   onSettingsClick: function() {

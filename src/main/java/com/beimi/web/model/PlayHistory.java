@@ -18,6 +18,7 @@ public class PlayHistory implements Serializable {
     private String id ;
     private String userId;
     private Integer roomId;
+    private String roomUuid;
     private String nickname;
     private Integer username;
     private String photo;
@@ -176,5 +177,13 @@ public class PlayHistory implements Serializable {
 
     public void setObj(Object obj) {
         this.obj = obj;
+    }
+
+    public String getRoomUuid() {
+        return roomUuid;
+    }
+
+    public void setRoomUuid(String roomUuid) {
+        this.roomUuid = roomUuid;
     }
 }

@@ -3,7 +3,7 @@ cc.Class({
 
   properties: {
 
-    bgVolume: 0, // 背景音量
+    bgVolume: 1.0, // 背景音量
 
     deskVolume: 1.0, //   房间 房间音量
 

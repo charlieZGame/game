@@ -21,6 +21,7 @@ cc.Class({
                 cc.beimi.authorization = null;
                 cc.beimi.socket.disconnect();
                 cc.beimi.socket = null;
+                cc.beimi.joinroom=false;
                 self.scene("login" , self) ;
             }else if (cc.beimi!=null &&cc.beimi.isLeaveroom) {
                console.log("====cc.beimi.isLeaveroom==========",cc.beimi.isLeaveroom);

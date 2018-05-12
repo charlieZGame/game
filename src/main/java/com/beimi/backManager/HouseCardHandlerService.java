@@ -126,7 +126,7 @@ public class HouseCardHandlerService {
     }
 
 
-    public StandardResponse queryUserFlow(String userId, Integer startPage, Integer pageSize, Integer roomId) {
+    public StandardResponse queryUserFlow(String userId, Integer startPage, Integer pageSize, String roomId) {
 
         try {
             if (roomId == null) {
@@ -134,12 +134,12 @@ public class HouseCardHandlerService {
                 if (CollectionUtils.isEmpty(summays)) {
                     return new StandardResponse(1, "ok", null);
                 }
-                List<Integer> list = new ArrayList<Integer>();
+                List<String> list = new ArrayList<String>();
                 for (Object obj : summays) {
                     if (obj == null) {
                         continue;
                     }
-                    list.add(obj instanceof BigInteger ? ((BigInteger) obj).intValue() : (Integer) obj);
+                    list.add((String) obj);
                 }
                 if (CollectionUtils.isEmpty(list)) {
                     return new StandardResponse(-1, "roomIds2 is null", null);
@@ -165,6 +165,7 @@ public class HouseCardHandlerService {
                     if (objects[8] != null && userId.equals(objects[8])) {
                         roomSummay.setCurrentUser(true);
                     }
+                    roomSummay.setRoomUuid((String)objects[9]);
                     lis.add(roomSummay);
                 }
                 Map<String, Object> tempMap = new HashMap<String, Object>();
@@ -181,7 +182,7 @@ public class HouseCardHandlerService {
                 tempMap.put("roomIds", roomTemp);
                 return new StandardResponse(1, "ok", tempMap);
             } else {
-                List<PlayHistory> playHistories = playHistoryRepository.findByUserIdAndRoomId(userId, roomId);
+                List<PlayHistory> playHistories = playHistoryRepository.findByUserIdAndRoomUuid(userId, roomId);
                 if (CollectionUtils.isEmpty(playHistories)) {
                     return new StandardResponse(1, "ok", null);
                 }
@@ -212,12 +213,12 @@ public class HouseCardHandlerService {
     }
 
 
-    public StandardResponse queryPlayerEnd(Integer roomId,String userId) {
+    public StandardResponse queryPlayerEnd(String roomId,String userId) {
         try {
             if (roomId == null) {
                 return new StandardResponse(-1, "roomId is null", null);
             }
-            List<Integer> roomIds = new ArrayList<Integer>();
+            List<String> roomIds = new ArrayList<String>();
             roomIds.add(roomId);
             List<Object> response = playHistoryRepository.summayRoom(roomIds);
             if (CollectionUtils.isEmpty(response)) {
@@ -294,6 +295,7 @@ public class HouseCardHandlerService {
             playHistory.setUsername(player.getUsername());
             playHistory.setPhoto(player.getPhoto());
             playHistory.setNickname(player.getNickname());
+            playHistory.setRoomUuid(gameRoom.getId());
             playHistory.setCardNum(1);
             playHistory.setCreateTime(new Date());
             playHistory.setIsWin("2");
@@ -310,6 +312,7 @@ public class HouseCardHandlerService {
                     PlayHistory playHistory = new PlayHistory();
                     playHistory.setUserId(player.getPlayuser());
                     playHistory.setRoomId(Integer.parseInt(gameRoom.getRoomid()));
+                    playHistory.setRoomUuid(gameRoom.getId());
                     playHistory.setCreateTime(new Date());
                     playHistory.setScore(returnResult.getScore());
                     playHistory.setCardFirends(nikeNames.length() > 0 ? nikeNames.substring(1) : "");
