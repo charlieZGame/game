@@ -21,6 +21,9 @@ cc.Class({
     return check;
   },
   connect: function() {
+    if (cc.beimi.sessiontimeout) {
+      return
+    }
     let self = this;
     self.lastConnectTime = Date.now();
     cc.beimi.isConnect = false;
@@ -107,6 +110,7 @@ cc.Class({
         var data = self.parse(result);
         if (data.gamestatus == "timeout") { //会话过期，退出登录 ， 会话时间由后台容器提供控制
           cc.beimi.sessiontimeout = true;
+          self.closeloadding();
           self.alert("登录已过期，请重新登录");
         } else if (cc.beimi.extparams != null) {
           if (data.gamestatus == "playing" && data.gametype != null) {
@@ -241,11 +245,10 @@ cc.Class({
     return object.getComponent(common);
   },
   loadding: function() {
-    console.log("------------------------------"+cc.beimi.loadding.size()+"----------------------------");
+    console.log("------------------------------loadding:"+cc.beimi.loadding.size()+"----------------------------");
     if (cc.beimi.loadding.size() > 0) {
       this.loaddingDialog = cc.beimi.loadding.get();
       this.loaddingDialog.parent = cc.find("Canvas");
-
       this._animCtrl = this.loaddingDialog.getComponent(cc.Animation);
       var animState = this._animCtrl.play("loadding");
       animState.wrapMode = cc.WrapMode.Loop;
@@ -253,6 +256,7 @@ cc.Class({
   },
 
   alert: function(message) {
+    this.closeloadding();
     if (cc.beimi.dialog.size() > 0) {
       this.alertdialog = cc.beimi.dialog.get();
       this.alertdialog.parent = cc.find("Canvas");
@@ -261,7 +265,6 @@ cc.Class({
         node.getComponent(cc.Label).string = message;
       }
     }
-    this.closeloadding();
   },
 
   showQuitApp: function() {
@@ -273,9 +276,7 @@ cc.Class({
   },
 
   closeloadding: function() {
-    console.log("--------------------------closeloadding-------------------------");
     if (cc.find("Canvas/loadding")) {
-      console.log("--------------------------Canvas-------------------------");
       cc.beimi.loadding.put(cc.find("Canvas/loadding"));
     }
   },
@@ -321,8 +322,10 @@ cc.Class({
   },
 
   scene: function(name, self) {
+    let ctx = this;
     cc.director.preloadScene(name, function() {
-      self.closeloadding();
+      ctx.closeloadding();
+      ctx.closealert();
       cc.director.loadScene(name);
     });
   },
@@ -510,7 +513,7 @@ cc.Class({
       jsb.reflection.callStaticMethod("org/cocos2dx/javascript/AppActivity", "shareByWeiXin",
         "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V", title, description, url);
     } else if(cc.sys.os == cc.sys.OS_IOS){
-      jsb.reflection.callStaticMethod("OCNativeForCocos", "shareByWeiXin:", title, description, url);
+      jsb.reflection.callStaticMethod("OCNativeForCocos", "shareByWeiXinWithTitle:description:url:", title, description, url);
     }
   },
 
@@ -521,7 +524,7 @@ cc.Class({
     if(cc.sys.os == cc.sys.OS_ANDROID) {
       jsb.reflection.callStaticMethod("org/cocos2dx/javascript/AppActivity", "loginByWeiXin", "()V");
     } else if(cc.sys.os == cc.sys.OS_IOS){
-      jsb.reflection.callStaticMethod("OCNativeForCocos", "loginByWeiXin:");
+      jsb.reflection.callStaticMethod("OCNativeForCocos", "loginByWeiXin");
     }
   },
 
@@ -530,7 +533,7 @@ cc.Class({
       var flag = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getWxFlag", "()Z");
       return flag;
     } else if(cc.sys.os == cc.sys.OS_IOS){
-      var flag = jsb.reflection.callStaticMethod("OCNativeForCocos", "getWxFlag:");
+      var flag = jsb.reflection.callStaticMethod("OCNativeForCocos", "getWxFlag");
       return flag;
     }
   },
@@ -540,7 +543,7 @@ cc.Class({
       var openId = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getOpenId", "()Ljava/lang/String;");
       return openId;
     } else if(cc.sys.os == cc.sys.OS_IOS){
-      var openId = jsb.reflection.callStaticMethod("OCNativeForCocos", "getOpenId:");
+      var openId = jsb.reflection.callStaticMethod("OCNativeForCocos", "getOpenId");
       return openId;
     }
   },
@@ -550,7 +553,7 @@ cc.Class({
       var name = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getNickname", "()Ljava/lang/String;");
       return name;
     } else if(cc.sys.os == cc.sys.OS_IOS){
-      var name = jsb.reflection.callStaticMethod("OCNativeForCocos", "getNickname:");
+      var name = jsb.reflection.callStaticMethod("OCNativeForCocos", "getNickname");
       return name;
     }
   },
@@ -560,7 +563,7 @@ cc.Class({
       var avatar = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getAvatar", "()Ljava/lang/String;");
       return avatar;
     } else if(cc.sys.os == cc.sys.OS_IOS){
-      var avatar = jsb.reflection.callStaticMethod("OCNativeForCocos", "getAvatar:");
+      var avatar = jsb.reflection.callStaticMethod("OCNativeForCocos", "getAvatar");
       return avatar;
     }
   },
@@ -570,7 +573,7 @@ cc.Class({
       var sex = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getSex", "()I");
       return sex;
     } else if(cc.sys.os == cc.sys.OS_IOS){
-      var sex = jsb.reflection.callStaticMethod("OCNativeForCocos", "getSex:");
+      var sex = jsb.reflection.callStaticMethod("OCNativeForCocos", "getSex");
       return sex;
     }
   },
@@ -580,7 +583,7 @@ cc.Class({
       var msg = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getMsg", "()Ljava/lang/String;");
       return msg;
     } else if(cc.sys.os == cc.sys.OS_IOS){
-      var sex = jsb.reflection.callStaticMethod("OCNativeForCocos", "getMsg:");
+      var sex = jsb.reflection.callStaticMethod("OCNativeForCocos", "getMsg");
       return sex;
     }
   },
@@ -590,7 +593,7 @@ cc.Class({
       var pwd = jsb.reflection.callStaticMethod("com/baoding/majiang/Define", "getPassword", "()Ljava/lang/String;");
       return pwd;
     } else if(cc.sys.os == cc.sys.OS_IOS){
-      var pwd = jsb.reflection.callStaticMethod("OCNativeForCocos", "getPassword:");
+      var pwd = jsb.reflection.callStaticMethod("OCNativeForCocos", "getPassword");
       return pwd;
     }
   },

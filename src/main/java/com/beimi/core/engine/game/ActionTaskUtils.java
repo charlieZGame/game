@@ -20,6 +20,7 @@ import com.beimi.util.rules.model.GamePlayers;
 import com.beimi.util.rules.model.Player;
 import com.beimi.util.rules.model.RoomReady;
 import com.beimi.util.server.handler.BeiMiClient;
+import com.beimi.web.model.GamePlayway;
 import com.beimi.web.model.GameRoom;
 import com.beimi.web.model.PlayUserClient;
 import org.apache.commons.collections4.CollectionUtils;
@@ -112,7 +113,8 @@ public class ActionTaskUtils {
 		 */
 		if(enough == true){
 		//	game.change(gameRoom , BeiMiGameEvent.ENOUGH.toString());	//通知状态机 , 此处应由状态机处理异步执行
-			if(gameRoom.getPiao() == 0) {
+			GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), gameRoom.getOrgi()) ;
+			if(gameRoom.getPiao() == 0 || "koudajiang".equals(gamePlayway.getCode())) {
 				game.change(gameRoom, BeiMiGameEvent.ENOUGH.toString());
 			}else {
 				if (CollectionUtils.isNotEmpty(playerList) && playerList.size() == 4) {

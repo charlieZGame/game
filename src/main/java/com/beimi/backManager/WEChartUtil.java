@@ -25,8 +25,8 @@ public class WEChartUtil {
 
     private static Logger logger = LoggerFactory.getLogger(WEChartUtil.class);
 
-   private static String appId="wx7890d6b46048fc05";
-   private static String appSecret="9eaa91ee7f39a9e34a401f1f75c18fbc";
+   private static String appId="wx7ea232488bb78296";
+   private static String appSecret="b5d1af889096d3060d213b0aaf906351";
    private static String grantType="authorization_code";
 
 
@@ -111,11 +111,12 @@ public class WEChartUtil {
             user.setNickname(Base64Util.baseEncode(nickname));
             user.setPhoto(photo);
             user.setYxbj("1");
-            user.setUserCategory("3");
+            user.setUserCategory("1");
             user.setCreateTime(new Date());
             repository.save(user);
             proxyUser = user;
         }else{
+            proxyUser.setNickname(Base64Util.baseEncode(nickname));
             repository.saveAndFlush(proxyUser);
         }
         return proxyUser;

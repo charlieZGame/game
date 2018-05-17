@@ -20,8 +20,9 @@ public class UKWebAppConfigurer
     	registry.addInterceptor(new UserInterceptorHandler()).addPathPatterns("/**").excludePathPatterns("/login.html").excludePathPatterns("/tokens").
     	//registry.addInterceptor(new UserInterceptorHandler()).addPathPatterns("/**").excludePathPatterns("/tokens").
                 excludePathPatterns("/api/**").excludePathPatterns("/dealFlow/**").excludePathPatterns("/houseCard/**").excludePathPatterns("/userCase/**").
-                excludePathPatterns("/userManager/**").excludePathPatterns("/pay/**").excludePathPatterns("/appWebLogin/**").excludePathPatterns("/wechart/login")
-                .excludePathPatterns("/appWebLoginData/**").excludePathPatterns("/clearData/**").excludePathPatterns("/getData/**");
+                excludePathPatterns("/userManager/**").excludePathPatterns("/pay/**").excludePathPatterns("/wechart/login").excludePathPatterns("/wap/index.html").
+                excludePathPatterns("/clearData/**").excludePathPatterns("/getData/**").
+                excludePathPatterns("/appWebLoginData/**").excludePathPatterns("/appWebLogin/**");
     	registry.addInterceptor(new CrossInterceptorHandler()).addPathPatterns("/**");
         registry.addInterceptor(new BackManagerInterceptorHandler()).addPathPatterns("/dealFlow/**").addPathPatterns("/houseCard/**").
                 addPathPatterns("/userManager/**");

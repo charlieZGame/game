@@ -1,6 +1,7 @@
 package com.beimi.rule;
 
 
+import com.beimi.core.BMDataContext;
 import com.beimi.util.GameUtils;
 import com.beimi.util.GameWinCheck;
 import com.beimi.util.rules.model.Action;
@@ -17,11 +18,11 @@ public class YTLValidate  extends AbsCheckScoreRule{
     @Override
     public boolean isSatisfy() {
 
-        if(CollectionUtils.isNotEmpty(actions)){
+        if(actions.size() > 1){
             return false;
         }
 
-        if (CollectionUtils.isEmpty(collections) || (collections.size() - 2) % 3 != 0 || collections.size() != 14) {
+        if (CollectionUtils.isEmpty(collections)) {
             return false;
         }
 
@@ -80,22 +81,15 @@ public class YTLValidate  extends AbsCheckScoreRule{
             return false;
         }
         List<Byte> masterCards = null;
-        List<Byte> slaveKeyCards = null;
         Integer size = 0;
         for(Map.Entry<Integer,List<Byte>> entry : map.entrySet()){
             if(size < entry.getValue().size()){
                 size = entry.getValue().size();
                 masterCards = entry.getValue();
-            }else{
-                slaveKeyCards = entry.getValue();
             }
         }
 
-   /*     if(size + hun.size() != 9){
-            return false;
-        }*/
-
-        if(CollectionUtils.isEmpty(masterCards)){
+        if(CollectionUtils.isEmpty(masterCards) || masterCards.size() != 9){
             return false;
         }
 
@@ -110,21 +104,6 @@ public class YTLValidate  extends AbsCheckScoreRule{
             }
             if(hunSize < 0) {
                 return false;
-            }
-        }
-
-
-        if(CollectionUtils.isNotEmpty(slaveKeyCards)) {
-            Collections.sort(slaveKeyCards);
-            for (int i = 0; i < slaveKeyCards.size() - 1; i++) {
-                if (Math.abs(slaveKeyCards.get(i) / 4 - slaveKeyCards.get(i + 1) / 4) == 2) {
-                    hunSize = hunSize - 1;
-                } else if (Math.abs(slaveKeyCards.get(i) / 4 - slaveKeyCards.get(i + 1) / 4) > 2) {
-                    hunSize = hunSize - 2;
-                }
-                if(hunSize < 0) {
-                    return false;
-                }
             }
         }
 
@@ -171,19 +150,20 @@ public class YTLValidate  extends AbsCheckScoreRule{
 
         YTLValidate ytlValidate = new YTLValidate();
 
-        Byte[] stringArray = new Byte[]{16,17,1,2,3,4,5,6,8,9,10,12,13,14};
-        /*ytlValidate.powerful = new byte[3];
-        ytlValidate.powerful[0] = 68;
-        ytlValidate.powerful[1] = 36;
-        ytlValidate.powerful[2] = 40;*/
-
-        List<Byte> collections = new ArrayList<Byte>();
-        for(Byte b : stringArray){
-            collections.add(b);
+        Byte[] bytes = new Byte[]{52,53,39,43,46,50,54,58,61,66,71};
+        List<Byte> list = new ArrayList<Byte>();
+        for(Byte b : bytes){
+            list.add(b);
         }
-        ytlValidate.collections = collections;
+
+        List<Action> actions = new ArrayList<Action>();
+        Action action = new Action("", BMDataContext.PlayerAction.PENG.toString(),(byte)-26);
+        actions.add(action);
+        ytlValidate.collections = list;
+        ytlValidate.actions = actions;
+
         System.out.println(ytlValidate.isSatisfy());
-        Object obj = ytlValidate.collections;
+
 
     }
 }

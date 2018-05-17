@@ -3,9 +3,11 @@ package com.beimi.backManager;
 import com.beimi.util.Base64Util;
 import com.beimi.util.cache.CacheHelper;
 import com.beimi.util.cache.hazelcast.impl.PlayerCach;
+import com.beimi.web.model.Announcement;
 import com.beimi.web.model.PlayUser;
 import com.beimi.web.model.PlayUserClient;
 import com.beimi.web.model.ProxyUser;
+import com.beimi.web.service.repository.jpa.AnnouncementRespository;
 import com.beimi.web.service.repository.jpa.PlayUserRepository;
 import com.beimi.web.service.repository.jpa.ProxyUserRepository;
 import org.apache.commons.collections4.CollectionUtils;
@@ -13,14 +15,19 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * Created by zhengchenglei on 2018/4/5.
@@ -36,6 +43,9 @@ public class UserMananger {
     private PlayUserRepository playUserRepository;
     @Autowired
     private ProxyUserRepository proxyUserRepository;
+    @Autowired
+    private AnnouncementRespository announcementRespository;
+    private String status = "301";
 
 
     @ResponseBody
@@ -133,13 +143,28 @@ public class UserMananger {
         return new StandardResponse<Integer>(1, "OK", onlineNum).toJSON();
     }
 
+    public static void main(String[] args) throws UnsupportedEncodingException {
+        String data = java.net.URLEncoder.encode("你好","GBK");
+        System.out.println(data);
+        System.out.println(java.net.URLDecoder.decode(data,"UTF-8"));
+        System.out.println(Base64Util.baseDencode(Base64Util.baseDencode("NkkyVTVwNmQ=")));
+    }
+
     @ResponseBody
     @RequestMapping("addUserInfo")
     public String addUserInfo(HttpServletRequest request,String nickname,String photo){
         try {
             long tid = System.currentTimeMillis();
+           // logger.info("============nickName:{}",nickname);
+          //  logger.info("============nickName:{}",Base64Util.baseDencode(nickname));
+        //    logger.info("============nickName:{}",Base64Util.baseDencode(Base64Util.baseDencode(nickname)));
+            logger.info("============nickName:{}",nickname);
+            logger.info("============nickName:{}",java.net.URLDecoder.decode(nickname,"UTF-8"));
+            logger.info("============nickName:{}",Base64Util.baseDencode(Base64Util.baseDencode(nickname)));
+            nickname = java.net.URLDecoder.decode(nickname,"UTF-8");
+         //   nickname = Base64Util.baseDencode(Base64Util.baseDencode(nickname));
             ProxyUser proxyUser = WEChartUtil.addManagerUser(tid,proxyUserRepository, (String) request.getAttribute("openId"), nickname, photo);
-            proxyUser.setNickname(Base64Util.baseEncode(proxyUser.getNickname()));
+            proxyUser.setNickname(Base64Util.baseDencode(proxyUser.getNickname()));
             return new StandardResponse(1,"OK",proxyUser).toJSON();
         }catch (Exception e){
             logger.info("用户登录异常",e);
@@ -301,8 +326,40 @@ public class UserMananger {
 
     }
 
+    @ResponseBody
+    @RequestMapping("/updateAnnouncement")
+    public String updateAnnouncement(HttpServletRequest request,String content){
+        try {
+            String checkResult = WEChartUtil.supperManagerValidate(request,proxyUserRepository);
+            if(StringUtils.isNotEmpty(checkResult)){
+                return checkResult;
+            }
+            logger.info("修改公告 content:{}",content);
+            Announcement announcement = announcementRespository.findByType("1");
+            announcement.setContent(content);
+            announcementRespository.saveAndFlush(announcement);
+            return new StandardResponse<ProxyUser>(1,"OK",null).toJSON();
+        }catch (Exception e){
+            logger.error("修改公告异常",e);
+            return new StandardResponse<ProxyUser>(-1,"failure",null).toJSON();
+        }
+    }
 
-
+    @ResponseBody
+    @RequestMapping("/getStatus")
+    public String getStatus(HttpServletRequest request, HttpServletResponse response){
+        try {
+         /*   String checkResult = WEChartUtil.supperManagerValidate(request,proxyUserRepository);
+            if(StringUtils.isNotEmpty(checkResult)){
+                return checkResult;
+            }*/
+            response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            return status;
+        }catch (Exception e){
+            logger.error("获取状态",e);
+            return new StandardResponse<ProxyUser>(-1,"failure",null).toJSON();
+        }
+    }
 
 
 }

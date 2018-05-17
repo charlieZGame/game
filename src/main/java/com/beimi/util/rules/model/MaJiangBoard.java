@@ -11,6 +11,7 @@ import com.beimi.util.Base64Util;
 import com.beimi.util.GameWinCheck;
 import com.beimi.util.cache.hazelcast.HazlcastCacheHelper;
 import com.beimi.util.cache.hazelcast.impl.ProxyGameRoomCache;
+import com.beimi.web.model.UserScore;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -63,10 +64,10 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 	//控制 能糊不糊 这一轮都不能糊
 	private Map<String,Boolean> cycleController = new HashMap<String,Boolean>();
 
-	private boolean handlerDoIt;
+	private Boolean handlerDoIt = false;
 
 	// 真对碰 杠 抢糊的情况
-	private boolean qingHu;
+	private Boolean qingHu;
 
 	/**
 	 * 翻底牌 ， 斗地主
@@ -248,9 +249,9 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 					}
 				}
 
-
 				List<MJCardMessage> huMessage = new ArrayList<MJCardMessage>();
 				List<MJCardMessage> cpMessage = new ArrayList<MJCardMessage>();
+				GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), orgi);
 
 				for (Player temp : playersTemp) {
 					/**
@@ -260,7 +261,6 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 				/*	if (temp.getColor() == takeCards.getCard() / 36) {
 						continue;
 					}*/
-					GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(gameRoom.getPlayway(), orgi);
 
 					/**
 					 * 检查是否有 杠碰吃胡的 状况 如果这轮有没有糊 则不允许糊
@@ -280,34 +280,40 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 							 */
 							cpMessage.add(mjCard);
 						}
-					} else {
-						MJCardMessage mjCard = new MJCardMessage();
-						mjCard.setUserid(player.getPlayuser());
-						mjCard.setCommand("ting");
-						//提示胡牌暂时去掉
-						mjCard.setRecommendCards(GameUtils.recommandCards(temp, temp.getCardsArray(), gamePlayway.getCode(),gameRoom.isAllowPeng()));
-						ActionTaskUtils.sendEvent(temp.getPlayuser(), mjCard);
 					}
 				}
+				if(isAllowPG) {
+					MJCardMessage mjCard = new MJCardMessage();
+					mjCard.setUserid(player.getPlayuser());
+					mjCard.setCommand("ting");
+					//提示胡牌暂时去掉
+					mjCard.setRecommendCards(GameUtils.recommandCards(player, player.getCardsArray(), gamePlayway.getCode(), false));
+					ActionTaskUtils.sendEvent(player.getPlayuser(), mjCard);
+				}
+
 				huMessage.addAll(cpMessage);
-				for(MJCardMessage mjCardMessage : huMessage){
-					if(cphHandler((MaJiangBoard)board,mjCardMessage)){
+				handlerDoIt = false;
+				for(MJCardMessage mjCardMessage : huMessage) {
+					if (cphHandler((MaJiangBoard) board, mjCardMessage)) {
 						hasAction = true;
 					}
-					if(handlerDoIt){
+					if (handlerDoIt) {
 						handlerDoIt = false;
 						break;
 					}
 				}
 
 				/**
-				 * 无杠碰吃
+				 * 无杠碰吃 isAllowPG 是为了处理碰后又刚的问题，只有允许有糊的情况，其他的不允许往下走
 				 */
 				if (hasAction == false && isAllowPG) {
 					board.dealRequest(gameRoom, board, orgi, false, null);
 				} else {
 					// 如果有吃碰杠，需要用户主动去打牌,不需要叫状态机处理
 					//GameUtils.getGame(gameRoom.getPlayway(), orgi).change(gameRoom, BeiMiGameEvent.DEAL.toString(), 5);    //有杠碰吃，等待5秒后发牌
+					if(huMessage.size() == 0 && ((MaJiangBoard)board).isQingHu() != null){
+						((MaJiangBoard)board).isQingHu().notifyAll();
+					}
 				}
 			} else {
 				takeCards = new TakeMaJiangCards();
@@ -478,7 +484,8 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 	}
 
 
-	public void houseCardHandler(GameRoom gameRoom, GamePlayway playway,Board board,List<PlayUserClient> players,List<ReturnResult> returnResults){
+	public void houseCardHandler(GameRoom gameRoom, GamePlayway playway,Board board,List<PlayUserClient> players,List<ReturnResult> returnResults
+			,boolean isNeedSaveCard){
 
 		try {
 			if (gameRoom == null || playway == null) {
@@ -493,7 +500,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 				}
 			}
 			HouseCardHandlerService cardHandlerService = BMDataContext.getContext().getBean("houseCardHandlerService", HouseCardHandlerService.class);
-			cardHandlerService.dataBaseSummaryHandler(gameRoom,players,board,returnResults,userId);
+			cardHandlerService.dataBaseSummaryHandler(gameRoom,players,board,returnResults,userId,isNeedSaveCard);
 		}catch (Exception e){
 			logger.error("保存历史数据异常 returnResults:{}",returnResults,e);
 		}
@@ -563,7 +570,22 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 					if (rr.isWin()) {
 						returnResult = rr;
 					}
+					boolean isExist = false;
+					for (UserScore userScore : gameRoom.getUserScore()) {
+						if (userScore.getUserId().equals(rr.getUserId())) {
+							userScore.setScore(userScore.getScore() + rr.getScore());
+							isExist = true;
+						}
+					}
+					if(!isExist){
+						UserScore userScore = new UserScore();
+						userScore.setUserId(rr.getUserId());
+						userScore.setScore(rr.getScore());
+						gameRoom.getUserScore().add(userScore);
+					}
 				}
+
+
 				List<GameResultSummary> gameResultChecks = GameWinCheck.playerSummary(player, returnResult.getCollections());
 				summaryPlayer.setGameResultChecks(gameResultChecks);
 
@@ -578,6 +600,10 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 		}
 
 		for (SummaryPlayer splayer : summary.getPlayers()) {
+			if(CollectionUtils.isEmpty(returnResults)) {
+				splayer.setScore(0);
+				continue;
+			}
 			for(ReturnResult returnResult : returnResults) {
 				if (splayer.getUserid().equals(returnResult.getUserId())){
 					splayer.setScore(returnResult.getScore());
@@ -586,7 +612,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 			}
 		}
 
-		houseCardHandler(gameRoom, playway, board, players,returnResults);
+		houseCardHandler(gameRoom, playway, board, players,returnResults,gameRoom.getCurrentnum() == gameRoom.getNumofgames());
 		summary.setGameRoomOver(gameRoomOver);    //有玩家破产，房间解散
 		gameRoom.setCurrentnum(gameRoom.getCurrentnum() + 1);
 		logger.info("发送总结信息为 summary:{}", JSONObject.toJSONString(summary));
@@ -679,7 +705,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 		this.number = number;
 	}
 
-	public boolean isHandlerDoIt() {
+	public Boolean isHandlerDoIt() {
 		return handlerDoIt;
 	}
 
@@ -724,11 +750,11 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 		System.out.println(playersTemp);
 	}
 
-	public boolean isQingHu() {
+	public Boolean isQingHu() {
 		return qingHu;
 	}
 
-	public void setQingHu(boolean qingHu) {
+	public void setQingHu(Boolean qingHu) {
 		this.qingHu = qingHu;
 	}
 }

@@ -26,7 +26,7 @@ public abstract interface PlayHistoryRepository extends JpaRepository<PlayHistor
     @Query(value="select * from (select t.room_uuid from play_history t  where t.user_id =:userId group by t.room_uuid order by create_time desc) m limit 0,50",nativeQuery=true)
     public abstract List<Object> findByUserId(@Param("userId")String userId);
 
-    @Query(value="select * from (select t.room_id,count(1) num,t.nickname,t.username,t.photo, sum(t.score) score,t.create_time,sum(t.card_num) card_num,t.user_id,t.room_uuid from play_history t  where t.room_uuid in(:roomIds) group by t.room_uuid,t.nickname,t.username,t.photo,t.user_id order by create_time desc) m",nativeQuery=true)
+    @Query(value="select * from (select t.room_id,count(1) num,t.nickname,t.username,t.photo, sum(t.score) score,t.create_time,avg(t.card_num) card_num,t.user_id,t.room_uuid from play_history t  where t.room_uuid in(:roomIds) group by t.room_uuid,t.nickname,t.username,t.photo,t.user_id order by create_time desc) m",nativeQuery=true)
     public abstract List<Object> summayRoom(@Param("roomIds") List<String> roomIds);
 
 }

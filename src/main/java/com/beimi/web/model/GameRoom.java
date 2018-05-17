@@ -1,8 +1,6 @@
 package com.beimi.web.model;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -69,7 +67,7 @@ public class GameRoom implements UserEvent, java.io.Serializable, Comparable<Gam
 	@Transient
 	private boolean window = true;
 	@Transient
-	private Integer piao = 0;
+	private Integer piao = 1; //默认选票
 	@Transient
 	private Map<String,String> pioaQi = new HashMap<String,String>();
 
@@ -81,6 +79,10 @@ public class GameRoom implements UserEvent, java.io.Serializable, Comparable<Gam
 	private boolean isBegin = false;
 	@Transient
 	private boolean isAllowPeng = true;
+	@Transient
+	private int fengding;
+	@Transient
+	private List<UserScore> userScore = new ArrayList<UserScore>();
 
 	private Map<String,String> extparams ;//房卡模式下的自定义参数
 	
@@ -333,5 +335,21 @@ public class GameRoom implements UserEvent, java.io.Serializable, Comparable<Gam
 	@Transient
 	public void setAllowPeng(boolean allowPeng) {
 		isAllowPeng = allowPeng;
+	}
+	@Transient
+	public int getFengding() {
+		return fengding;
+	}
+	@Transient
+	public void setFengding(int fengding) {
+		this.fengding = fengding;
+	}
+	@Transient
+	public List<UserScore> getUserScore() {
+		return userScore;
+	}
+	@Transient
+	public void setUserScore(List<UserScore> userScore) {
+		this.userScore = userScore;
 	}
 }

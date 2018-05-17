@@ -107,11 +107,13 @@ public class GameEngine {
 
 					if("koudajiang".equals(gamePlayway.getCode())){
 						koudajiangHandler(tid,playerList,(MaJiangBoard)board,currentPlayer,beiMiClient,gameEvent);
+						beiMiClient.getClient().sendEvent("currentUserScore",gameRoom.getUserScore());
 					}else{
 						RecoveryData recoveryData = CardRecoverUtil.hunHandler(tid,(MaJiangBoard)board,currentPlayer,gameEvent.getGameRoom());
 						logger.info("tid:{} 恢复hun牌面信息发牌完成 cards:{}", tid, JSONObject.toJSONString(recoveryData));
 						//beiMiClient.getClient().sendEvent("recovery",recoveryData, gameEvent.getGameRoom());
 						beiMiClient.getClient().sendEvent("recovery",recoveryData);
+						beiMiClient.getClient().sendEvent("currentUserScore",gameRoom.getUserScore());
 					}
 					if(CollectionUtils.isEmpty(currentPlayer.getActions()) && currentPlayer.getCardsArray().length == 14) {
 						sendHandleMessage((MaJiangBoard) board, gamePlayway, currentPlayer, true,gameRoom);
@@ -126,7 +128,8 @@ public class GameEngine {
 				//GameUtils.getGame(beiMiClient.getPlayway(), gameEvent.getOrgi()).change(gameEvent);    //通知状态机 , 此处应由状态机处理异步执行
 				String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(userid, orgi);
 				GameRoom gameRoom  = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, orgi);        //直接加入到 系统缓存 （只有一个地方对GameRoom进行二次写入，避免分布式锁）
-				if(gameRoom.getPiao() == 0) {
+				GamePlayway gamePlayway = (GamePlayway) CacheHelper.getSystemCacheBean().getCacheObject(playway, orgi) ;
+				if(gameRoom.getPiao() == 0 || "koudajiang".equals(gamePlayway.getCode())) {
 					GameUtils.getGame(beiMiClient.getPlayway(), gameEvent.getOrgi()).change(gameEvent);    //通知状态机 , 此处应由状态机处理异步执行
 				}else {
 					List<PlayUserClient> playerList = CacheHelper.getGamePlayerCacheBean().getCacheObject(gameRoom.getId(), orgi);
@@ -142,6 +145,13 @@ public class GameEngine {
 
 	private void sendHandleMessage(MaJiangBoard board,GamePlayway gamePlayway,Player player,boolean isCurrentTurn,GameRoom gameRoom){
 
+		if(1 == 1){
+			return;
+		}
+
+		if(board == null || board.getLast() == null){
+			return;
+		}
 		if(isCurrentTurn) {
 			byte card = player.getCardsArray()[player.getCardsArray().length - 1];
 			byte[] tempB = new byte[player.getCardsArray().length - 1];
@@ -170,7 +180,7 @@ public class GameEngine {
 			}
 		}else{
 
-			if(board == null || board.getLast() == null || player.getPlayuser().equals(board.getNextplayer())){
+			if(board == null || board.getLast() == null || player.getPlayuser().equals(board.getNextplayer()) || board.getLast().getUserid().equals(player.getPlayuser())){
 				return;
 			}
 
@@ -353,15 +363,13 @@ public class GameEngine {
 				if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("koufeng"))) {
 					gameRoom.setWindow(Boolean.parseBoolean(jsonObject.get("koufeng").toString()));
 				}
-				if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("hunpiao"))) {
-					gameRoom.setPiao(Integer.parseInt(jsonObject.get("hunpiao").toString()));
+				if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("fengding"))) {
+					gameRoom.setFengding(Integer.parseInt(jsonObject.get("fengding").toString()));
 				}
-				if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("koupiao"))) {
+			/*	if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("koupiao"))) {
 					gameRoom.setPiao(Integer.parseInt(jsonObject.get("koupiao").toString()));
-				}
-				if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("koupiao"))) {
-					gameRoom.setPiao(Integer.parseInt(jsonObject.get("koupiao").toString()));
-				}
+				}*/
+
 				if (jsonObject != null && StringUtils.isNotEmpty((String) jsonObject.get("hunpeng"))) {
 					gameRoom.setAllowPeng(Boolean.parseBoolean(jsonObject.get("hunpeng").toString()));
 				}
@@ -668,7 +676,13 @@ public class GameEngine {
 						logger.info("userId:{} getHuController:{}",player.getPlayuser(),((MaJiangBoard) board).getHuController().size());
 						if (((MaJiangBoard) board).getHuController().size() == 0) {
 							//处理完上次的吃碰胡才能进行取牌操作
-							board.dealRequest(gameRoom, board, orgi, false, null);
+							if(((MaJiangBoard)board).isQingHu() == null) {
+								board.dealRequest(gameRoom, board, orgi, false, null);
+							}else{
+								synchronized (((MaJiangBoard)board).isQingHu()){
+									((MaJiangBoard)board).isQingHu().notifyAll();
+								}
+							}
 						}
 					} else {
 
@@ -739,9 +753,22 @@ public class GameEngine {
 							byte[] playCards = new byte[1];
 							playCards[0] = card;
 							BMDataContext.getGameEngine().takeCardsRequest(roomid, userid, gameRoom.getOrgi(), false, playCards,false);
-							if(((MaJiangBoard)board).isQingHu()){
-								return null;
+							//if(((MaJiangBoard)board).isQingHu()){
+							if(((MaJiangBoard)board).isQingHu() == null){
+								((MaJiangBoard)board).setQingHu(false);
 							}
+								synchronized (((MaJiangBoard)board).isQingHu()){
+									try {
+										((MaJiangBoard)board).isQingHu().wait();
+										if(((MaJiangBoard)board).isQingHu()){
+											return null;
+										}
+										((MaJiangBoard)board).setQingHu(null);
+									} catch (InterruptedException e) {
+										e.printStackTrace();
+									}
+								}
+							//}
 							actionEvent = new ActionEvent(board.getBanker(), userid, card, action);
 							actionEvent.setActype(BMDataContext.PlayerGangAction.MING.toString());
 							playerAction.setType(BMDataContext.PlayerGangAction.MING.toString());
@@ -875,6 +902,9 @@ public class GameEngine {
 							}
 						}
 						((MaJiangBoard)board).setQingHu(true);
+						synchronized (((MaJiangBoard)board).isQingHu()){
+							((MaJiangBoard)board).isQingHu().notifyAll();
+						}
 						player.setWin(true);
 						if (board.getNextplayer().getNextplayer().equals(userid)) {
 							player.setZm(true);
@@ -883,9 +913,9 @@ public class GameEngine {
 							player.setZm(false);
 							actionEvent.setZm(false);
 							player.setTargetUser(board.getLast().getUserid());
+							player.setCards(ArrayUtils.add(player.getCardsArray(), card));
 						}
 						ActionTaskUtils.sendEvent("selectaction", actionEvent, gameRoom);
-						player.setCards(ArrayUtils.add(player.getCardsArray(), card));
 
 						GameUtils.getGame(gameRoom.getPlayway(), orgi).change(gameRoom, BeiMiGameEvent.ALLCARDS.toString(), 0);    //打完牌了,通知结算
 					} else { //血战到底

@@ -49,8 +49,10 @@ public class MaJiangGameUserDefined implements ChessGame{
 		 * 血流/战玩法 ， 无风 ，广东麻将， 有风 ， 需要根据配置的玩法 获取
 		 */
 		// 来源麻将 都有风
-		for(int i= -4 ; i>-32 ; i--){
-			temp.add(0 , (byte)i) ;
+		if(gameRoom.isWindow()) {
+			for (int i = -4; i > -32; i--) {
+				temp.add(0, (byte) i);
+			}
 		}
 
 		for(Map.Entry<String,List<Byte>> entry : cards.entrySet()){
@@ -75,7 +77,7 @@ public class MaJiangGameUserDefined implements ChessGame{
 		for(int i = 0;i<playUsers.size();i++){
 			if(cards.containsKey(playUsers.get(i).getId())){
 				Player player = new Player(playUsers.get(i).getId()) ;
-				if(gameRoom.getPiao() > 0){
+				if(gameRoom.getPiao() > 0 && "majiang".equals(playway.getCode())){
 					player.setPiao(Integer.parseInt(gameRoom.getPioaQi().get(player.getPlayuser())));
 				}
 				byte[] b = new byte[cards.get(playUsers.get(i).getId()).size()];
@@ -88,7 +90,7 @@ public class MaJiangGameUserDefined implements ChessGame{
 				cards.remove(playUsers.get(i).getId());
 			}else if(playUsers.get(i).getId().equals(banker)){
 				Player player = new Player(playUsers.get(i).getId()) ;
-				if(gameRoom.getPiao() > 0){
+				if(gameRoom.getPiao() > 0 && "majiang".equals(playway.getCode())){
 					player.setPiao(Integer.parseInt(gameRoom.getPioaQi().get(player.getPlayuser())));
 				}
 				byte[] b = new byte[14];
@@ -99,7 +101,7 @@ public class MaJiangGameUserDefined implements ChessGame{
 				players[i] = player;
 			}else{
 				Player player = new Player(playUsers.get(i).getId()) ;
-				if(gameRoom.getPiao() > 0){
+				if(gameRoom.getPiao() > 0 && "majiang".equals(playway.getCode())){
 					player.setPiao(Integer.parseInt(gameRoom.getPioaQi().get(player.getPlayuser())));
 				}
 				byte[] b = new byte[13];
@@ -213,7 +215,7 @@ public class MaJiangGameUserDefined implements ChessGame{
 					if (powerful[0] == -7) {
 						b[1] = (byte) ((powerful[0] + 5) * 4);
 					} else if (powerful[0] == -6) {
-						b[1] = (byte) ((powerful[0] + 6) * 4);
+						b[1] = (byte) ((powerful[0] + 5) * 4);
 					} else {
 						b[1] = (byte) ((powerful[0] - 2) * 4);
 					}
@@ -225,7 +227,7 @@ public class MaJiangGameUserDefined implements ChessGame{
 						b[2] = (byte) ((powerful[0] + 5) * 4);
 					} else if (powerful[0] == -6) {
 						b[2] = (byte) ((powerful[0] - 1) * 4);
-						b[1] = (byte) ((powerful[0] + 6) * 4);
+						b[1] = (byte) ((powerful[0] + 5) * 4);
 					} else {
 						b[1] = (byte) ((powerful[0] - 1) * 4);
 						b[2] = (byte) ((powerful[0] - 2) * 4);

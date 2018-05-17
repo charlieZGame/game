@@ -403,13 +403,34 @@ public class GameUtils {
 	public static List<Byte> recommandCards(Player player ,byte[] cards,String code,boolean isAllowPeng){
 
 		List<Byte> recommendCard = new ArrayList<Byte>();
-		for(int i = -7 ; i < 27;i++){
-			MJCardMessage message = processLaiyuanMJCard(player,cards,(byte)(i*4),true,null,code,isAllowPeng);
+		for(int i = -7 ; i < 27 ;i++){
+			MJCardMessage message = processLaiyuanMJCard(player,cards,(byte)((i*4)-1),true,null,code,isAllowPeng);
 			if(message.isHu()){
-				recommendCard.add((byte)(i*4));
+				recommendCard.add((byte)((i*4)-1));
 			}
 		}
 		return recommendCard;
+
+	}
+
+	public static void main(String[] args) {
+
+		byte[] cards = new byte[]{1,2,3,4,5,6,8,9,10,12,13,14,16};
+		List<Byte> test = new ArrayList<Byte>();
+		Collections.sort(test);
+		Player player = new Player("USER1");
+		player.setColor(2);
+		byte[] powerfull = new byte[3];
+		powerfull[0] = 24;
+		powerfull[1] = 28;
+		powerfull[2] = 32;
+		player.setPowerfull(powerfull);
+		player.setCards(cards);
+		List<Byte> bs = recommandCards(player,cards,"koudajiang",false);
+		for(byte b : bs){
+			System.out.println(b);
+		}
+		//MJCardMessage message = processLaiyuanMJCard(player,cards,(byte)36,true,null,"majiang",true);
 
 	}
 
@@ -494,7 +515,7 @@ public class GameUtils {
 					} else if (entry.getValue() == 3) {
 						mjCard.setCard(takecard);
 						mjCard.setGang(true);
-						if (!isExits.containsKey(takecard / 4) && !deal) {
+						if (!isExits.containsKey(takecard / 4) && !deal && isAllowPeng) {
 							mjCard.setPeng(true);
 						}
 					}
@@ -536,18 +557,19 @@ public class GameUtils {
 		}
 
 		boolean isHu = false;
-		// 七小对
-		if(GameWinCheck.sevenPairCheck(player,mapCards,huns)){
+		boolean isQxd = false;
+		// 七小对 第一个不满足肯定不会走第二个
+		if(GameWinCheck.sevenPairCheck(player,mapCards,huns,collections) &&
+				GameWinCheck.haveEightAndQueEnd(player, hunMap,collections.get(0), collections, true)){
 			logger.info(" 七小对校验通过 playerId:{}", player.getPlayuser());
-			Collections.sort(allCards);
-			collections.add(allCards);
 			isHu = true;
+			isQxd = true;
 		}else if(GameWinCheck.pairWinAlgorithmSingle(mapCards, huns, collections)) {
 			isHu = true;
 		}
 
 		if("majiang".equals(code)) {
-			if (!isHu || !GameWinCheck.haveEightAndQueEnd(player, hunMap, null, collections, true)) {
+			if (!isHu || (!isQxd && !GameWinCheck.haveEightAndQueEnd(player, hunMap,null, collections, true))) {
 				mjCard.setHu(false);
 				player.setWin(false);
 				logger.info("牌面后校验不通过 playerId:{}", player.getPlayuser());
@@ -561,7 +583,7 @@ public class GameUtils {
 				logger.info("牌面后校验通过 playerId:{}", player.getPlayuser());
 			}
 		}else{
-			if (!isHu || !GameWinCheck.haveEightAndQueEnd(player, hunMap, null, collections, false)) {
+			if (!isHu || (!isQxd && !GameWinCheck.haveEightAndQueEnd(player, hunMap, null, collections, false))) {
 				mjCard.setHu(false);
 				//player.setWin(false);
 				logger.info("牌面后校验不通过 playerId:{}", player.getPlayuser());
@@ -625,7 +647,7 @@ public class GameUtils {
 				data.put(card/4,data.get(card/4)+1);
 			}
 		}
-		if("majiang".equals(code) || CollectionUtils.isEmpty(player.getCoverCards())) {
+		/*if("majiang".equals(code) || CollectionUtils.isEmpty(player.getCoverCards())) {
 
 			//查看碰的里边有杠的没有
 			Map<Byte,Boolean> isExits = new HashMap<Byte,Boolean>();
@@ -658,7 +680,7 @@ public class GameUtils {
 			}
 		}else{
 			kougangpeng(player,takecard,data,mjCard,deal,true);
-		}
+		}*/
 
 		// 处理手牌
 		if(hunMap.containsKey(takecard/4)) {
@@ -692,18 +714,19 @@ public class GameUtils {
 		}
 
 		boolean isHu = false;
+		boolean isQxd = false;
 		// 七小对
-		if(GameWinCheck.sevenPairCheck(player,mapCards,huns)){
+		if(GameWinCheck.sevenPairCheck(player,mapCards,huns,collections) &&
+				GameWinCheck.haveEightAndQueEnd(player, hunMap, collections.get(0), collections, true)){
 			logger.info(" 七小对校验通过 playerId:{}", player.getPlayuser());
-			Collections.sort(allCards);
-			collections.add(allCards);
+			isQxd = true;
 			isHu = true;
 		}else if(CollectionUtils.isNotEmpty(GameWinCheck.pairWinAlgorithm(mapCards, huns, collections))) {
 			isHu = true;
 		}
 
 		if("majiang".equals(code)) {
-			if (!isHu || !GameWinCheck.haveEightAndQueEnd(player, hunMap, null, collections, true)) {
+			if (!isHu || (isQxd || !GameWinCheck.haveEightAndQueEnd(player, hunMap, null, collections, true))) {
 				mjCard.setHu(false);
 				player.setWin(false);
 				logger.info("牌面后校验不通过 playerId:{}", player.getPlayuser());
@@ -717,7 +740,7 @@ public class GameUtils {
 				logger.info("牌面后校验通过 playerId:{}", player.getPlayuser());
 			}
 		}else{
-			if (!isHu || !GameWinCheck.haveEightAndQueEnd(player, hunMap, null, collections, false)) {
+			if (!isHu || (isQxd || !GameWinCheck.haveEightAndQueEnd(player, hunMap, null, collections, false))) {
 				mjCard.setHu(false);
 				//player.setWin(false);
 				logger.info("牌面后校验不通过 playerId:{}", player.getPlayuser());
@@ -745,15 +768,15 @@ public class GameUtils {
 			return;
 		}
 
-		Map<Byte,Boolean> isExits = new HashMap<Byte,Boolean>();
+		Map<Byte, Boolean> isExits = new HashMap<Byte, Boolean>();
 		//查看碰的里边有杠的没有
-		if(CollectionUtils.isNotEmpty(player.getActions())){
-			for(Action action : player.getActions()){
-				if( BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())){
-					if(action.getCard()/4== takecard/4 && deal && isAllowPeng){
+		if (CollectionUtils.isNotEmpty(player.getActions())) {
+			for (Action action : player.getActions()) {
+				if (BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())) {
+					if (action.getCard() / 4 == takecard / 4 && deal) {
 						mjCard.setCard(takecard);
 						mjCard.setGang(true);
-						isExits.put((byte)(action.getCard()/4),true);
+						isExits.put((byte) (action.getCard() / 4), true);
 					}
 				}
 			}
@@ -774,17 +797,17 @@ public class GameUtils {
 		for (Map.Entry<Integer, Integer> entry : data.entrySet()) {
 			if (entry.getKey() == takecard / 4) {
 				if (entry.getValue() == 2 && !deal) {
-					Integer isNeedNum = 2 - (coverCardsData.get(takecard / 4) == null?0:coverCardsData.get(takecard / 4));
-					if (isNeedNum <= 0 || (player.getCardsArray().length - player.getCoverCards().size()) > isNeedNum) {
+					Integer isNeedNum = 2 - (coverCardsData.get(takecard / 4) == null ? 0 : coverCardsData.get(takecard / 4));
+					if (isNeedNum <= 0 || (player.getCardsArray().length - player.getCoverCards().size()) > isNeedNum && isAllowPeng) {
 						mjCard.setCard(takecard);
 						mjCard.setPeng(true);
 					}
 				} else if (entry.getValue() == 3) {
-					Integer isNeedNum = 3 - (coverCardsData.get(takecard / 4) == null?0:coverCardsData.get(takecard / 4));
+					Integer isNeedNum = 3 - (coverCardsData.get(takecard / 4) == null ? 0 : coverCardsData.get(takecard / 4));
 					if (isNeedNum <= 0 || (player.getCardsArray().length - player.getCoverCards().size()) > isNeedNum) {
 						mjCard.setCard(takecard);
 						mjCard.setGang(true);
-						if(!isExits.containsKey(takecard/4) && !deal) {
+						if (!isExits.containsKey(takecard / 4) && !deal && isAllowPeng) {
 							mjCard.setPeng(true);
 						}
 					}
@@ -796,7 +819,7 @@ public class GameUtils {
 
 
 
-	public static void main(String[] args) {
+	public static void main1(String[] args) {
 
 
 	/*	byte[] cards = new byte[]{46,47,63,75,76,80,94,95,97,88,-6};

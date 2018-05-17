@@ -16,7 +16,12 @@ public class QXDValidate  extends AbsCheckScoreRule{
     public boolean isSatisfy() {
 
 
-        if(CollectionUtils.isNotEmpty(actions)) {
+        if(CollectionUtils.isNotEmpty(actions)){
+            return false;
+        }
+
+
+        /*if(CollectionUtils.isNotEmpty(actions)) {
             for (Action action : actions){
                 if(BMDataContext.PlayerAction.PENG.toString().equals(action.getAction())){
                     collections.add((byte)(action.getCard()/ 4 * 4));
@@ -29,7 +34,7 @@ public class QXDValidate  extends AbsCheckScoreRule{
                     }
                 }
             }
-        }
+        }*/
 
 
         List<Byte> tempb = new ArrayList<Byte>();

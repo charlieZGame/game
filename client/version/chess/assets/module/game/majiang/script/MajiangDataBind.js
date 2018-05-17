@@ -293,7 +293,17 @@ cc.Class({
       type: cc.Prefab
     },
 
+    tingmore_dialog: { //我 将要胡的牌
+      default: null,
+      type: cc.Prefab
+    },
+
     ting_tip: { //ting牌node
+      default: null,
+      type: cc.Node
+    },
+
+    ting_more_tip: { //ting牌node
       default: null,
       type: cc.Node
     },
@@ -329,6 +339,8 @@ cc.Class({
       type: cc.Node
     },
 
+      _voiceMsgQueue:[],
+      _lastPlayTime:null,
 
   },
 
@@ -341,6 +353,7 @@ cc.Class({
     this.initdata(true);
     this.resize();
     this.ting_tip.active = false;
+    this.ting_more_tip.active = false;
     cc.beimi.currentnum=0;
     let self = this;
     let roomType = "";
@@ -411,6 +424,10 @@ cc.Class({
       if (self.chatScrollView && self.chatScrollView.active == true) {
         self.chatScrollView.active = false
       }
+      if (self.tingmore_dialogPrefab) {
+        self.tingmore_dialogPrefab.destroy();
+        self.tingmore_dialogPrefab=null;
+      }
       console.log("this.roomUuid",this.roomUuid);
       //测试拖到牌
       // let temp = self.cardpool.get();
@@ -459,6 +476,12 @@ cc.Class({
       // {"data":{"roomIds":["855705"],"855705":[{"currentUser":false,"date":"2018-04-29 16:04:16","nickname":"Guest_0MQFp5","num":1,"photo":"","roomId":855705,"score":-4,"useCards":4,"userNo":50003125},{"currentUser":false,"date":"2018-04-29 16:04:16","nickname":"Guest_18sdZp","num":1,"photo":"","roomId":855705,"score":6,"useCards":0,"userNo":50003133},{"currentUser":false,"date":"2018-04-29 16:04:16","nickname":"Guest_1ts5g4","num":1,"photo":"","roomId":855705,"score":-1,"useCards":0,"userNo":50003132},{"currentUser":false,"date":"2018-04-29 16:04:16","nickname":"Guest_18g4JY","num":1,"photo":"","roomId":855705,"score":-1,"useCards":0,"userNo":50003124}]},"msg":"ok","returnCode":1}
       // temp.create(self, data);
 
+      //胡牌通知
+      // let data={
+      //   userid:'wx7788992669ok',
+      //   recommendCards:'2,3,4,6,7,8,9,9,88,98'
+      // }
+      //  self.ting_event(data,self)
     }, self);
 
     // let testNum=0;
@@ -497,6 +520,8 @@ cc.Class({
       // temp_script.init(89);
       // hucards_tip.parent = self.hucards_tip_layout;
       // }
+
+
 
       //  测试扣牌
       // self.selectkou_dialog.active = true;
@@ -615,6 +640,20 @@ cc.Class({
           console.log("======玩家doplaycards================", card_script.value);
           socket.emit("doplaycards", card_script.value);
         }
+        event.stopPropagation();
+      });
+
+
+      this.node.on("tipmore", function(event) {
+        if (self.tingmore_dialogPrefab) {
+           self.tingmore_dialogPrefab.destroy();
+           self.tingmore_dialogPrefab=null;
+          return
+        }
+        self.tingmore_dialogPrefab = cc.instantiate(self.tingmore_dialog);
+        let tingmore_dialog_script = self.tingmore_dialogPrefab.getComponent("TingDialog");
+        tingmore_dialog_script.init(self.recommendCardsValue);
+        self.tingmore_dialogPrefab.parent = self.root();
         event.stopPropagation();
       });
       /**
@@ -813,6 +852,16 @@ cc.Class({
         }
       });
 
+      this.map("voice_msg", this.voice_msg_event); //接收了语音聊天信息
+      socket.on("voice_msg", function(result) {
+        if (self.inited == true) {
+          var data = self.parse(result);
+          self.route("voice_msg")(data, self);
+        }
+      });
+
+
+
       this.map("selectPiao", this.selectPiao_event); //接收了聊天信息
       socket.on("selectPiao", function(result) {
         if (self.inited == true) {
@@ -887,8 +936,7 @@ cc.Class({
           //房卡不够
           if(resultObj.status==-1){
              self.alert(resultObj.msg || '房间创建失败，请联系管理员');
-
-             self.scene(cc.beimi.gametype, this);
+             self.scene(cc.beimi.gametype, self);
           }
       });
 
@@ -964,6 +1012,7 @@ cc.Class({
         this.playerspool.put(cc.instantiate(this.playerprefab));
       }
     }
+
 
     /**
       * 当前玩家的 麻将牌的 对象池
@@ -1261,7 +1310,7 @@ cc.Class({
     context.select_action_searchlight(data, context, player);
     if (data.userid == cc.beimi.user.id) {
       context.initDealHandCards(context, data);
-      console.log("我揭牌牌了");
+      console.log("我出牌了");
       context.cleanTingTip(context);
     } else {
       let inx = 0;
@@ -1289,6 +1338,7 @@ cc.Class({
   allcards_event: function(data, context) {
     console.log("收到allcards_event", data);
     context.dealActionProcess(context);
+    context.cleanTingTip(context);
     cc.beimi.gamestatus = "notready";
     //结算界面，
     context.gameover = false;
@@ -1321,7 +1371,7 @@ cc.Class({
       let temp = context.summarytotalpage.getComponent("MaJiangSummary");
       console.log("收到gameover-22222--", data.data);
       temp.create(context, data);
-    }, 1000);
+    }, 500);
 
     // context.exchange_state("allcards", context);
   },
@@ -1462,6 +1512,45 @@ cc.Class({
       }
     }
   },
+
+  voice_msg_event: function(data, context) {
+    if (!context) {
+      context = this;
+    }
+    console.log("voice_msg_event-------->", JSON.stringify(data));
+    context._voiceMsgQueue.push(data);
+    context.playVoice();
+  },
+
+  playVoice:function(){
+    // if(this._voiceMsgQueue.length){
+    //     console.log("playVoice2");
+    //     var data = this._voiceMsgQueue.shift();
+    //
+    //
+    //     var msgInfo = JSON.parse(data.content);
+    //
+    //     var msgfile = "voicemsg.amr";
+    //     console.log(msgInfo.msg.length);
+    //     cc.vv.voiceMgr.writeVoice(msgfile,msgInfo.msg);
+    //     cc.vv.voiceMgr.play(msgfile);
+    //     this._lastPlayTime = Date.now() + msgInfo.time;
+    // }
+    //
+    // for (var inx = 0; inx < context.playersarray.length; inx++) {
+    //   let temp = context.playersarray[inx].getComponent("MaJiangPlayer");
+    //   if (temp.data.id == data.srcUserId) {
+    //     temp.setChatMessage(data.sound);
+    //     setTimeout(function() {
+    //       temp.hideChatMessage();
+    //     }, 3000);
+    //     break;
+    //   }
+    // }
+},
+
+
+
   /**
      * 接收到服务端的 恢复牌局的数据 恢复牌局
      * @param data
@@ -1634,11 +1723,14 @@ cc.Class({
 
   //听牌通知
   ting_event: function(data, context) {
+    context.cleanTingTip(context);
     if (data.recommendCards && data.recommendCards.length > 0 && data.userid == cc.beimi.user.id) {
       context.ting_tip.active = true;
+      context.ting_more_tip.active = true;
       let recommendCardsValue = context.decode(data.recommendCards);
-      console.log("收到胡牌提醒---》");
-      for (var i = 0; i < recommendCardsValue.length; i++) {
+      console.log("收到胡牌提醒---》",recommendCardsValue);
+      context.recommendCardsValue = recommendCardsValue;
+      for (var i = 0; i < recommendCardsValue.length&&i<6; i++) {
         let hucards_tip;
         hucards_tip = cc.instantiate(context.hucards_tip);
         context.huactioncardstip.push(hucards_tip);
@@ -3146,6 +3238,8 @@ cc.Class({
     //     let socket = this.socket();
     //     socket.disconnect();
     // }
+    this.closeloadding();
+    this.closealert();
     this.inited = false;
     //cc.beimi.extparams=null;
     this.cleanmap();
@@ -3162,9 +3256,14 @@ cc.Class({
 
   cleanTingTip: function(context) {
     console.log("--0000---清理听牌ui");
+    context.ting_more_tip.active = false;
     if (context.ting_tip.active) {
       console.log("--11111---清理听牌ui");
       context.ting_tip.active = false;
+      if (context.tingmore_dialogPrefab) {
+       context.tingmore_dialogPrefab.destroy();
+        context.tingmore_dialogPrefab=null;
+      }
       if (context.huactioncardstip && context.huactioncardstip.length > 0) {
         for (var inx = 0; inx < context.huactioncardstip.length; inx++) {
           context.huactioncardstip[inx].destroy();

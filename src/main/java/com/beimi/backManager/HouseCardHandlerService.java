@@ -44,28 +44,31 @@ public class HouseCardHandlerService {
 
 
     @Transactional
-    public void dataBaseSummaryHandler(GameRoom gameRoom, List<PlayUserClient> players, Board board, List<ReturnResult> returnResults,String proxyUserId) {
-        cardHandler(gameRoom, players, returnResults,proxyUserId);
-        saveUserFlow(gameRoom, board, players, returnResults,proxyUserId);
+    public void dataBaseSummaryHandler(GameRoom gameRoom, List<PlayUserClient> players, Board board, List<ReturnResult> returnResults,
+                                       String proxyUserId,boolean isNeedSaveCard) {
+        cardHandler(gameRoom, players, returnResults, proxyUserId, isNeedSaveCard);
+        saveUserFlow(gameRoom, board, players, returnResults, proxyUserId);
     }
 
 
     @Transactional
-    public void cardHandler(GameRoom gameRoom, List<PlayUserClient> players, List<ReturnResult> returnResults,String proxyUserId) {
+    public void cardHandler(GameRoom gameRoom, List<PlayUserClient> players, List<ReturnResult> returnResults, String proxyUserId,boolean isNeedSave) {
 
 
         if (CollectionUtils.isEmpty(players)) {
             return;
         }
         PlayUserClient playUser = null;
-        if(StringUtils.isNotEmpty(proxyUserId)) {
+        if (StringUtils.isNotEmpty(proxyUserId)) {
             playUser = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(proxyUserId, gameRoom.getOrgi());
-            if(playUser == null){
+            if (playUser == null) {
                 playUser = playUserRepository.findById(proxyUserId);
             }
-        }else{
+        } else {
             playUser = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(gameRoom.getMaster(), gameRoom.getOrgi());
         }
+
+        int cardSize = gameRoom.getNumofgames() == 4 ? 2 : (gameRoom.getNumofgames() == 8 ? 3 :(gameRoom.getNumofgames() == 12 ? 4 : 0));
 
         if (CollectionUtils.isNotEmpty(players)) {
             for (PlayUserClient playUserClient : players) {
@@ -87,26 +90,27 @@ public class HouseCardHandlerService {
                         playUserClient.setPlayerlevel(level);
                     }
                 }
-                if (playUser.getId().equals(playUserClient.getId()) && StringUtils.isEmpty(proxyUserId)) {
-                //    playUser.setCards(playUser.getCards() - 1);
+                if (playUser.getId().equals(playUserClient.getId()) && StringUtils.isEmpty(proxyUserId) && isNeedSave) {
                     //每一局都结算
-                    playUserClient.setCards(playUserClient.getCards() - 1);
+                    playUserClient.setCards(playUserClient.getCards() - cardSize);
                 }
                 playUserRepository.saveAndFlush(playUserClient);
             }
         }
-        if(StringUtils.isNotEmpty(proxyUserId)){
-            playUser.setCards(playUser.getCards() - 1);
+        if (StringUtils.isNotEmpty(proxyUserId) && isNeedSave) {
+            playUser.setCards(playUser.getCards() - cardSize);
             playUserRepository.saveAndFlush(playUser);
         }
-        dealFlowRepository.save(addDealflow(playUser.getUsername() + "", 1, "消费", playUser.getOpenid(), playUser.getNickname(), playUser.getOpenid()));
-        ConsumeCard consumeCard = consumeCardRepository.findByType("1");
-        if (consumeCard == null) {
-            return;
+        if(isNeedSave) {
+            dealFlowRepository.save(addDealflow(playUser.getUsername() + "", cardSize, "消费", playUser.getOpenid(), playUser.getNickname(), playUser.getOpenid()));
+            ConsumeCard consumeCard = consumeCardRepository.findByType("1");
+            if (consumeCard == null) {
+                return;
+            }
+            consumeCard.setEffectiveNum(consumeCard.getEffectiveNum() + cardSize);
+            consumeCardRepository.saveAndFlush(consumeCard);
+            dealFlowRepository.save(addDealflow("主账户", cardSize, "买入", "88888888888888888888888888888888", playUser.getNickname(), playUser.getOpenid()));
         }
-        consumeCard.setEffectiveNum(consumeCard.getEffectiveNum() + 1);
-        consumeCardRepository.saveAndFlush(consumeCard);
-        dealFlowRepository.save(addDealflow("主账户", 1, "买入", "88888888888888888888888888888888", playUser.getNickname(), playUser.getOpenid()));
     }
 
     private DealFlow addDealflow(String username, Integer num, String type, String userId, String nickName, String handlerId) {
@@ -165,7 +169,7 @@ public class HouseCardHandlerService {
                     if (objects[8] != null && userId.equals(objects[8])) {
                         roomSummay.setCurrentUser(true);
                     }
-                    roomSummay.setRoomUuid((String)objects[9]);
+                    roomSummay.setRoomUuid((String) objects[9]);
                     lis.add(roomSummay);
                 }
                 Map<String, Object> tempMap = new HashMap<String, Object>();
@@ -213,7 +217,7 @@ public class HouseCardHandlerService {
     }
 
 
-    public StandardResponse queryPlayerEnd(String roomId,String userId) {
+    public StandardResponse queryPlayerEnd(String roomId, String userId) {
         try {
             if (roomId == null) {
                 return new StandardResponse(-1, "roomId is null", null);
@@ -263,22 +267,26 @@ public class HouseCardHandlerService {
     /**
      * @param playUsers
      */
-    public void saveUserFlow(GameRoom gameRoom, Board board, List<PlayUserClient> playUsers, List<ReturnResult> returnResults,String proxyUserId) {
+    public void saveUserFlow(GameRoom gameRoom, Board board, List<PlayUserClient> playUsers, List<ReturnResult> returnResults, String proxyUserId) {
 
-        StringBuilder nikeNames = new StringBuilder();
+        StringBuilder nickNames = new StringBuilder();
         StringBuilder ids = new StringBuilder();
         Map<String, PlayUserClient> map = new HashMap<String, PlayUserClient>();
+        int cardSize = gameRoom.getNumofgames() == 4 ? 2 : (gameRoom.getNumofgames() == 8 ? 3 :(gameRoom.getNumofgames() == 12 ? 4 : 0));
         for (PlayUserClient playUser : playUsers) {
+            if(CollectionUtils.isEmpty(returnResults)){
+                nickNames.append("#").append(playUser.getNickname()).append(",").append(0);
+            }
             for (ReturnResult returnResult : returnResults) {
                 if (playUser.getId().equals(returnResult.getUserId())) {
-                    nikeNames.append("#").append(playUser.getNickname()).append(",").append(returnResult.getScore());
+                    nickNames.append("#").append(playUser.getNickname()).append(",").append(returnResult.getScore());
                 }
             }
             map.put(playUser.getId(), playUser);
             ids.append("#").append(playUser.getId());
         }
 
-        if(StringUtils.isNotEmpty(proxyUserId)) {
+        if (StringUtils.isNotEmpty(proxyUserId)) {
 
             PlayUserClient player = null;
             player = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(proxyUserId, gameRoom.getOrgi());
@@ -296,7 +304,7 @@ public class HouseCardHandlerService {
             playHistory.setPhoto(player.getPhoto());
             playHistory.setNickname(player.getNickname());
             playHistory.setRoomUuid(gameRoom.getId());
-            playHistory.setCardNum(1);
+            playHistory.setCardNum(cardSize);
             playHistory.setCreateTime(new Date());
             playHistory.setIsWin("2");
             playHistory.setYxbj("1");
@@ -306,34 +314,45 @@ public class HouseCardHandlerService {
         }
 
 
-            for (Player player : board.getPlayers()) {
+        for (Player player : board.getPlayers()) {
+
+            if(CollectionUtils.isEmpty(returnResults)){
+                insertHistory(player,gameRoom,0,nickNames.toString(),map,proxyUserId,ids.toString(),cardSize);
+                continue;
+            }
+
             for (ReturnResult returnResult : returnResults) {
                 if (player.getPlayuser().equals(returnResult.getUserId())) {
-                    PlayHistory playHistory = new PlayHistory();
-                    playHistory.setUserId(player.getPlayuser());
-                    playHistory.setRoomId(Integer.parseInt(gameRoom.getRoomid()));
-                    playHistory.setRoomUuid(gameRoom.getId());
-                    playHistory.setCreateTime(new Date());
-                    playHistory.setScore(returnResult.getScore());
-                    playHistory.setCardFirends(nikeNames.length() > 0 ? nikeNames.substring(1) : "");
-                    playHistory.setUsername(map.get(player.getPlayuser()).getUsername() == null ? 0 : map.get(player.getPlayuser()).getUsername());
-                    playHistory.setPhoto(map.get(player.getPlayuser()).getPhoto());
-                    playHistory.setNickname(map.get(player.getPlayuser()).getNickname() == null ? null : map.get(player.getPlayuser()).getNickname());
-                    if(StringUtils.isEmpty(proxyUserId)) {
-                        if (gameRoom.getMaster().equals(player.getPlayuser())) {
-                            playHistory.setCardNum(1);
-                        } else {
-                            playHistory.setCardNum(0);
-                        }
-                    }
-                    playHistory.setCreateTime(new Date());
-                    playHistory.setIsWin(player.isWin() ? "1" : "0");
-                    playHistory.setYxbj("1");
-                    playHistory.setFriendIds(ids.length() == 0 ? "" : ids.substring(1));
-                    playHistoryRepository.save(playHistory);
+                    insertHistory(player,gameRoom,returnResult.getScore(),nickNames.toString(),map,proxyUserId,ids.toString(),cardSize);
                 }
             }
         }
+    }
+
+
+    private void insertHistory(Player player,GameRoom gameRoom,int score,String nickNames,Map<String,PlayUserClient> map,String proxyUserId,String ids,int cardSize){
+        PlayHistory playHistory = new PlayHistory();
+        playHistory.setUserId(player.getPlayuser());
+        playHistory.setRoomId(Integer.parseInt(gameRoom.getRoomid()));
+        playHistory.setRoomUuid(gameRoom.getId());
+        playHistory.setCreateTime(new Date());
+        playHistory.setScore(score);
+        playHistory.setCardFirends(nickNames.length() > 0 ? nickNames.substring(1) : "");
+        playHistory.setUsername(map.get(player.getPlayuser()).getUsername() == null ? 0 : map.get(player.getPlayuser()).getUsername());
+        playHistory.setPhoto(map.get(player.getPlayuser()).getPhoto());
+        playHistory.setNickname(map.get(player.getPlayuser()).getNickname() == null ? null : map.get(player.getPlayuser()).getNickname());
+        if (StringUtils.isEmpty(proxyUserId)) {
+            if (gameRoom.getMaster().equals(player.getPlayuser())) {
+                playHistory.setCardNum(cardSize);
+            } else {
+                playHistory.setCardNum(0);
+            }
+        }
+        playHistory.setCreateTime(new Date());
+        playHistory.setIsWin(player.isWin() ? "1" : "0");
+        playHistory.setYxbj("1");
+        playHistory.setFriendIds(ids.length() == 0 ? "" : ids.substring(1));
+        playHistoryRepository.save(playHistory);
     }
 
 }

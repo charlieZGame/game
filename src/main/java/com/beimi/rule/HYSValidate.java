@@ -1,5 +1,6 @@
 package com.beimi.rule;
 
+import com.beimi.core.BMDataContext;
 import com.beimi.util.rules.model.Action;
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -21,12 +22,20 @@ public class HYSValidate extends AbsCheckScoreRule {
         }
 
         Map<Integer,Integer> hunSe = new HashMap<Integer,Integer>();
-        for(Byte b : collections){
-            hunSe.put(b/4,null);
+        for(Byte b : collections) {
+            if (b < 0) {
+                hunSe.put(-1, null);
+            } else {
+                hunSe.put(b / 36, null);
+            }
         }
         if(CollectionUtils.isNotEmpty(actions)){
             for(Action action : actions){
-                hunSe.put(action.getCard()/4,null);
+                if (action.getCard() < 0) {
+                    hunSe.put(-1, null);
+                } else {
+                    hunSe.put(action.getCard() / 36, null);
+                }
             }
         }
 
@@ -67,4 +76,25 @@ public class HYSValidate extends AbsCheckScoreRule {
     public void setActions(List<Action> actions) {
         this.actions = actions;
     }
+
+
+    public static void main(String[] args) {
+
+        Byte[] bytes = new Byte[]{52,53,39,43,46,50,54,58,61,66,71};
+        List<Byte> list = new ArrayList<Byte>();
+        for(Byte b : bytes){
+            list.add(b);
+        }
+
+        List<Action> actions = new ArrayList<Action>();
+        Action action = new Action("",BMDataContext.PlayerAction.PENG.toString(),(byte)-26);
+        actions.add(action);
+        HYSValidate hysValidate = new HYSValidate();
+        hysValidate.collections = list;
+        hysValidate.actions = actions;
+
+        System.out.println(hysValidate.isSatisfy());
+
+    }
+
 }

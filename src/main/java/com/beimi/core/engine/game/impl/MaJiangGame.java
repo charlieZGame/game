@@ -74,7 +74,7 @@ public class MaJiangGame implements ChessGame{
 		int inx = 0 ;
 		for(PlayUserClient playUser : playUsers){
 			Player player = new Player(playUser.getId()) ;
-			if(gameRoom.getPiao() > 0){
+			if(gameRoom.getPiao() > 0 && "majiang".equals(playway.getCode())){
 				player.setPiao(Integer.parseInt(gameRoom.getPioaQi().get(playUser.getId())));
 			}
 			if(player.getPlayuser().equals(banker)){
@@ -200,7 +200,7 @@ public class MaJiangGame implements ChessGame{
 					if (powerful[0] == -7) {
 						b[1] = (byte) ((powerful[0] + 5) * 4);
 					} else if (powerful[0] == -6) {
-						b[1] = (byte) ((powerful[0] + 6) * 4);
+						b[1] = (byte) ((powerful[0] + 5) * 4);
 					} else {
 						b[1] = (byte) ((powerful[0] - 2) * 4);
 					}
@@ -212,7 +212,7 @@ public class MaJiangGame implements ChessGame{
 						b[2] = (byte) ((powerful[0] + 5) * 4);
 					} else if (powerful[0] == -6) {
 						b[2] = (byte) ((powerful[0] - 1) * 4);
-						b[1] = (byte) ((powerful[0] + 6) * 4);
+						b[1] = (byte) ((powerful[0] + 5) * 4);
 					} else {
 						b[1] = (byte) ((powerful[0] - 1) * 4);
 						b[2] = (byte) ((powerful[0] - 2) * 4);

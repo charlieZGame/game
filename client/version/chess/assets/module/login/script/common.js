@@ -91,7 +91,8 @@ cc.Class({
       this.alert("请先同意用户协议，再登录");
       return;
     }
-    if(!cc.sys.isNative) {
+    cc.beimi.sessiontimeout = false;
+    if(2==2) {
         cc.beimi.user = {};
         cc.beimi.user.nickname = "杨柳依依";
         cc.beimi.user.avatar = "http://img.suncity.ink/game/2018/04/9999988.png";

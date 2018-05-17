@@ -36,7 +36,7 @@ public class CreateAllCardsTask extends AbstractTask implements ValueWithExpiryT
 	}
 	@Override
 	public long getCacheExpiryTime() {
-		return System.currentTimeMillis()+timer*1000;	//5秒后执行
+		return 0l;	//5秒后执行
 	}
 
 
@@ -105,6 +105,7 @@ public class CreateAllCardsTask extends AbstractTask implements ValueWithExpiryT
 		if(gameRoom.getCurrentnum() == gameRoom.getNumofgames()+1) {
 			GameUtils.updatePlayerClientStatus(userId, gameRoom.getOrgi(), BMDataContext.PlayerTypeEnum.LEAVE.toString(), true);
 		}
+		CacheHelper.getBoardCacheBean().delete(gameRoom.getId(),gameRoom.getOrgi());
 
 	}
 }

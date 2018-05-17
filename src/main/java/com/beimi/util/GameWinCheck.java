@@ -22,6 +22,7 @@ public class GameWinCheck {
      */
     public static  List<List<Byte>> pairWinAlgorithm(Map<Integer, List<Byte>> cards, List<Byte> huns, List<List<Byte>> collectionCardList) {
 
+        collectionCardList.clear();
         // 先从混子里边找对子，应为这个一个共同的过程
         if (huns.size() >= 2) {
             List<Byte> hunsTemp = cloneList(huns);
@@ -105,31 +106,20 @@ public class GameWinCheck {
      * @param huns
      * @return
      */
-    public static boolean sevenPairCheck(Player player,Map<Integer, List<Byte>> mapCards,List<Byte> huns){
+    public static boolean sevenPairCheck(Player player,Map<Integer, List<Byte>> mapCards,List<Byte> huns,List<List<Byte>> collections){
 
+
+        if(CollectionUtils.isNotEmpty(player.getActions())){
+            return false;
+        }
 
         Map<Integer, List<Byte>> tempMap = new HashMap<Integer,List<Byte>>();
         for(Map.Entry<Integer,List<Byte>>entry : mapCards.entrySet() ){
             tempMap.put(entry.getKey(),cloneList(entry.getValue()));
         }
 
-        for(Action action : player.getActions()){
-            if(BMDataContext.PlayerAction.GANG.toString().equals(action.getAction())){
-                continue;
-            }
-            exceCategory((byte)(action.getCard()/ 4 * 4),tempMap);
-            if(action.getCard() < 0){
-                exceCategory((byte)(action.getCard()/ 4 * 4 - 1),tempMap);
-                exceCategory((byte)(action.getCard()/ 4 * 4 - 2),tempMap);
-            }else {
-                exceCategory((byte)(action.getCard()/ 4 * 4 + 1),tempMap);
-                exceCategory((byte)(action.getCard()/ 4 * 4 + 2),tempMap);
-            }
-            exceCategory(action.getCard(),tempMap);
-            exceCategory(action.getCard(),tempMap);
-        }
-
-
+        List<Byte>tempHun = cloneList(huns);
+        List<Byte> list = new ArrayList<Byte>();
         int needHun = 0;
         for(Map.Entry<Integer,List<Byte>>entry : tempMap.entrySet() ){
             List<Byte> tempb = cloneList(entry.getValue());
@@ -137,13 +127,36 @@ public class GameWinCheck {
             Map<Integer, List<Byte>>  map = findPair(tempb);
             if(map == null || map.isEmpty()){
                 needHun = needHun + tempb.size();
+                if(needHun > huns.size()){
+                    collections.clear();
+                    return false;
+                }
+                for(Byte b : tempb){
+                    list.add(b);
+                    list.add(tempHun.remove(0));
+                }
             }else {
                 needHun = needHun + (tempb.size() - map.get(entry.getKey()).size());
+                if(needHun > huns.size()){
+                    collections.clear();
+                    return false;
+                }
+                list.addAll(map.get(entry.getKey()));
+                tempb.removeAll(map.get(entry.getKey()));
+                for(Byte b : tempb){
+                    list.add(b);
+                    list.add(tempHun.remove(0));
+                }
             }
             if(needHun > huns.size()){
+                collections.clear();
                 return false;
             }
         }
+        if(tempHun.size() > 0){
+            list.addAll(tempHun);
+        }
+        collections.add(list);
         return true;
     }
 
@@ -157,6 +170,7 @@ public class GameWinCheck {
      */
     public static boolean pairWinAlgorithmSingle(Map<Integer, List<Byte>> cards, List<Byte> huns, List<List<Byte>> collectionCardList) {
 
+        collectionCardList.clear();
         // 先从混子里边找对子，应为这个一个共同的过程
         if (huns.size() >= 2) {
             List<Byte> hunsTemp = cloneList(huns);
@@ -848,6 +862,7 @@ public class GameWinCheck {
         }
 
 
+        // 七小对的特殊校验
         if (CollectionUtils.isNotEmpty(pairs)) {
             int anyCards = addPairQue(pairs, que, huns);
             boolean result = validateQueAndHaveEight(isNeedQue, que, anyCards);

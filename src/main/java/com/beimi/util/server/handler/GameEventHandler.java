@@ -13,6 +13,7 @@ import com.beimi.core.engine.game.GameEngine;
 import com.beimi.model.DefineMap;
 import com.beimi.model.OutRoom;
 import com.beimi.model.PlayCache;
+import com.beimi.rule.ReturnResult;
 import com.beimi.util.RandomCharUtil;
 import com.beimi.util.cache.CacheBean;
 import com.beimi.util.cache.hazelcast.HazlcastCacheHelper;
@@ -208,7 +209,11 @@ public class GameEventHandler {
 
 */
 
-				userNormalExist(beiMiClient);
+				try {
+					userNormalExist(beiMiClient);
+				}catch (Exception e){
+					e.printStackTrace();
+				}
 				PlayUserClient playUser = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi()) ;
 				List<PlayUserClient> players = CacheHelper.getGamePlayerCacheBean().getCacheObject(playUser.getRoomid(), playUser.getOrgi()) ;
 				if(CollectionUtils.isNotEmpty(players) && players.size() <= 1){
@@ -301,13 +306,17 @@ public class GameEventHandler {
 		GamePlayers gamePlayers = new GamePlayers(gameRoom.getPlayers(), playUsers, BMDataContext.BEIMI_PLAYERS_EVENT);
 
 		for (PlayUserClient playUserClient : playUserClients) {
-			if (playUserClient.getId().equals(beiMiClient.getUserid())) {
-				continue;
-			}
-			logger.info("人数未达到发出解散 userId:{}", playUserClient.getId());
-			BeiMiClient tmpClient = NettyClients.getInstance().getClient(playUserClient.getId());
-			tmpClient.getClient().sendEvent(BMDataContext.BEIMI_MESSAGE_EVENT, gamePlayers);
+			try {
+				if (playUserClient.getId().equals(beiMiClient.getUserid())) {
+					continue;
+				}
+				logger.info("人数未达到发出解散 userId:{}", playUserClient.getId());
+				BeiMiClient tmpClient = NettyClients.getInstance().getClient(playUserClient.getId());
+				tmpClient.getClient().sendEvent(BMDataContext.BEIMI_MESSAGE_EVENT, gamePlayers);
 
+			}catch (Exception e){
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -438,6 +447,19 @@ public class GameEventHandler {
 			return ;
 		}
 		GameRoom gameRoom  = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, beiMiClient.getOrgi());
+		try {
+			HouseCardHandlerService cardHandlerService = BMDataContext.getContext().getBean("houseCardHandlerService", HouseCardHandlerService.class);
+			String userId = null;
+			ProxyGameRoomCache cacheBean = (ProxyGameRoomCache) CacheHelper.getProxyGameRoomCache().getCacheInstance(HazlcastCacheHelper.CacheServiceEnum.ProxyGameRoomCache.toString());
+			for (Map.Entry<String, Object> entry : cacheBean.getInstance().entrySet()) {
+				if (((Map<String, String>) entry.getValue()).containsKey(gameRoom.getRoomid())) {
+					userId = entry.getKey();
+				}
+			}
+			cardHandlerService.cardHandler(gameRoom, playerList, new ArrayList<ReturnResult>(), userId,true);
+		}catch (Exception e){
+			e.printStackTrace();
+		}
 		logger.info("tid:{} 玩家强制离场 playerList:{}", tid, playerList.size());
 		for (PlayUserClient playUserClient : playerList) {
 			try {
@@ -576,6 +598,15 @@ public class GameEventHandler {
 
 				String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(userToken.getUserid(), userToken.getOrgi());
 				if(StringUtils.isEmpty(roomid)) {
+				/*	GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, userToken.getOrgi()) ;		//直接加入到 系统缓存 （只有一个地方对GameRoom进行二次写入，避免分布式锁）
+					if(gameRoom != null && gameRoom.getCurrentnum() > 0) {
+						Board board = (Board) CacheHelper.getBoardCacheBean().getCacheObject(gameRoom.getId(), gameRoom.getOrgi());
+						logger.info("下一轮游戏,board:{}",board);
+						if (board == null) {
+							onRestart(client, "true");
+							return;
+						}
+					}*/
 					PlayUserClient playUser = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(userToken.getUserid(), userToken.getOrgi());
 					int jun = 0;
 					if(StringUtils.isNotEmpty(data)) {
@@ -779,7 +810,7 @@ public class GameEventHandler {
 				tokenIllegal(client);
 			}
 		} else {
-			//gameStatus.setGamestatus(BMDataContext.GameStatusEnum.TIMEOUT.toString());
+			gameStatus.setGamestatus(BMDataContext.GameStatusEnum.TIMEOUT.toString());
 			tokenIllegal(client);
 		}
 	}
@@ -1086,9 +1117,9 @@ public class GameEventHandler {
 			if (userToken != null) {
 				HouseCardHandlerService cardHandlerService = BMDataContext.getContext().getBean("houseCardHandlerService",HouseCardHandlerService.class);
 				StandardResponse response = cardHandlerService.queryUserFlow(userToken.getUserid(),startPage,pageSize,roomUuid);
-				logger.info("tid:{} 返回数据 data:{}",tid,response.toJSON());
+				//logger.info("tid:{} 返回数据 data:{}",tid,response.toJSON());
 				client.sendEvent("getPlayhistory", response);
-				GameUtils.updatePlayerClientStatus(userToken.getUserid(), userToken.getOrgi(), BMDataContext.PlayerTypeEnum.LEAVE.toString(), true);
+				//GameUtils.updatePlayerClientStatus(userToken.getUserid(), userToken.getOrgi(), BMDataContext.PlayerTypeEnum.LEAVE.toString(), true);
 			}else{
 				tokenIllegal(client);
 			}
@@ -1115,7 +1146,7 @@ public class GameEventHandler {
 			if (userToken != null) {
 				HouseCardHandlerService cardHandlerService = BMDataContext.getContext().getBean("houseCardHandlerService",HouseCardHandlerService.class);
 				StandardResponse response = cardHandlerService.queryUserFlow(userToken.getUserid(),startPage,pageSize,roomUuid);
-				logger.info("tid:{} 返回数据 data:{}",tid,response.toJSON());
+				//logger.info("tid:{} 返回数据 data:{}",tid,response.toJSON());
 				client.sendEvent("getPlayhistoryDetail", response);
 			}else{
 				tokenIllegal(client);
@@ -1233,6 +1264,8 @@ public class GameEventHandler {
 			if (userToken != null) {
 				PlayUserClient playUser = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(userToken.getUserid(), userToken.getOrgi());
 				String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(playUser.getId(), playUser.getOrgi());
+				GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, userToken.getOrgi()) ;
+				client.sendEvent("currentUserScore",gameRoom.getUserScore());
 				BMDataContext.getGameEngine().restartRequest(roomid, playUser, beiMiClient, "true".equals(data));
 			}
 		}

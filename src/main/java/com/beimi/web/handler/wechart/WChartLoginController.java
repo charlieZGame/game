@@ -190,4 +190,10 @@ public class WChartLoginController extends Handler{
     }
 
 
+    public static void main(String[] args) {
+
+        System.out.println(UKTools.md5One("wx7788992669ok1"+"LYJM#888888&6666$3333@END").toUpperCase());
+    }
+
+
 }
