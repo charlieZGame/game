@@ -32,11 +32,13 @@ public class QYSValidate extends AbsCheckScoreRule {
 
 
         collections.removeAll(hun);
-        int flag = (collections.get(0) < 0 ? -1 : 1);
+        int flag;
         int se;
         if(CollectionUtils.isNotEmpty(collections)) {
+            flag = (collections.get(0) < 0 ? -1 : 1);
             se = collections.get(0) / 36;
         }else if(CollectionUtils.isNotEmpty(actions)){
+            flag = (actions.get(0).getCard() < 0 ? -1 : 1);
             se = actions.get(0).getCard() / 36;
         }else{
             return false;

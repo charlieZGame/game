@@ -195,7 +195,7 @@ public class WEChartUtil {
         dealFlow.setUserId(userId);
         dealFlow.setOpenId(userId);
         dealFlow.setSrcType(type);
-        dealFlow.setCreatePin(Base64Util.baseEncode(nickName));
+        dealFlow.setCreatePin(nickName);
         dealFlow.setHandlerUserId(createPin);
         repository.save(dealFlow);
 

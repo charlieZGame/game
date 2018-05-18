@@ -571,7 +571,7 @@ public class GameUtils {
 		if("majiang".equals(code)) {
 			if (!isHu || (!isQxd && !GameWinCheck.haveEightAndQueEnd(player, hunMap,null, collections, true))) {
 				mjCard.setHu(false);
-				player.setWin(false);
+				//player.setWin(false);
 				logger.info("牌面后校验不通过 playerId:{}", player.getPlayuser());
 			} else {
 				logger.info("=========进行加牌操作==================");
@@ -728,7 +728,7 @@ public class GameUtils {
 		if("majiang".equals(code)) {
 			if (!isHu || (isQxd || !GameWinCheck.haveEightAndQueEnd(player, hunMap, null, collections, true))) {
 				mjCard.setHu(false);
-				player.setWin(false);
+				//player.setWin(false);
 				logger.info("牌面后校验不通过 playerId:{}", player.getPlayuser());
 			} else {
 				logger.info("=========进行加牌操作==================");
@@ -799,6 +799,9 @@ public class GameUtils {
 				if (entry.getValue() == 2 && !deal) {
 					Integer isNeedNum = 2 - (coverCardsData.get(takecard / 4) == null ? 0 : coverCardsData.get(takecard / 4));
 					if (isNeedNum <= 0 || (player.getCardsArray().length - player.getCoverCards().size()) > isNeedNum && isAllowPeng) {
+						if(player.getCoverCards() != null && (player.getCoverCards().size() == player.getCardsArray().length)){
+							continue;
+						}
 						mjCard.setCard(takecard);
 						mjCard.setPeng(true);
 					}

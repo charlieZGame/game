@@ -216,20 +216,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 
 			if (takeCards != null) {        //通知出牌
 				logger.info("construct take cards finish");
-				takeCards.setCardsnum(player.getCardsArray().length);
 
-				board.setLast(takeCards);
-
-				board.getNextplayer().setTakecard(true);
-
-				CacheHelper.getBoardCacheBean().put(gameRoom.getId(), board, gameRoom.getOrgi());    //更新缓存数据
-
-				if (takeCards.getCards().length == 1) {
-					takeCards.setCard(takeCards.getCards()[0]);
-				}
-				ActionTaskUtils.sendEvent("takecards", takeCards, gameRoom);
-
-				player.setHistory(ArrayUtils.add(player.getHistoryArray(), takeCards.getCard()));
 
 				/**
 				 * 判断是否胡牌 / 杠牌 / 碰 / 吃 ， 如果有，则发送响应的通知给其他玩家，如果没，下一个玩家 抓牌
@@ -269,7 +256,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 					if (!temp.getPlayuser().equals(player.getPlayuser())) {
 
 						logger.info("参与校验的牌为 card:{}", takeCards.getCard());
-						MJCardMessage mjCard = checkMJCard(temp, takeCards.getCard(), false, gamePlayway.getCode(),gameRoom.isAllowPeng());
+						MJCardMessage mjCard = checkMJCard(temp, playCards[0], false, gamePlayway.getCode(),gameRoom.isAllowPeng());
 						logger.info("whether having gang chi hu mjCard:{}", mjCard);
 						logger.info("通知客户端吃碰胡 peng:{}", mjCard.isPeng());
 						if(mjCard.isHu()){
@@ -289,6 +276,18 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 					//提示胡牌暂时去掉
 					mjCard.setRecommendCards(GameUtils.recommandCards(player, player.getCardsArray(), gamePlayway.getCode(), false));
 					ActionTaskUtils.sendEvent(player.getPlayuser(), mjCard);
+				}
+
+				if(isAllowPG || huMessage.size() > 0){
+					takeCards.setCardsnum(player.getCardsArray().length);
+					board.setLast(takeCards);
+					board.getNextplayer().setTakecard(true);
+					CacheHelper.getBoardCacheBean().put(gameRoom.getId(), board, gameRoom.getOrgi());    //更新缓存数据
+					if (takeCards.getCards().length == 1) {
+						takeCards.setCard(takeCards.getCards()[0]);
+					}
+					ActionTaskUtils.sendEvent("takecards", takeCards, gameRoom);
+					player.setHistory(ArrayUtils.add(player.getHistoryArray(), takeCards.getCard()));
 				}
 
 				huMessage.addAll(cpMessage);
@@ -311,8 +310,13 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 				} else {
 					// 如果有吃碰杠，需要用户主动去打牌,不需要叫状态机处理
 					//GameUtils.getGame(gameRoom.getPlayway(), orgi).change(gameRoom, BeiMiGameEvent.DEAL.toString(), 5);    //有杠碰吃，等待5秒后发牌
-					if(huMessage.size() == 0 && ((MaJiangBoard)board).isQingHu() != null){
-						((MaJiangBoard)board).isQingHu().notifyAll();
+					/*if(huMessage.size() == 0 && ((MaJiangBoard)board).isQingHu() != null){
+						synchronized (((MaJiangBoard)board).isQingHu()) {
+							((MaJiangBoard) board).isQingHu().notifyAll();
+						}
+					}*/
+					if(huMessage.size() > 0 && !isAllowPG) {
+						((MaJiangBoard) board).setQingHu(true);
 					}
 				}
 			} else {
@@ -331,12 +335,17 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 		try {
 			if (board.getCycleController().containsKey(mjCard.getUserid()) && board.getCycleController().get(mjCard.getUserid()) && mjCard.isHu()) {
 				logger.info("userId:{},mjCard:{},cycleController 存在未处理cycleController:{}", mjCard.getUserid(), mjCard, cycleController);
-				return false;
+				if(mjCard.isPeng() || mjCard.isGang()){
+					mjCard.setHu(false);
+				}else {
+					return false;
+				}
 			}
 
 			hasAction = true;
 			logger.info("userId:{} 继续", mjCard.getUserid());
 			synchronized (huController) {
+				mjCard.setTime(System.currentTimeMillis());
 				huController.put(mjCard.getUserid(), mjCard);
 				logger.info("huController 添加 userId:{},data:{}，huController:{}", mjCard.getUserid(), mjCard, huController);
 				if (huController.size() >= 2) {
@@ -384,7 +393,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 	public void dealRequest(GameRoom gameRoom, Board board, String orgi, boolean reverse, String nextplayer) {
 		Player next = board.nextPlayer(board.index(board.getNextplayer().getNextplayer()));
 		//过胡情况
-		next.setWin(false);
+		//next.setWin(false);
 		next.setCollections(null);
 		if (!StringUtils.isBlank(nextplayer)) {
 			next = board.player(nextplayer);

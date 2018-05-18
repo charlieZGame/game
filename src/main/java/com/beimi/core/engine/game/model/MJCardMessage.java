@@ -29,6 +29,8 @@ public class MJCardMessage implements Message,java.io.Serializable{
 	private String userid ;
 	
 	private String takeuser ; //出牌的人
+
+	private transient long time;
 	
 	public MJCardMessage(){
 		
@@ -126,5 +128,13 @@ public class MJCardMessage implements Message,java.io.Serializable{
 				", userid='" + userid + '\'' +
 				", takeuser='" + takeuser + '\'' +
 				'}';
+	}
+
+	public long getTime() {
+		return time;
+	}
+
+	public void setTime(long time) {
+		this.time = time;
 	}
 }

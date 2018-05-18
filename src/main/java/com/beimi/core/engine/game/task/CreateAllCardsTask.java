@@ -36,7 +36,7 @@ public class CreateAllCardsTask extends AbstractTask implements ValueWithExpiryT
 	}
 	@Override
 	public long getCacheExpiryTime() {
-		return 0l;	//5秒后执行
+		return System.currentTimeMillis()+timer*1;	//5秒后执行
 	}
 
 

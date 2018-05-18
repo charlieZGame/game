@@ -463,7 +463,7 @@ public class HuValidate {
     }
 
 
-    public static void main(String[] args) {
+    public static void main1(String[] args) {
 
         byte[] b1 = new byte[]{32,33,2,4,8,12,16,20,24,28,34,36,40,44};
         List<List<Byte>> collections = new ArrayList<List<Byte>>();
@@ -477,37 +477,38 @@ public class HuValidate {
 
 
 
-    public static void main1(String[] args) {
+    public static void main(String[] args) {
 
         Player[] players = new Player[4];
         Player player1 = new Player("1");
         Player player2 = new Player("2");
         Player player3 = new Player("3");
         Player player4 = new Player("4");
-        Action action = new Action("1",BMDataContext.PlayerAction.PENG.toString(),(byte)82);
-        Action action3 = new Action("1",BMDataContext.PlayerAction.PENG.toString(),(byte)82);
-        Action action2 = new Action("1",BMDataContext.PlayerAction.GANG.toString(),(byte)58);
-        action2.setType(BMDataContext.PlayerGangAction.AN.toString());
-        action2.setSrcUserId("2");
-        action.setSrcUserId("2");
+       // Action action = new Action("1",BMDataContext.PlayerAction.PENG.toString(),(byte)82);
+       // Action action3 = new Action("1",BMDataContext.PlayerAction.PENG.toString(),(byte)82);
+        //Action action2 = new Action("1",BMDataContext.PlayerAction.GANG.toString(),(byte)58);
+       // action2.setType(BMDataContext.PlayerGangAction.AN.toString());
+      //  action2.setSrcUserId("2");
+       // action.setSrcUserId("2");
 
         List<Action> actions = new ArrayList<Action>();
-        actions.add(action);
-        actions.add(action3);
-        player1.setActions(actions);
+      //  actions.add(action);
+     //   actions.add(action3);
+     //   player1.setActions(actions);
 
         players[0] = player1;
         players[1] = player2;
         players[2] = player3;
         players[3] = player4;
 
-        byte[] b1 = new byte[]{11,43,54,68,10,15,9};
+        byte[] b1 = new byte[]{30,31,1,95,7,96,-7,-4,-8,99,38,100,-22,101};
         List<List<Byte>> collections = new ArrayList<List<Byte>>();
         List<Byte> collection = new ArrayList<Byte>();
         for(byte b : b1){
             collection.add(b);
         }
-        collections.addAll(userHandler());
+        collections.add(collection);
+    //    collections.addAll(userHandler());
         player1.setCollections(collections);
         player1.setCards(b1);
         List<Byte> cover = new ArrayList<Byte>();
@@ -515,14 +516,16 @@ public class HuValidate {
         cover.add((byte)2);
         cover.add((byte)5);
         cover.add((byte)6);
-        player1.setCoverCards(cover);
+        //player1.setCoverCards(cover);
         player1.setBanker(true);
         player1.setZm(true);
-        player1.setTargetUser("2");
-        player1.setWin(true);
+       // player1.setTargetUser("2");
+     //   player1.setWin(true);
         GameRoom gameRoom = new GameRoom();
         gameRoom.setPiao(2);
-        List<ReturnResult> returnResults = validateHu(players,gameRoom,"2",null);
+        GamePlayway playway = new GamePlayway();
+        playway.setCode("majiang");
+        List<ReturnResult> returnResults = validateHu(players,gameRoom,"2",playway);
        System.out.println(JSONObject.toJSONString(returnResults));
 
     }

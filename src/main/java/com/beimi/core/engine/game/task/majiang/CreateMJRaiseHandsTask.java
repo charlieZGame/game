@@ -85,7 +85,7 @@ public class CreateMJRaiseHandsTask extends AbstractTask implements ValueWithExp
 
 			if (BMDataContext.PlayerTypeEnum.NORMAL.toString().equals(playUserClient.getPlayertype())) {
 				// TODO: 2018/3/23 ZCL 这个是第一次开始打牌需要等待时间 需要从数据库读取
-				super.getGame(gameRoom.getPlayway(), orgi).change(gameRoom, BeiMiGameEvent.PLAYCARDS.toString(), 8000);    //应该从 游戏后台配置参数中获取
+				super.getGame(gameRoom.getPlayway(), orgi).change(gameRoom, BeiMiGameEvent.PLAYCARDS.toString(), 1);    //应该从 游戏后台配置参数中获取
 			} else {
 				super.getGame(gameRoom.getPlayway(), orgi).change(gameRoom, BeiMiGameEvent.PLAYCARDS.toString(), 3);    //应该从游戏后台配置参数中获取
 			}

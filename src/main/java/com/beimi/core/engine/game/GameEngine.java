@@ -143,54 +143,60 @@ public class GameEngine {
 	}
 
 
-	private void sendHandleMessage(MaJiangBoard board,GamePlayway gamePlayway,Player player,boolean isCurrentTurn,GameRoom gameRoom){
-
+	private void sendHandleMessage(MaJiangBoard board,GamePlayway gamePlayway,Player player,boolean isCurrentTurn,GameRoom gameRoom) {
+/*
 		if(1 == 1){
 			return;
-		}
+		}*/
 
-		if(board == null || board.getLast() == null){
+		if (board == null || board.getLast() == null) {
 			return;
 		}
-		if(isCurrentTurn) {
+		if (isCurrentTurn) {
 			byte card = player.getCardsArray()[player.getCardsArray().length - 1];
 			byte[] tempB = new byte[player.getCardsArray().length - 1];
 			System.arraycopy(player.getCardsArray(), 0, tempB, 0, tempB.length);
 			player.setCards(tempB);
-			MJCardMessage mjCard = board.checkMJCard(player, card, true, gamePlayway.getCode(),gameRoom.isAllowPeng());
-			logger.info("恢复指令14 data:{}",mjCard);
-			boolean hasAction = false;
+			MJCardMessage mjCard = board.checkMJCard(player, card, true, gamePlayway.getCode(), gameRoom.isAllowPeng());
+			logger.info("恢复指令14 data:{}", mjCard);
 			if (mjCard.isGang() || mjCard.isPeng() || mjCard.isChi() || mjCard.isHu()) {
 				/**
 				 * 通知客户端 有杠碰吃胡了
 				 */
-				hasAction = true;
 				ActionTaskUtils.sendEvent(player.getPlayuser(), mjCard);
 			}
 			player.setCards(ArrayUtils.add(player.getCardsArray(), card));
 			/**
 			 * 抓牌 , 下一个玩家收到的牌里会包含 牌面，其他玩家的则不包含牌面  //todo ZCL主要是更新牌面
 			 */
-			for (Player temp : board.getPlayers()) {
+		/*	for (Player temp : board.getPlayers()) {
 				if (temp.getPlayuser().equals(player.getPlayuser())) {
 					ActionTaskUtils.sendEvent("dealcard", temp.getPlayuser(), new DealCard(player.getPlayuser(), board.getDeskcards().size(), temp.getColor(), card, hasAction));
 				} else {
 					ActionTaskUtils.sendEvent("dealcard", temp.getPlayuser(), new DealCard(player.getPlayuser(), board.getDeskcards().size()));
 				}
-			}
-		}else{
+			}*/
+		} else {
 
-			if(board == null || board.getLast() == null || player.getPlayuser().equals(board.getNextplayer()) || board.getLast().getUserid().equals(player.getPlayuser())){
+			if (board == null || board.getLast() == null || player.getPlayuser().equals(board.getNextplayer()) || board.getLast().getUserid().equals(player.getPlayuser())) {
 				return;
 			}
 
-			MJCardMessage mjCard = board.checkMJCard(player, board.getLast().getCard(), false, gamePlayway.getCode(),gameRoom.isAllowPeng());
-			logger.info("恢复指令13 data:{}",mjCard);
-			if (mjCard.isGang() || mjCard.isPeng() || mjCard.isChi() || mjCard.isHu()) {
-				/**
-				 * 通知客户端 有杠碰吃胡了
-				 */
-				ActionTaskUtils.sendEvent(player.getPlayuser(), mjCard);
+			if (board.getHuController() == null || board.getHuController().size() == 0) {
+				return ;
+			}
+
+			MJCardMessage mjCard = null;
+			for(Map.Entry<String,MJCardMessage> entry : board.getHuController().entrySet()){
+				if(mjCard == null){
+					mjCard = entry.getValue();
+				}else{
+					mjCard = (mjCard.getTime() > entry.getValue().getTime() ? entry.getValue() : mjCard);
+				}
+			}
+
+			if(mjCard != null && mjCard.getUserid().equals(player.getPlayuser())) {
+				ActionTaskUtils.sendEvent(mjCard.getUserid(), mjCard);
 			}
 		}
 	}
@@ -680,12 +686,12 @@ public class GameEngine {
 								board.dealRequest(gameRoom, board, orgi, false, null);
 							}else{
 								synchronized (((MaJiangBoard)board).isQingHu()){
+									((MaJiangBoard)board).setQingHu(false);
 									((MaJiangBoard)board).isQingHu().notifyAll();
 								}
 							}
 						}
 					} else {
-
 						// 如果是下一个用户是当前用户，说明 是自己取牌，这样的话就不用 通知下一个用户 取牌，必须自己先打出一张牌，同时也没有notify的情况
 					}
 				}else if (!StringUtils.isBlank(action) && action.equals(BMDataContext.PlayerAction.PENG.toString()) && allowAction(card, player.getActions(), BMDataContext.PlayerAction.PENG.toString())) {
@@ -752,23 +758,24 @@ public class GameEngine {
 							// 对于碰杠 有可能存在其他家糊的情况， 所以 还要校验其他家有没有糊的情况
 							byte[] playCards = new byte[1];
 							playCards[0] = card;
-							BMDataContext.getGameEngine().takeCardsRequest(roomid, userid, gameRoom.getOrgi(), false, playCards,false);
-							//if(((MaJiangBoard)board).isQingHu()){
-							if(((MaJiangBoard)board).isQingHu() == null){
-								((MaJiangBoard)board).setQingHu(false);
+							if (((MaJiangBoard) board).isQingHu() == null) {
+								((MaJiangBoard) board).setQingHu(false);
 							}
-								synchronized (((MaJiangBoard)board).isQingHu()){
+							BMDataContext.getGameEngine().takeCardsRequest(roomid, userid, gameRoom.getOrgi(), false, playCards, false);
+
+							if (((MaJiangBoard) board).isQingHu()) {
+								synchronized (((MaJiangBoard) board).isQingHu()){
 									try {
-										((MaJiangBoard)board).isQingHu().wait();
-										if(((MaJiangBoard)board).isQingHu()){
-											return null;
-										}
-										((MaJiangBoard)board).setQingHu(null);
+										((MaJiangBoard) board).isQingHu().wait();
 									} catch (InterruptedException e) {
 										e.printStackTrace();
 									}
 								}
-							//}
+								if(((MaJiangBoard) board).isQingHu()) {
+									return null;
+								}
+							}
+							((MaJiangBoard) board).setQingHu(null);
 							actionEvent = new ActionEvent(board.getBanker(), userid, card, action);
 							actionEvent.setActype(BMDataContext.PlayerGangAction.MING.toString());
 							playerAction.setType(BMDataContext.PlayerGangAction.MING.toString());

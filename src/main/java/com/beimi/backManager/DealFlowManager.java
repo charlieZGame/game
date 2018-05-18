@@ -54,7 +54,12 @@ public class DealFlowManager {
                 }
                return genereateResponse(dealFlowPage);
             }
-            checkResult = WEChartUtil.supperProxyManagerValidate(request,proxyUserRepository);
+
+
+
+            // 暂时屏蔽代理用户  supperManagerValidate
+            //checkResult = WEChartUtil.supperProxyManagerValidate(request,proxyUserRepository);
+            checkResult = WEChartUtil.supperManagerValidate(request,proxyUserRepository);
             if(StringUtils.isEmpty(checkResult)){
                 Page<DealFlow> dealFlowPage = null;
                 String openId = (String)request.getAttribute("openId");
