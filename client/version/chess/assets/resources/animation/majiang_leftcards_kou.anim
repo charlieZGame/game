@@ -1,0 +1,43 @@
+{
+  "__type__": "cc.AnimationClip",
+  "_name": "majiang_leftcards_kou",
+  "_objFlags": 0,
+  "_rawFiles": null,
+  "_duration": 0.05,
+  "sample": 120,
+  "speed": 1,
+  "wrapMode": 1,
+  "curveData": {
+    "paths": {
+      "麻将牌-侧家手牌": {
+        "comps": {
+          "cc.Sprite": {
+            "spriteFrame": [
+              {
+                "frame": 0,
+                "value": {
+                  "__uuid__": "e07953b2-d5ef-464d-a3ee-464fe3d7ef8a"
+                }
+              },
+              {
+                "frame": 0.041666666666666664,
+                "value": {
+                  "__uuid__": "e68bdfc2-a80a-47f6-a736-cf1b396af612"
+                }
+              }
+            ]
+          }
+        },
+        "props": {
+          "scaleX": [
+            {
+              "frame": 0,
+              "value": -1
+            }
+          ]
+        }
+      }
+    }
+  },
+  "events": []
+}

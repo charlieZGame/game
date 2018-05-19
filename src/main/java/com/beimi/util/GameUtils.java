@@ -413,7 +413,7 @@ public class GameUtils {
 
 	}
 
-	public static void main(String[] args) {
+	public static void main1(String[] args) {
 
 		byte[] cards = new byte[]{1,2,3,4,5,6,8,9,10,12,13,14,16};
 		List<Byte> test = new ArrayList<Byte>();
@@ -822,7 +822,7 @@ public class GameUtils {
 
 
 
-	public static void main1(String[] args) {
+	public static void main(String[] args) {
 
 
 	/*	byte[] cards = new byte[]{46,47,63,75,76,80,94,95,97,88,-6};
@@ -835,11 +835,11 @@ public class GameUtils {
 
 		long start = System.nanoTime();
 		//-24,-25,-26     5,39,43,64,68,71,94,96,103,67,
-		byte[] cards = new byte[]{1,2,4,8,12,16,20,24,28,32,36,40,44};
+		byte[] cards = new byte[]{100,41};
 		//byte[] cards = new byte[]{10,28,30,32,56,64,15};
 		//byte[] cards = new byte[]{5,11,13,44,47,55,66,70,75,81,83,92,94};
 		//byte[] cards = new byte[]{44,45,48,49,52,53};
-		byte takecard =14;
+		byte takecard =92;
 
 	/*	List<Byte> list = new ArrayList<Byte>();
 		for(byte b : cards){
@@ -870,25 +870,25 @@ public class GameUtils {
 		}
 		Player player = new Player("USER1");
 		player.setColor(2);
-		byte[] powerfull = new byte[3];
-		powerfull[0] = 24;
-		powerfull[1] = 28;
-		powerfull[2] = 32;
+		byte[] powerfull = new byte[1];
+		powerfull[0] = 41;
 		/*powerfull[1] = 53;*/
 		player.setPowerfull(powerfull);
 		List<Action> actions = new ArrayList<Action>();
-		Action playerAction = new Action("adfaf" , BMDataContext.PlayerAction.GANG.toString() , (byte)-30);
+		Action playerAction = new Action("adfaf" , BMDataContext.PlayerAction.PENG.toString() , (byte)19);
 		actions.add(playerAction);
 		//player.setActions(actions);
 
-		Action playerAction2 = new Action("adfaf2" , BMDataContext.PlayerAction.PENG.toString() , (byte)100);
+		Action playerAction2 = new Action("adfaf2" , BMDataContext.PlayerAction.PENG.toString() , (byte)11);
 		actions.add(playerAction2);
 	//	player.setActions(actions);
 
-		Action playerAction3 = new Action("adfaf4" , BMDataContext.PlayerAction.PENG.toString() , (byte)97);
+		Action playerAction3 = new Action("adfaf4" , BMDataContext.PlayerAction.PENG.toString() , (byte)14);
 		actions.add(playerAction3);
+		Action playerAction4 = new Action("adfaf4" , BMDataContext.PlayerAction.PENG.toString() , (byte)0);
+		actions.add(playerAction4);
 
-		//player.setActions(actions);
+		player.setActions(actions);
 
 
 		player.setCards(cards);
@@ -898,7 +898,7 @@ public class GameUtils {
 		player.setCards(cards);*/
 
 		List<List<Byte>> collections = new ArrayList<List<Byte>>();
-		MJCardMessage mjCardMessage = GameUtils.processLaiyuanMJCardResult(player, cards, takecard,false,collections,"majiang");
+		MJCardMessage mjCardMessage = GameUtils.processLaiyuanMJCard(player, cards, takecard,false,collections,"majiang",true);
 		//MJCardMessage mjCardMessage = GameUtils.processLaiyuanMJCard(player, cards, takecard,false,collections,"majiang");
 		System.out.println(JSONObject.toJSONString(mjCardMessage));
 

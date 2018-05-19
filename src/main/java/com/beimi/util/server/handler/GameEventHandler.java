@@ -435,7 +435,7 @@ public class GameEventHandler {
 		}
 	}
 
-	
+
 	public void signUserUnfriendly(long tid,SocketIOClient client, String data) {
 		BeiMiClient beiMiClient = NettyClients.getInstance().getClient(CacheHelper.getInstance().getUserId(client.getSessionId().toString()));
 		String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(beiMiClient.getUserid(), beiMiClient.getOrgi());
@@ -598,16 +598,20 @@ public class GameEventHandler {
 
 				String roomid = (String) CacheHelper.getRoomMappingCacheBean().getCacheObject(userToken.getUserid(), userToken.getOrgi());
 				if(StringUtils.isEmpty(roomid)) {
-				/*	GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, userToken.getOrgi()) ;		//直接加入到 系统缓存 （只有一个地方对GameRoom进行二次写入，避免分布式锁）
+					GameRoom gameRoom = (GameRoom) CacheHelper.getGameRoomCacheBean().getCacheObject(roomid, userToken.getOrgi()) ;		//直接加入到 系统缓存 （只有一个地方对GameRoom进行二次写入，避免分布式锁）
+					PlayUserClient playUser = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(userToken.getUserid(), userToken.getOrgi());
 					if(gameRoom != null && gameRoom.getCurrentnum() > 0) {
 						Board board = (Board) CacheHelper.getBoardCacheBean().getCacheObject(gameRoom.getId(), gameRoom.getOrgi());
-						logger.info("下一轮游戏,board:{}",board);
 						if (board == null) {
+							logger.info("下一轮游戏,board:{}",board);
 							onRestart(client, "true");
 							return;
 						}
-					}*/
-					PlayUserClient playUser = (PlayUserClient) CacheHelper.getApiUserCacheBean().getCacheObject(userToken.getUserid(), userToken.getOrgi());
+					}
+					if(gameRoom != null){
+						client.sendEvent("currentUserScore",gameRoom.getUserScore());
+					}
+
 					int jun = 0;
 					if(StringUtils.isNotEmpty(data)) {
 						Map<String, Object> map = JSONObject.parseObject(data, Map.class);

@@ -206,15 +206,14 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 		 * 第一步就是先移除 计时器 ， 玩家通过点击页面上 牌面出牌的 需要移除计时器，并根据 状态 进行下一个节点
 		 */
 		CacheHelper.getExpireCache().remove(gameRoom.getRoomid());
-
 		TakeCards takeCards = null;
+
 		if (board.getDeskcards().size() <= 14) {//出完了
 			logger.info("出完糊的方式");
 			GameUtils.getGame(gameRoom.getPlayway(), orgi).change(gameRoom, BeiMiGameEvent.ALLCARDS.toString(), 0);    //通知结算
 		} else {
-			takeCards = board.takecard(player, true, playCards);
 
-			if (takeCards != null) {        //通知出牌
+			if (playCards != null && playCards.length > 0) {        //通知出牌
 				logger.info("construct take cards finish");
 
 
@@ -255,7 +254,7 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 
 					if (!temp.getPlayuser().equals(player.getPlayuser())) {
 
-						logger.info("参与校验的牌为 card:{}", takeCards.getCard());
+						logger.info("参与校验的牌为 card:{}", playCards[0]);
 						MJCardMessage mjCard = checkMJCard(temp, playCards[0], false, gamePlayway.getCode(),gameRoom.isAllowPeng());
 						logger.info("whether having gang chi hu mjCard:{}", mjCard);
 						logger.info("通知客户端吃碰胡 peng:{}", mjCard.isPeng());
@@ -279,6 +278,8 @@ public class MaJiangBoard extends Board implements java.io.Serializable {
 				}
 
 				if(isAllowPG || huMessage.size() > 0){
+					// 这块逻辑不能放到上边，应为对于强糊的，如果没有糊不能一次上次用户的牌
+					takeCards = board.takecard(player, true, playCards);
 					takeCards.setCardsnum(player.getCardsArray().length);
 					board.setLast(takeCards);
 					board.getNextplayer().setTakecard(true);

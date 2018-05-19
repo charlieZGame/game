@@ -94,7 +94,7 @@ cc.Class({
     cc.beimi.sessiontimeout = false;
      if(1==1) {
          cc.beimi.user = {};
-         cc.beimi.user.nickname = "杨柳依依1";
+         cc.beimi.user.nickname = "杨柳依依";
          cc.beimi.user.avatar = "http://img.suncity.ink/game/2018/04/9999988.png";
         cc.beimi.user.sex = 2;
          cc.beimi.user.openId = "wx7788992669ok1";

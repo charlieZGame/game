@@ -1,0 +1,13 @@
+2018-04-19 15:49:43.864 [restartedMain] INFO  com.beimi.Application - Starting Application on ZB-PC0DD5US with PID 13136 (D:\wcworkerspace\ordertrack_worker\target\classes started by zhengchenglei in D:\wcworkerspace\ordertrack_worker)
+2018-04-19 15:49:43.866 [restartedMain] INFO  com.beimi.Application - No active profile set, falling back to default profiles: default
+2018-04-19 15:49:44.479 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 5.3.5.Final
+2018-04-19 15:49:45.731 [restartedMain] INFO  o.s.b.c.e.AnnotationConfigEmbeddedWebApplicationContext - Refreshing org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext@782f72a6: startup date [Thu Apr 19 15:49:45 CST 2018]; root of context hierarchy
+2018-04-19 15:49:48.745 [restartedMain] INFO  o.s.d.r.config.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2018-04-19 15:49:48.964 [restartedMain] INFO  o.s.d.r.config.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode!
+2018-04-19 15:49:50.496 [restartedMain] INFO  org.kie.spring.KModuleBeanFactoryPostProcessor - :: BeanFactoryPostProcessor::postProcessBeanFactory called ::
+2018-04-19 15:49:50.585 [restartedMain] INFO  o.d.compiler.kie.builder.impl.ClasspathKieProject - Recursed up folders, found and used pom.xml D:\wcworkerspace\ordertrack_worker\pom.xml
+2018-04-19 15:49:50.588 [restartedMain] INFO  org.kie.spring.KModuleBeanFactoryPostProcessor - Found project with releaseId: com.beimi:beimi:0.8.0
+2018-04-19 15:49:51.218 [restartedMain] INFO  o.s.c.s.PostProcessorRegistrationDelegate$BeanPostProcessorChecker - Bean 'org.springframework.transaction.annotation.ProxyTransactionManagementConfiguration' of type [org.springframework.transaction.annotation.ProxyTransactionManagementConfiguration$$EnhancerBySpringCGLIB$$d58e4908] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying)
+2018-04-19 15:49:51.305 [restartedMain] INFO  o.s.b.a.l.AutoConfigurationReportLoggingInitializer - 
+
+Error starting ApplicationContext. To display the auto-configuration report re-run your application with 'debug' enabled.

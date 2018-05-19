@@ -1,7 +1,7 @@
 {
   "appKey": "C7C2C1C0-0C70-B338-55DE-64B7D3E72D76",
   "appSecret": "ec80e700bd600ede14013ee050558606",
-  "encryptJs": true,
+  "encryptJs": false,
   "excludeScenes": [],
   "includeAnySDK": false,
   "includeSDKBox": false,

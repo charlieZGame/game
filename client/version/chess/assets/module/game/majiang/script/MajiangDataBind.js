@@ -482,6 +482,16 @@ cc.Class({
       //   recommendCards:'2,3,4,6,7,8,9,9,88,98'
       // }
       //  self.ting_event(data,self)
+
+
+      //测试积分
+      // let data = [{"userId":"861d8503a4af4d91bd15f647304d7a2b","score":14,"peng":0,"gang":0,"dianpao":0,"hu":0},{"userId":"547c964bd0164fa09e8f3f98ebb9c7c4","score":0,"peng":0,"gang":0,"dianpao":0,"hu":0},{"userId":"4f48f3e04bf04e9fbdb21439a250be41","score":-14,"peng":0,"gang":0,"dianpao":0,"hu":0},{"userId":"7f32f43da8d84cf094cedb4bb06a3ffb","score":0,"peng":0,"gang":0,"dianpao":0,"hu":0}];
+      // for (var inx = 0; inx < self.playersarray.length; inx++) {
+      //     let temp = self.playersarray[inx].getComponent("MaJiangPlayer");
+      //     console.log("temp.data.id-------->", temp.data.id);
+      //     data[inx].userId =  temp.data.id;
+      //  }
+      //  self.currentUserScore_event(data,self);
     }, self);
 
     // let testNum=0;
@@ -703,7 +713,7 @@ cc.Class({
       });
 
       this.node.on("share", function(event) {
-        self.wxShare("房间号：" + self.roomid.string, "房间已经开好，快来三缺一跟我嗨到爆！", "https://fir.im/bd3q1");
+        self.wxShare("房间号：" + self.roomid.string, "房间已经开好，快来三缺一跟我嗨到爆！", "http://www.laiyuanmajiang.top:8080/wap/index.html");
         event.stopPropagation();
       });
 
@@ -852,14 +862,21 @@ cc.Class({
         }
       });
 
-      this.map("voice_msg", this.voice_msg_event); //接收了语音聊天信息
-      socket.on("voice_msg", function(result) {
+      this.map("currentUserScore", this.currentUserScore_event); //接收了聊天信息
+      socket.on("currentUserScore", function(result) {
         if (self.inited == true) {
           var data = self.parse(result);
-          self.route("voice_msg")(data, self);
+          self.route("currentUserScore")(data, self);
         }
       });
 
+      // this.map("voice_msg", this.voice_msg_event); //接收了语音聊天信息
+      // socket.on("voice_msg", function(result) {
+      //   if (self.inited == true) {
+      //     var data = self.parse(result);
+      //     self.route("voice_msg")(data, self);
+      //   }
+      // });
 
 
       this.map("selectPiao", this.selectPiao_event); //接收了聊天信息
@@ -1513,6 +1530,26 @@ cc.Class({
     }
   },
 
+  currentUserScore_event: function(data, context) {
+    if (!context) {
+      context = this;
+    }
+
+    for (var inx = 0; inx < context.playersarray.length; inx++) {
+        let temp = context.playersarray[inx].getComponent("MaJiangPlayer");
+        console.log("temp.data.id-------->", temp.data.id);
+    }
+
+    console.log("currentUserScore_event-------->", JSON.stringify(data));
+    for (var inx = 0; inx < data.length; inx++) {
+     let player = context.player(data[inx].userId, context);
+     console.log("currentUserScore_event-------->",data[inx].userId,player.tablepos);
+     var playerscript = player.getComponent("MaJiangPlayer");
+     playerscript.setScore(data[inx].score);
+    }
+  },
+
+
   voice_msg_event: function(data, context) {
     if (!context) {
       context = this;
@@ -1794,7 +1831,18 @@ cc.Class({
         }
         if (data.hu) {
           hu.active = true;
-          guo.active = true;
+          let isAllLaizi = true;
+          for (var inx = 0; inx < context.playercards.length;) {
+            let temp = context.playercards[inx].getComponent("HandCards");
+            if (!temp.laizi.active) {
+              isAllLaizi = false;
+              break;
+            }
+          }
+          if (!isAllLaizi) {
+              guo.active = true;
+          }
+
         }
         context.actionnode_deal.active = true;
         context.setAction("deal", context);
@@ -1841,6 +1889,7 @@ cc.Class({
             hu.active = true;
             actionNum = actionNum + 1;
           }
+
           if (data.deal == false) {
             guo.active = true;
             actionNum = actionNum + 1;

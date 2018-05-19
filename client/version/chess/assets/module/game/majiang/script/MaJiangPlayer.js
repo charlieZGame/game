@@ -107,8 +107,16 @@ cc.Class({
               }.bind(this));
             }
         }
-        this.goldcoins.string = playerdata.goldcoins + " " + playerdata.playerlevel;
+        this.goldcoins.string = (playerdata.currentGameScore? playerdata.currentGameScore+"分":'0分') + " " + playerdata.playerlevel;
+        // this.goldcoins.string = playerdata.goldcoins + " " + playerdata.playerlevel;
     },
+
+    setScore(currentGameScore){
+      this.data.currentGameScore = currentGameScore;
+      console.log("=====currentGameScore==========>",  this.data.username,  this.data.nickname,currentGameScore? currentGameScore+"分":'0分');
+      this.goldcoins.string = (currentGameScore? currentGameScore+"分":'0分') + " " + this.data.playerlevel;
+    },
+
     banker:function(){
         this.creator.active = true ;
     },

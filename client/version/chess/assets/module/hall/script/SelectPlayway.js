@@ -66,18 +66,18 @@ cc.Class({
          if(context.gamepoint && cc.beimi!=null && cc.beimi.games !=null){
              for(var inx=0 ; inx < context.gamepoint.children.length ; inx++){
                  let name = context.gamepoint.children[inx].name ;
-                 var gameenable = false ;
+                 var gameenable = true ;
                  console.log("cc.beimi.games",cc.beimi.games);
-                 for(var i=0 ; i<cc.beimi.games.length ; i++){
-                     var gamemodel = cc.beimi.games[i] ;
-                     for(var j=0 ; j<gamemodel.types.length ; j++){
-                         let gametype = gamemodel.types[j] ;
-                         if(gametype.code == name){
-                             gameenable = true ; break ;
-                         }
-                     }
-                     if(gameenable == true){break ;}
-                 }
+                 // for(var i=0 ; i<cc.beimi.games.length ; i++){
+                 //     var gamemodel = cc.beimi.games[i] ;
+                 //     for(var j=0 ; j<gamemodel.types.length ; j++){
+                 //         let gametype = gamemodel.types[j] ;
+                 //         if(gametype.code == name){
+                 //             gameenable = true ; break ;
+                 //         }
+                 //     }
+                 //     if(gameenable == true){break ;}
+                 // }
                  if(gameenable == true){
                    console.log("===========this.gamepoint.children[inx].name============",cc.beimi.isHasEnterRoom,context.gamepoint.children[inx]);
                      context.gamepoint.children[inx].active = true;
